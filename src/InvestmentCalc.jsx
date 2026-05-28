@@ -201,7 +201,7 @@ export default function InvestmentCalc() {
   };
 
   useEffect(() => {
-    supabase.from("smeta_state").select("state").eq("id", "main").single()
+    supabase.from("smeta_state").select("state").eq("id", "main").maybeSingle()
       .then(({ data }) => { if (data?.state) applyState(data.state); });
 
     const channel = supabase.channel("smeta_realtime")
