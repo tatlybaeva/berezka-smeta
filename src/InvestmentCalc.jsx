@@ -178,6 +178,7 @@ export default function InvestmentCalc() {
     )
   );
   const [expanded, setExpanded] = useState({});
+  const [editing, setEditing] = useState({});
 
   const toggleZone = (id) => {
     const newVal = !enabledZones[id];
@@ -290,6 +291,7 @@ export default function InvestmentCalc() {
         const total = zoneTotal(zone);
         const isOn = enabledZones[zone.id];
         const isExp = expanded[zone.id];
+        const isEdit = editing[zone.id];
         return (
           <div key={zone.id} style={{
             background: "#fff", borderRadius: 12, marginBottom: 8,
@@ -321,43 +323,64 @@ export default function InvestmentCalc() {
                       <input type="checkbox" checked={on} onChange={() => toggleItem(zone.id, i)}
                         style={{ width: 14, height: 14, accentColor: "#1a1a1a", cursor: "pointer", flexShrink: 0 }} />
                       <span style={{ flex: 1, fontSize: 12, color: "#444", lineHeight: 1.3 }}>{item.name}</span>
-                      {/* qty stepper */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                        <button onClick={() => setQty(zone.id, i, qty - 1)}
-                          style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4,
-                            background: "#f7f7f5", cursor: "pointer", fontSize: 12, lineHeight: 1,
-                            display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-                        <input type="number" value={qty} min={0} max={99}
-                          onChange={e => setQty(zone.id, i, e.target.value)}
-                          style={{ width: 32, textAlign: "center", border: "1px solid #ddd",
-                            borderRadius: 4, fontSize: 12, padding: "2px 0", background: "#fff" }} />
-                        <button onClick={() => setQty(zone.id, i, qty + 1)}
-                          style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4,
-                            background: "#f7f7f5", cursor: "pointer", fontSize: 12, lineHeight: 1,
-                            display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
-                      </div>
-                      {/* editable price */}
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0, minWidth: 80 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                          <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
-                          <input type="number" value={price} min={0}
-                            onChange={e => setPrice(zone.id, i, e.target.value)}
-                            style={{ width: 60, textAlign: "right", border: "1px solid #ddd",
-                              borderRadius: 4, fontSize: 12, padding: "2px 4px", background: "#fff",
-                              color: price !== item.brl ? "#b45309" : "#333" }} />
-                        </div>
-                        {qty > 1 && (
-                          <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
-                            = {fmtR(lineTotal)}
+
+                      {isEdit ? (
+                        <>
+                          {/* qty stepper */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+                            <button onClick={() => setQty(zone.id, i, qty - 1)}
+                              style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4,
+                                background: "#f7f7f5", cursor: "pointer", fontSize: 12,
+                                display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                            <input type="number" value={qty} min={0} max={99}
+                              onChange={e => setQty(zone.id, i, e.target.value)}
+                              style={{ width: 32, textAlign: "center", border: "1px solid #ddd",
+                                borderRadius: 4, fontSize: 12, padding: "2px 0" }} />
+                            <button onClick={() => setQty(zone.id, i, qty + 1)}
+                              style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4,
+                                background: "#f7f7f5", cursor: "pointer", fontSize: 12,
+                                display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                           </div>
-                        )}
-                      </div>
+                          {/* price input */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+                            <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
+                            <input type="number" value={price} min={0}
+                              onChange={e => setPrice(zone.id, i, e.target.value)}
+                              style={{ width: 60, textAlign: "right", border: "1px solid #ddd",
+                                borderRadius: 4, fontSize: 12, padding: "2px 4px",
+                                color: price !== item.brl ? "#b45309" : "#333" }} />
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ textAlign: "right", flexShrink: 0, minWidth: 80 }}>
+                          {price === 0
+                            ? <span style={{ fontSize: 11, color: "#999" }}>бесплатно</span>
+                            : <>
+                                <div style={{ fontSize: 12, fontWeight: 500, color: price !== item.brl ? "#b45309" : "#333" }}>
+                                  {fmtR(lineTotal)}
+                                </div>
+                                {qty > 1 && <div style={{ fontSize: 10, color: "#aaa" }}>{fmtR(price)}/шт × {qty}</div>}
+                              </>
+                          }
+                        </div>
+                      )}
                     </div>
                   );
                 })}
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8,
-                  fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>
-                  Итого зона: {fmtR(total)} / {fmt$(total)}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+                  <button
+                    onClick={() => setEditing(p => ({ ...p, [zone.id]: !p[zone.id] }))}
+                    style={{
+                      fontSize: 11, padding: "5px 12px", borderRadius: 6, cursor: "pointer",
+                      border: isEdit ? "1px solid #1a1a1a" : "1px solid #ddd",
+                      background: isEdit ? "#1a1a1a" : "#f7f7f5",
+                      color: isEdit ? "#fff" : "#555", fontWeight: isEdit ? 600 : 400,
+                    }}>
+                    {isEdit ? "✓ Готово" : "Изменить"}
+                  </button>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>
+                    Итого: {fmtR(total)} / {fmt$(total)}
+                  </div>
                 </div>
               </div>
             )}
