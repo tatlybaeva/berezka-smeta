@@ -199,16 +199,28 @@ export default function InvestmentCalc() {
     )
   );
 
+  const [prices, setPrices] = useState(
+    Object.fromEntries(
+      ZONES.flatMap(z => z.items.map((item, i) => [`${z.id}_${i}`, item.brl]))
+    )
+  );
+
   const setQty = (zoneId, itemIdx, val) => {
     const key = `${zoneId}_${itemIdx}`;
     const n = Math.max(0, Math.min(99, Number(val) || 0));
     setQuantities(prev => ({ ...prev, [key]: n }));
   };
 
+  const setPrice = (zoneId, itemIdx, val) => {
+    const key = `${zoneId}_${itemIdx}`;
+    const n = Math.max(0, Number(val) || 0);
+    setPrices(prev => ({ ...prev, [key]: n }));
+  };
+
   const zoneTotal = (zone) =>
     zone.items.reduce((sum, item, i) => {
       const key = `${zone.id}_${i}`;
-      return enabledItems[key] ? sum + item.brl * (quantities[key] || 1) : sum;
+      return enabledItems[key] ? sum + (prices[key] ?? item.brl) * (quantities[key] || 1) : sum;
     }, 0);
 
   const equipTotal = ZONES.reduce((sum, z) => sum + (enabledZones[z.id] ? zoneTotal(z) : 0), 0);
@@ -300,7 +312,8 @@ export default function InvestmentCalc() {
                   const key = `${zone.id}_${i}`;
                   const on = enabledItems[key];
                   const qty = quantities[key] || 1;
-                  const lineTotal = item.brl * qty;
+                  const price = prices[key] ?? item.brl;
+                  const lineTotal = price * qty;
                   return (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0",
                       borderBottom: i < zone.items.length - 1 ? "1px solid #f5f5f5" : "none",
@@ -308,6 +321,7 @@ export default function InvestmentCalc() {
                       <input type="checkbox" checked={on} onChange={() => toggleItem(zone.id, i)}
                         style={{ width: 14, height: 14, accentColor: "#1a1a1a", cursor: "pointer", flexShrink: 0 }} />
                       <span style={{ flex: 1, fontSize: 12, color: "#444", lineHeight: 1.3 }}>{item.name}</span>
+                      {/* qty stepper */}
                       <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                         <button onClick={() => setQty(zone.id, i, qty - 1)}
                           style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4,
@@ -322,14 +336,21 @@ export default function InvestmentCalc() {
                             background: "#f7f7f5", cursor: "pointer", fontSize: 12, lineHeight: 1,
                             display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                       </div>
-                      <div style={{ textAlign: "right", flexShrink: 0, minWidth: 72 }}>
-                        {item.brl === 0
-                          ? <span style={{ fontSize: 11, color: "#999" }}>бесплатно</span>
-                          : <>
-                              <div style={{ fontSize: 12, fontWeight: 500, color: "#333" }}>{fmtR(lineTotal)}</div>
-                              {qty > 1 && <div style={{ fontSize: 10, color: "#aaa" }}>{fmtR(item.brl)}/шт</div>}
-                            </>
-                        }
+                      {/* editable price */}
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0, minWidth: 80 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                          <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
+                          <input type="number" value={price} min={0}
+                            onChange={e => setPrice(zone.id, i, e.target.value)}
+                            style={{ width: 60, textAlign: "right", border: "1px solid #ddd",
+                              borderRadius: 4, fontSize: 12, padding: "2px 4px", background: "#fff",
+                              color: price !== item.brl ? "#b45309" : "#333" }} />
+                        </div>
+                        {qty > 1 && (
+                          <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                            = {fmtR(lineTotal)}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
