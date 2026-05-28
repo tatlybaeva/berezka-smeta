@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BERЁZKA — Дизайн-код v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood:#211D19;--wood-2:#2B2620;--lace:#F1EBDD;--linen:#E3D7BE;
+    --forest:#3C4A33;--red:#A2382B;--terra:#C0744E;--lamp:#DA9C46;
+    --lace-60:rgba(241,235,221,.62);--lace-30:rgba(241,235,221,.30);
+    --line:rgba(241,235,221,.13);--ink:#211D19;--maxw:1080px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--wood);color:var(--lace);font-family:'Manrope',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.06;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px}
+  h1,h2,h3,.serif{font-family:'Spectral',serif;font-weight:500;letter-spacing:-.01em}
+  .hand{font-family:'Caveat',cursive;color:var(--lamp)}
+
+  /* nav */
+  .top-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--wood);z-index:100;max-width:100%}
+  .back-btn{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--lace-60);text-decoration:none;font-weight:600;transition:color .2s}
+  .back-btn:hover{color:var(--lace)}
+  .v-switch{display:flex;gap:2px;background:var(--wood-2);border:1px solid var(--line);border-radius:8px;padding:3px}
+  .v-switch a{font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;color:var(--lace-60);transition:all .2s}
+  .v-switch a.on{background:var(--lace);color:var(--ink)}
+
+  .lace-edge{height:24px;background:var(--lace);opacity:.85;-webkit-mask:radial-gradient(circle 9px at 13px 24px,transparent 8.5px,#000 9.5px) 0 0/26px 24px repeat-x;mask:radial-gradient(circle 9px at 13px 24px,transparent 8.5px,#000 9.5px) 0 0/26px 24px repeat-x;}
+  .eyelets{display:flex;gap:18px;justify-content:center;margin-bottom:-2px}
+  .eyelets i{width:5px;height:5px;border-radius:50%;border:1.5px solid var(--lace);opacity:.6}
+  .bark{height:24px;display:flex;align-items:center;gap:14px;justify-content:center;opacity:.4}
+  .bark span{height:2px;background:var(--lace);border-radius:2px}
+  .bark span:nth-child(1){width:34px}.bark span:nth-child(2){width:9px}.bark span:nth-child(3){width:52px}
+  .bark span:nth-child(4){width:6px}.bark span:nth-child(5){width:22px}.bark span:nth-child(6){width:70px}.bark span:nth-child(7){width:12px}
+
+  header{padding:80px 0 60px;position:relative;text-align:left}
+  header::after{content:"";position:absolute;right:-10%;top:6%;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(218,156,70,.22),transparent 62%);pointer-events:none;z-index:0}
+  header>*{position:relative;z-index:1}
+  .kicker{font-size:13px;letter-spacing:.34em;text-transform:uppercase;color:var(--lace-60);font-weight:600}
+  .logo-cover{font-family:'Spectral',serif;font-weight:600;font-size:clamp(64px,13vw,170px);line-height:.92;letter-spacing:-.02em;margin:18px 0 10px}
+  .logo-cover .yo{color:var(--red)}
+  .tagline{font-family:'Spectral',serif;font-style:italic;font-weight:400;font-size:clamp(20px,3.2vw,32px);color:var(--lamp)}
+  .cover-meta{display:flex;flex-wrap:wrap;gap:28px;margin-top:42px;font-size:14px;color:var(--lace-60)}
+  .cover-meta b{display:block;color:var(--lace);font-weight:600;font-size:15px;margin-bottom:2px}
+
+  section{padding:74px 0}
+  .sec-head{display:flex;align-items:baseline;gap:18px;margin-bottom:34px}
+  .sec-num{font-family:'Spectral',serif;font-size:18px;color:var(--lamp);font-weight:600}
+  .sec-title{font-size:clamp(28px,4.6vw,46px);line-height:1.04}
+  .lead{font-size:18px;max-width:64ch;color:var(--lace-60)}
+  .lead b{color:var(--lace);font-weight:600}
+
+  .card-dark{background:var(--wood-2);border:1px solid var(--line);border-radius:16px}
+  .card-light{background:var(--lace);color:var(--ink);border-radius:16px}
+
+  .logo-stage{padding:56px 32px;display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:center;margin-bottom:22px}
+  .lk-main{font-family:'Spectral',serif;font-weight:600;font-size:clamp(46px,8vw,90px);letter-spacing:-.02em;line-height:.9}
+  .lk-main .yo{color:var(--red)}
+  .lk-stack{display:flex;flex-direction:column;align-items:center;gap:14px;border-left:1px solid var(--line);padding-left:24px}
+  .lk-stack .wm{font-family:'Spectral',serif;font-weight:600;font-size:32px}
+  .lk-stack .wm .yo{color:var(--red)}
+  .lk-cyr{font-family:'Spectral',serif;font-style:italic;color:var(--lace-60);font-size:21px}
+  .yo-build{position:relative;display:inline-block;font-family:'Spectral',serif;font-weight:600;line-height:1}
+  .yo-build .yo-e{font-size:130px;color:var(--ink)}
+  .yo-dot{position:absolute;top:26px;width:17px;height:17px;background:var(--red);border-radius:50% 50% 50% 50%/60% 60% 40% 40%}
+  .yo-dot.d1{left:30px}.yo-dot.d2{left:60px}
+  .logo-notes{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .note{padding:22px}
+  .note h4{font-family:'Spectral',serif;font-size:18px;font-weight:600;margin-bottom:8px;color:var(--lamp)}
+  .note p{font-size:14.5px;color:var(--lace-60)}
+  .do-dont{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+  .dd{border-radius:14px;padding:18px 22px;font-size:14px}
+  .dd.do{background:rgba(60,74,51,.4);border:1px solid rgba(120,150,100,.5)}
+  .dd.dont{background:rgba(162,56,43,.16);border:1px solid rgba(162,56,43,.5)}
+  .dd b{display:block;font-family:'Spectral',serif;font-size:16px;margin-bottom:6px}
+  .dd.do b{color:#9fb585}.dd.dont b{color:var(--terra)}
+
+  .swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px}
+  .sw{border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+  .sw .chip{height:108px}
+  .sw .info{padding:13px 15px;background:var(--wood-2)}
+  .sw .nm{font-family:'Spectral',serif;font-weight:600;font-size:16px}
+  .sw .hex{font-size:12.5px;color:var(--lace-60);letter-spacing:.05em;margin-top:2px;text-transform:uppercase}
+  .sw .use{font-size:12px;color:var(--lace-60);margin-top:7px;line-height:1.45}
+  .ratio{display:flex;height:50px;border-radius:10px;overflow:hidden;margin-top:24px;border:1px solid var(--line)}
+  .ratio i{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;letter-spacing:.04em;text-align:center;padding:0 6px}
+
+  .type-grid{display:grid;gap:20px}
+  .type-card{padding:30px 32px}
+  .type-tag{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--lamp);font-weight:600;margin-bottom:14px}
+  .spec-display{font-family:'Spectral',serif;font-weight:500;font-size:clamp(38px,7vw,70px);line-height:1;letter-spacing:-.02em}
+  .spec-body{font-family:'Manrope';font-size:18px;line-height:1.55;max-width:60ch}
+  .spec-hand{font-family:'Caveat',cursive;font-weight:700;font-size:clamp(36px,6.5vw,58px);color:var(--terra);line-height:1}
+  .glyphs{font-size:14.5px;color:var(--lace-60);margin-top:16px;letter-spacing:.02em}
+  .type-card.card-light .type-tag{color:var(--red)}
+  .type-card.card-light .glyphs{color:rgba(33,29,25,.55)}
+  .type-card.card-light .spec-hand{color:var(--red)}
+
+  .motif-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px}
+  .motif{padding:24px 16px;text-align:center}
+  .motif svg{width:62px;height:62px;display:block;margin:0 auto 12px}
+  .motif .ml{font-family:'Spectral',serif;font-size:16px;font-weight:600}
+  .motif .ms{font-size:12px;color:var(--lace-60);margin-top:3px}
+  .lace-demo{margin-top:20px;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+  .lace-demo .top{background:var(--wood-2);padding:22px 24px;font-size:14px;color:var(--lace-60)}
+  .lace-demo .top b{color:var(--lace);font-family:'Spectral',serif;font-weight:600}
+
+  .photo-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .photo-list{list-style:none;padding:26px 28px}
+  .photo-list li{padding:10px 0 10px 26px;position:relative;font-size:15px;border-bottom:1px dashed var(--line)}
+  .photo-list li::before{content:"";position:absolute;left:3px;top:18px;width:8px;height:8px;border-radius:50%}
+  .photo-list.yes li::before{background:#9fb585}
+  .photo-list.no li::before{background:var(--terra)}
+  .photo-list h4{font-family:'Spectral',serif;font-size:20px;font-weight:600;margin-bottom:8px;color:var(--lamp)}
+  .photo-list.no h4{color:var(--terra)}
+
+  .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+  .app{border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+  .app .cap{padding:14px 18px;font-size:12.5px;color:var(--lace-60);background:var(--wood-2)}
+  .app .cap b{color:var(--lace);font-family:'Spectral',serif;font-weight:600;display:block;font-size:14.5px}
+  .m-menu{padding:26px 24px;background:var(--lace);color:var(--ink);min-height:236px}
+  .m-menu .mh{text-align:center;font-family:'Spectral',serif;font-weight:600;font-size:26px}
+  .m-menu .mh .yo{color:var(--red)}
+  .m-menu .msub{text-align:center;font-family:'Caveat';font-weight:700;color:var(--red);font-size:23px;margin-bottom:16px}
+  .m-row{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:7px 0;border-bottom:1px dotted rgba(33,29,25,.25)}
+  .m-row .pr{font-variant-numeric:tabular-nums;color:var(--red);font-weight:600}
+  .m-sign{min-height:236px;background:var(--red);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--lace);gap:8px}
+  .m-sign .s-wm{font-family:'Spectral',serif;font-weight:600;font-size:40px}
+  .m-sign .s-wm .yo{color:var(--lamp)}
+  .m-sign .s-tag{font-family:'Caveat';font-weight:700;font-size:24px;opacity:.92}
+  .m-cup{min-height:236px;display:flex;align-items:center;justify-content:center;background:var(--forest)}
+  .cup{width:118px;height:148px;background:#d7c1a4;clip-path:polygon(13% 0,87% 0,78% 100%,22% 100%);position:relative;display:flex;align-items:center;justify-content:center}
+  .cup .band{position:absolute;top:36%;left:-6%;right:-6%;height:48px;background:var(--wood);display:flex;align-items:center;justify-content:center}
+  .cup .band span{font-family:'Spectral',serif;color:var(--lace);font-weight:600;font-size:17px}
+  .cup .band span .yo{color:var(--lamp)}
+  .m-way{min-height:236px;background:var(--lace);display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:18px}
+  .way{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .way .plank{background:#b07a4d;color:var(--lace);font-family:'Caveat',cursive;font-weight:700;font-size:20px;padding:8px 16px;border-radius:4px;box-shadow:2px 2px 0 rgba(33,29,25,.25);transform:rotate(-2deg)}
+  .way .plank.alt{background:var(--forest);transform:rotate(2deg)}
+  .way svg{width:30px;height:30px}
+  .m-soc{min-height:236px;background:var(--wood-2);color:var(--lace);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:10px;position:relative;overflow:hidden}
+  .m-soc::before{content:"";position:absolute;bottom:-30px;right:-30px;width:160px;height:160px;background:radial-gradient(circle,rgba(218,156,70,.25),transparent 65%)}
+  .m-soc .q{font-family:'Spectral',serif;font-style:italic;font-size:23px;line-height:1.3;position:relative}
+  .m-soc .by{font-family:'Caveat';font-weight:700;font-size:24px;color:var(--lamp);position:relative}
+
+  .voice{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .vq{padding:26px 28px}
+  .vq .lbl{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;margin-bottom:12px}
+  .vq.say .lbl{color:#9fb585}.vq.dont .lbl{color:var(--terra)}
+  .vq p{font-family:'Spectral',serif;font-size:19px;line-height:1.5;color:var(--lace)}
+  .vq.dont p{color:var(--lace-60);text-decoration:line-through;text-decoration-color:var(--lace-30)}
+
+  .anti{display:flex;flex-wrap:wrap;gap:12px}
+  .anti span{border:1px solid var(--terra);color:var(--terra);border-radius:30px;padding:9px 18px;font-size:14px;font-weight:500}
+
+  footer{padding:66px 0 96px;text-align:center}
+  footer .anchor{font-family:'Spectral',serif;font-style:italic;font-size:clamp(20px,3vw,28px);max-width:48ch;margin:0 auto;color:var(--lamp)}
+  footer .sig{margin-top:24px;font-size:13px;color:var(--lace-60);letter-spacing:.04em}
+  .footer-nav{margin-top:36px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+  .footer-nav a{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--lace-60);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:2px;transition:color .2s}
+  .footer-nav a:hover{color:var(--lace)}
+
+  @media(max-width:760px){
+    .logo-stage{grid-template-columns:1fr;gap:34px}
+    .lk-stack{border-left:none;border-top:1px solid var(--line);padding-left:0;padding-top:26px}
+    .logo-notes,.do-dont,.photo-cols,.voice{grid-template-columns:1fr}
+    section{padding:54px 0}header{padding:64px 0 36px}
+    .top-nav{padding:14px 20px}
+  }
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="/" class="back-btn">← Смета</a>
+  <div class="v-switch">
+    <a href="/brand.html">v1</a>
+    <a href="/brand-v2.html" class="on">v2</a>
+  </div>
+</nav>
+
+<header class="wrap">
+  <div class="kicker reveal">Дизайн-код бренда · v2</div>
+  <div class="logo-cover reveal">ber<span class="yo">ё</span>zka</div>
+  <div class="tagline reveal">Северная душевность под южным солнцем</div>
+  <div class="cover-meta reveal">
+    <div><b>Что это</b>Дневное семейное кафе</div>
+    <div><b>Где</b>Флорианополис · SC · Brasil</div>
+    <div><b>Настроение</b>Тёмная изба, белое кружево, тёплый свет</div>
+  </div>
+</header>
+
+<div class="wrap"><div class="eyelets"><i></i><i></i><i></i><i></i><i></i></div></div>
+<div class="lace-edge"></div>
+
+<section class="wrap">
+  <div class="sec-head reveal"><span class="sec-num">01</span><h2 class="sec-title">Основа</h2></div>
+  <p class="lead reveal"><b>BERЁZKA</b> — место-дом, где русско-татарская кухня встречает бразильскую природу и скандинавский уют. Главное напряжение бренда — <b>тёмное и светлое</b>: мореное дерево избы и резные наличники против белизны кружева, гортензий и льняных скатертей.</p>
+  <p class="lead reveal" style="margin-top:14px">Имя написано латиницей, но с славянской <b>Ё</b> — культурный сплав зашит в само начертание. <b>Ё</b> и есть главный фирменный знак.</p>
+</section>
+
+<section class="wrap">
+  <div class="sec-head reveal"><span class="sec-num">02</span><h2 class="sec-title">Логотип</h2></div>
+  <p class="lead reveal">Тёплый строчный логотип-слово. Две точки над <b>Ё</b> — фолк-красные ягоды-капли: и буква, и акцент, перекликающийся с северной росписью.</p>
+  <div class="logo-stage card-dark reveal">
+    <div class="lk-main">ber<span class="yo">ё</span>zka</div>
+    <div class="lk-stack">
+      <svg width="54" height="54" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2C18 6 20 14 12 22C4 14 6 6 12 2Z" fill="#3C4A33" stroke="#F1EBDD" stroke-width=".8"/>
+        <path d="M12 4V21" stroke="#F1EBDD" stroke-width="1"/>
+        <path d="M12 9L15 7M12 13L15.5 11M12 9L9 7M12 13L8.5 11" stroke="#F1EBDD" stroke-width=".8"/>
+      </svg>
+      <div class="wm">ber<span class="yo">ё</span>zka</div>
+      <div class="lk-cyr">берёзка · кафе</div>
+    </div>
+  </div>
+  <div class="logo-stage card-light reveal" style="grid-template-columns:.7fr 1.3fr;color:var(--ink)">
+    <div style="text-align:center">
+      <div class="yo-build"><span class="yo-e">ё</span><span class="yo-dot d1"></span><span class="yo-dot d2"></span></div>
+    </div>
+    <div>
+      <div style="font-family:'Spectral',serif;font-weight:600;font-size:22px;margin-bottom:8px">Конструкция Ё</div>
+      <p style="font-size:15px;color:rgba(33,29,25,.7);max-width:42ch">Две точки рисуем как мягкие капли-ягоды фолк-красного. Это связывает имя с северной росписью и работает соло — как печать, фавикон, тиснение на крафте.</p>
+    </div>
+  </div>
+  <div class="logo-notes reveal">
+    <div class="note card-dark"><h4>Знак</h4><p>Лист берёзы с живой жилкой, шалфейно-зелёный. Соло — на стакане, печати, аватаре.</p></div>
+    <div class="note card-dark"><h4>Свободное поле</h4><p>Вокруг логотипа — воздух не меньше высоты буквы «b». Бренду нужно дышать, как двору.</p></div>
+  </div>
+  <div class="do-dont reveal">
+    <div class="dd do"><b>Да</b>Строчные буквы, белое на тёмном дереве, фолк-красная Ё, спокойный ритм, патина.</div>
+    <div class="dd dont"><b>Нет</b>Заглавный «кричащий» логотип, неон, градиенты, тени, обводки, наклоны.</div>
+  </div>
+</section>
+
+<div class="wrap"><div class="bark"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+
+<section class="wrap">
+  <div class="sec-head reveal"><span class="sec-num">03</span><h2 class="sec-title">Цвет</h2></div>
+  <p class="lead reveal">Два героя — <b>мореное дерево</b> и <b>белое кружево</b>. Лес и фолк-красный дают характер, глина и свет лампы — тёплый акцент.</p>
+  <div class="swatches reveal" style="margin-top:8px">
+    <div class="sw"><div class="chip" style="background:#211D19"></div><div class="info"><div class="nm">Мореное дерево</div><div class="hex">#211D19</div><div class="use">Фон-герой, изба, тёмное.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#F1EBDD"></div><div class="info"><div class="nm">Кружево</div><div class="hex">#F1EBDD</div><div class="use">Белый-герой: текст, лён, гортензия.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#3C4A33"></div><div class="info"><div class="nm">Лес</div><div class="hex">#3C4A33</div><div class="use">Зелёная изба, листва, спокойствие.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#A2382B"></div><div class="info"><div class="nm">Фолк-красный</div><div class="hex">#A2382B</div><div class="use">Роспись, Ё, фалунская вывеска.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#C0744E"></div><div class="info"><div class="nm">Глина</div><div class="hex">#C0744E</div><div class="use">Килим, горшки, керамика — акцент.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#DA9C46"></div><div class="info"><div class="nm">Свет лампы</div><div class="hex">#DA9C46</div><div class="use">Вечернее тепло, окна, радость.</div></div></div>
+  </div>
+  <div class="ratio reveal">
+    <i style="background:#211D19;color:#F1EBDD;flex:4">40 · дерево</i>
+    <i style="background:#F1EBDD;color:#211D19;flex:4">40 · кружево</i>
+    <i style="background:#3C4A33;color:#F1EBDD;flex:1.4">лес</i>
+    <i style="background:#A2382B;color:#F1EBDD;flex:1.4">красный</i>
+    <i style="background:#DA9C46;color:#211D19;flex:1">акцент</i>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec-head reveal"><span class="sec-num">04</span><h2 class="sec-title">Типографика</h2></div>
+  <p class="lead reveal">Душевная серифная пара с кириллицей и латиницей. Серив — голос и заголовки, гротеск — ясность, рукописный — тёплые детали.</p>
+  <div class="type-grid reveal">
+    <div class="type-card card-dark">
+      <div class="type-tag">Заголовки · Spectral</div>
+      <div class="spec-display">Тепло, дерево, кружево</div>
+      <div class="glyphs">Аа Бб Вв Гг · Aa Bb Cc · 0123456789 · «ёлка» «café»</div>
+    </div>
+    <div class="type-card card-light">
+      <div class="type-tag">Текст · Manrope</div>
+      <p class="spec-body">Пока ребёнок кормит кур и копается в песке, мама впервые за день спокойно пьёт кофе у лампы.</p>
+      <div class="glyphs">Light · Regular · Medium · SemiBold</div>
+    </div>
+    <div class="type-card card-dark">
+      <div class="type-tag">Акцент · Caveat (рукописный)</div>
+      <div class="spec-hand">с любовью, по-домашнему</div>
+      <div class="glyphs" style="margin-top:18px">Только тёплые детали: «блюдо дня», таблички во дворе, подписи. Не для абзацев.</div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="eyelets"><i></i><i></i><i></i><i></i><i></i></div></div>
+<div class="lace-edge"></div>
+
+<section class="wrap">
+  <div class="sec-head reveal"><span class="sec-num">05</span><h2 class="sec-title">Графический язык</h2></div>
+  <p class="lead reveal">Сердце айдентики — <b>северная народная роспись</b>: петухи, птицы, кони, солярные ромбы. Второй мотив — <b>кружево</b> (разделители, бордюры, фактуры).</p>
+  <div class="motif-grid reveal" style="margin-top:8px">
+    <div class="motif card-dark">
+      <svg viewBox="0 0 64 64" fill="none">
+        <path d="M40 30 C50 26 56 16 56 8 C54 18 50 24 47 28 C53 23 58 19 60 15 C56 29 49 32 43 33Z" fill="#A2382B"/>
+        <path d="M14 41 C12 28 20 24 31 24 C42 24 44 33 42 39 C39 44 31 45 24 45 C18 45 15 45 14 41Z" fill="#A2382B"/>
+        <path d="M31 25 C28 16 33 9 39 9 C45 9 45 17 42 22 L38 27Z" fill="#A2382B"/>
+        <path d="M24 34 Q31 31 38 35" stroke="#F1EBDD" stroke-width="1.4" fill="none"/>
+        <circle cx="40" cy="16" r="1.7" fill="#F1EBDD"/>
+        <path d="M24 45 L22 55 M19 55 H26 M33 45 L33 55 M30 55 H37" stroke="#A2382B" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <div class="ml">Петух</div><div class="ms">главный фолк-символ</div>
+    </div>
+    <div class="motif card-dark">
+      <svg viewBox="0 0 64 64" fill="none">
+        <path d="M9 37 C9 27 22 25 34 28 C40 21 51 21 57 26 C50 28 48 31 47 34 C53 35 55 40 53 44 C44 41 39 41 33 41 C21 43 11 44 9 37Z" fill="#A2382B"/>
+        <path d="M30 30 Q37 34 36 41" stroke="#F1EBDD" stroke-width="1.3" fill="none"/>
+        <circle cx="51" cy="28" r="1.5" fill="#F1EBDD"/>
+      </svg>
+      <div class="ml">Птица</div><div class="ms">мягкость, гостеприимство</div>
+    </div>
+    <div class="motif card-dark">
+      <svg viewBox="0 0 64 64" fill="none">
+        <path d="M11 52 L16 36 C16 29 21 23 30 21 C31 14 36 10 42 11 C44 13 44 18 41 20 C47 23 51 29 51 37 L53 52 L46 52 L44 39 L37 39 L37 52 L31 52 L31 39 C24 39 21 43 20 52Z" fill="#A2382B"/>
+        <path d="M37 13 Q42 10 45 13 Q42 16 39 17Z" fill="#DA9C46"/>
+        <path d="M22 36 Q30 33 40 36" stroke="#F1EBDD" stroke-width="1.2" fill="none"/>
+      </svg>
+      <div class="ml">Конь</div><div class="ms">движение, оберег</div>
+    </div>
+    <div class="motif card-dark">
+      <svg viewBox="0 0 64 64" fill="none">
+        <path d="M32 6 L41 32 L32 58 L23 32Z" fill="none" stroke="#A2382B" stroke-width="2.2"/>
+        <path d="M6 32 L32 23 L58 32 L32 41Z" fill="none" stroke="#A2382B" stroke-width="2.2"/>
+        <circle cx="32" cy="32" r="5" fill="#A2382B"/>
+        <path d="M32 6 L32 0 M32 58 L32 64 M6 32 L0 32 M58 32 L64 32" stroke="#DA9C46" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="ml">Солярный ромб</div><div class="ms">солнце, тепло, орнамент</div>
+    </div>
+  </div>
+  <div class="lace-demo reveal">
+    <div class="top"><b>Кружево</b> — фирменный бордюр и фактура. Подложки меню, обрезы упаковки, фоны соцсетей.</div>
+    <div class="eyelets" style="background:var(--lace);padding-top:10px;margin:0"><i style="border-color:var(--ink)"></i><i style="border-color:var(--ink)"></i><i style="border-color:var(--ink)"></i><i style="border-color:var(--ink)"></i><i style="border-color:var(--ink)"></i><i style="border-color:var(--ink)"></i><i style="border-color:var(--ink)"></i></div>
+    <div class="lace-edge" style="opacity:1"></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec-head reveal"><span class="sec-num">06</span><h2 class="sec-title">Фотостиль</h2></div>
+  <p class="lead reveal">Тёплый документальный кадр. Реальная жизнь места, не глянцевый сток.</p>
+  <div class="photo-cols reveal">
+    <ul class="photo-list yes card-dark">
+      <h4>Снимаем</h4>
+      <li>Тёмное дерево + белое кружево, гортензии, лён.</li>
+      <li>Вечерний свет лампы, свеча, тёплое окно в сумерках.</li>
+      <li>Руки за готовкой; пар, блины, ягоды, самовар.</li>
+      <li>Дети во дворе: куры, песок, грядки, пеньки, босиком.</li>
+      <li>Патина, фактуры, живая «несовершенность».</li>
+    </ul>
+    <ul class="photo-list no card-dark">
+      <h4>Избегаем</h4>
+      <li>Холодный стерильный студийный свет.</li>
+      <li>Постановочные «инстаграмно-идеальные» кадры.</li>
+      <li>Глянцевый фуд-сток, пластиковые цвета.</li>
+      <li>Корпоративность, плоский фронтальный свет.</li>
+      <li>Мультяшно-детская эстетика и кислотность.</li>
+    </ul>
+  </div>
+</section>
+
+<div class="wrap"><div class="bark"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+
+<section class="wrap">
+  <div class="sec-head reveal"><span class="sec-num">07</span><h2 class="sec-title">Применение</h2></div>
+  <p class="lead reveal">Один характер везде: кружево + фолк по тёмному дереву и фалунскому красному.</p>
+  <div class="apps reveal">
+    <div class="app">
+      <div class="m-menu">
+        <div class="mh">ber<span class="yo">ё</span>zka</div>
+        <div class="msub">меню дня</div>
+        <div class="m-row"><span>Блины с творогом и брусникой</span><span class="pr">R$ 26</span></div>
+        <div class="m-row"><span>Эчпочмак по-домашнему</span><span class="pr">R$ 22</span></div>
+        <div class="m-row"><span>Кофе у лампы</span><span class="pr">R$ 14</span></div>
+        <div class="m-row"><span>Морс из лесных ягод</span><span class="pr">R$ 12</span></div>
+      </div>
+      <div class="cap"><b>Меню</b>Тёмное по кружеву, фолк-красные цены</div>
+    </div>
+    <div class="app">
+      <div class="m-sign">
+        <div class="s-wm">ber<span class="yo">ё</span>zka</div>
+        <div class="s-tag">днём · до 17:00</div>
+      </div>
+      <div class="cap"><b>Вывеска</b>Фалунский красный, лампа в Ё</div>
+    </div>
+    <div class="app">
+      <div class="m-cup"><div class="cup"><div class="band"><span>ber<span class="yo">ё</span>zka</span></div></div></div>
+      <div class="cap"><b>Стакан с собой</b>Тёмная лента на крафте</div>
+    </div>
+    <div class="app">
+      <div class="m-way">
+        <div class="way">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C18 6 20 14 12 22C4 14 6 6 12 2Z" fill="#3C4A33"/></svg>
+          <div class="plank">Двор</div>
+        </div>
+        <div class="way">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14 10c4-1 6 1 5 4-4 2-6-1-5-4Z" fill="#A2382B"/><path d="M5 16c0-3 2-5 6-5s6 2 6 6" stroke="#A2382B" stroke-width="1.6" fill="none"/></svg>
+          <div class="plank alt">Куры</div>
+        </div>
+      </div>
+      <div class="cap"><b>Двор · вальдорф</b>Рукописные таблички на дереве</div>
+    </div>
+    <div class="app">
+      <div class="m-soc">
+        <div class="q">«Приходи в гости,<br>а не сделай заказ»</div>
+        <div class="by">— берёзка</div>
+      </div>
+      <div class="cap"><b>Соцсети</b>Серив-цитата, свет лампы, кружево</div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec-head reveal"><span class="sec-num">08</span><h2 class="sec-title">Тон голоса</h2></div>
+  <div class="voice reveal">
+    <div class="vq say card-dark"><div class="lbl">Так говорим</div><p>«Заходи, выдохни. Пока малыш кормит кур, твой кофе уже греется у лампы.»</p></div>
+    <div class="vq dont card-dark"><div class="lbl">Так — нет</div><p>«Лучшее семейное кафе! Скидка 20% только сегодня! Успей заказать!»</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec-head reveal"><span class="sec-num">09</span><h2 class="sec-title">Анти-вектор</h2></div>
+  <div class="anti reveal" style="margin-top:8px">
+    <span>не гламурный</span><span>не холодно-минималистичный</span><span>не корпоративный</span>
+    <span>не «инстаграмно-идеальный»</span><span>не мультяшно-детский</span><span>без пластика</span>
+    <span>без неона и градиентов</span><span>без стерильности</span>
+  </div>
+</section>
+
+<div class="wrap"><div class="eyelets"><i></i><i></i><i></i><i></i><i></i></div></div>
+<div class="lace-edge"></div>
+
+<footer class="wrap">
+  <p class="anchor">Если ощущается как тёплый живой дом в вечернем свете, а не как заведение — мы на верном пути.</p>
+  <div class="sig">BERЁZKA · Дизайн-код v2 · Florianópolis</div>
+  <div class="footer-nav">
+    <a href="/">← Смета</a>
+    <a href="/brand.html">Дизайн-код v1</a>
+  </div>
+</footer>
+
+<script>
+  const obs=new IntersectionObserver((es)=>{es.forEach((e)=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}})},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(Math.min(i,6)*40)+'ms';obs.observe(el);});
+</script>
+</body>
+</html>
