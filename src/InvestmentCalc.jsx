@@ -360,6 +360,17 @@ export default function InvestmentCalc() {
                 style={{ width: 16, height: 16, accentColor: "#1a1a1a", cursor: "pointer" }} />
               <span style={{ fontSize: 16 }}>{zone.emoji}</span>
               <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: "#1a1a1a" }}>{zone.name}</span>
+              <button
+                onClick={e => { e.stopPropagation(); setExpanded(p => ({ ...p, [zone.id]: true })); setEditing(p => ({ ...p, [zone.id]: !p[zone.id] })); }}
+                style={{
+                  fontSize: 11, padding: "3px 10px", borderRadius: 5, cursor: "pointer",
+                  border: isEdit ? "1px solid #1a1a1a" : "1px solid #ddd",
+                  background: isEdit ? "#1a1a1a" : "#f7f7f5",
+                  color: isEdit ? "#fff" : "#666",
+                  flexShrink: 0,
+                }}>
+                {isEdit ? "✓ Готово" : "Изменить"}
+              </button>
               <span style={{ fontSize: 13, fontWeight: 500, color: isOn ? "#1a1a1a" : "#aaa" }}>{fmt$(total)}</span>
               <span style={{ fontSize: 11, color: "#bbb", marginLeft: 4 }}>{isExp ? "▲" : "▼"}</span>
             </div>
@@ -422,17 +433,7 @@ export default function InvestmentCalc() {
                     </div>
                   );
                 })}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
-                  <button
-                    onClick={() => setEditing(p => ({ ...p, [zone.id]: !p[zone.id] }))}
-                    style={{
-                      fontSize: 11, padding: "5px 12px", borderRadius: 6, cursor: "pointer",
-                      border: isEdit ? "1px solid #1a1a1a" : "1px solid #ddd",
-                      background: isEdit ? "#1a1a1a" : "#f7f7f5",
-                      color: isEdit ? "#fff" : "#555", fontWeight: isEdit ? 600 : 400,
-                    }}>
-                    {isEdit ? "✓ Готово" : "Изменить"}
-                  </button>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>
                     Итого: {fmtR(total)} / {fmt$(total)}
                   </div>
