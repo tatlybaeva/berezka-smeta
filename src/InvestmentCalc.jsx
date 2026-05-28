@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "./supabase";
 
 const RATE = 5.03;
 const fmt$ = (brl) => `$${Math.round(brl / RATE).toLocaleString()}`;
@@ -179,6 +180,49 @@ export default function InvestmentCalc() {
   );
   const [expanded, setExpanded] = useState({});
   const [editing, setEditing] = useState({});
+  const [syncStatus, setSyncStatus] = useState("idle"); // idle | saving | saved | error
+  const saveTimer = useRef(null);
+  const isRemoteUpdate = useRef(false);
+
+  const buildState = (r, d, wc, res, ez, ei, q, p) => ({ rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p });
+
+  const applyState = (s) => {
+    if (!s) return;
+    isRemoteUpdate.current = true;
+    if (s.rent !== undefined) setRent(s.rent);
+    if (s.depositMonths !== undefined) setDepositMonths(s.depositMonths);
+    if (s.workingCapMonths !== undefined) setWorkingCapMonths(s.workingCapMonths);
+    if (s.reserve !== undefined) setReserve(s.reserve);
+    if (s.enabledZones) setEnabledZones(s.enabledZones);
+    if (s.enabledItems) setEnabledItems(s.enabledItems);
+    if (s.quantities) setQuantities(s.quantities);
+    if (s.prices) setPrices(s.prices);
+    setTimeout(() => { isRemoteUpdate.current = false; }, 0);
+  };
+
+  useEffect(() => {
+    supabase.from("smeta_state").select("state").eq("id", "main").single()
+      .then(({ data }) => { if (data?.state) applyState(data.state); });
+
+    const channel = supabase.channel("smeta_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "smeta_state" }, (payload) => {
+        if (payload.new?.state) applyState(payload.new.state);
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, []);
+
+  const scheduleSave = (state) => {
+    if (isRemoteUpdate.current) return;
+    setSyncStatus("saving");
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      const { error } = await supabase.from("smeta_state").upsert({ id: "main", state, updated_at: new Date().toISOString() });
+      setSyncStatus(error ? "error" : "saved");
+      if (!error) setTimeout(() => setSyncStatus("idle"), 2000);
+    }, 800);
+  };
 
   const toggleZone = (id) => {
     const newVal = !enabledZones[id];
@@ -218,6 +262,10 @@ export default function InvestmentCalc() {
     setPrices(prev => ({ ...prev, [key]: n }));
   };
 
+  useEffect(() => {
+    scheduleSave(buildState(rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices));
+  }, [rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices]);
+
   const zoneTotal = (zone) =>
     zone.items.reduce((sum, item, i) => {
       const key = `${zone.id}_${i}`;
@@ -233,9 +281,16 @@ export default function InvestmentCalc() {
   return (
     <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: "1rem" }}>
 
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "#999", textTransform: "uppercase", marginBottom: 4 }}>Конструктор инвестиций</div>
-        <div style={{ fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>БЕРЁЗКА — Смета по зонам</div>
+      <div style={{ marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "#999", textTransform: "uppercase", marginBottom: 4 }}>Конструктор инвестиций</div>
+          <div style={{ fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>БЕРЁЗКА — Смета по зонам</div>
+        </div>
+        <div style={{ fontSize: 11, marginTop: 6, color: syncStatus === "saved" ? "#16a34a" : syncStatus === "saving" ? "#aaa" : syncStatus === "error" ? "#dc2626" : "transparent" }}>
+          {syncStatus === "saving" && "сохранение…"}
+          {syncStatus === "saved" && "✓ сохранено"}
+          {syncStatus === "error" && "⚠ ошибка сохранения"}
+        </div>
       </div>
 
       <div style={{ background: "#1a1a1a", borderRadius: 14, padding: "16px 18px", marginBottom: 20, color: "white" }}>
