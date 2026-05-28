@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BERЁZKA — Brand Identity</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --ink:    #1A1410;
+  --birch:  #3A2E22;
+  --cream:  #F5F0E8;
+  --warm:   #EBE2D3;
+  --red:    #8B3A2A;
+  --sage:   #4A6340;
+  --gold:   #B8943A;
+  --mist:   #BDB5A8;
+}
+body { background:var(--cream); color:var(--ink); font-family:'Cormorant Garamond',Georgia,serif; }
+
+/* ── BACK BUTTON ── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--birch);
+  color: var(--cream);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  margin: 16px 36px;
+}
+.back-btn:hover { opacity: 0.85; }
+
+.nav { display:flex; padding:0 36px; border-bottom:1.5px solid var(--warm); position:sticky; top:0; background:var(--cream); z-index:10; }
+.tab { padding:18px 18px 15px; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--mist); cursor:pointer; border-bottom:2px solid transparent; }
+.tab.on { color:var(--ink); border-bottom-color:var(--ink); }
+
+.pg { display:none; padding:48px 36px; }
+.pg.on { display:block; }
+.lbl { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--mist); margin-bottom:24px; }
+
+/* ── LOGO PAGE ── */
+.variants { display:grid; grid-template-columns:1fr 1fr; gap:3px; }
+.v {
+  padding:56px 32px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  position:relative;
+}
+.v-tag { position:absolute; top:14px; left:16px; font-size:8px; letter-spacing:0.12em; text-transform:uppercase; opacity:0.3; }
+
+.wm { font-weight:500; font-size:40px; letter-spacing:0.3em; text-transform:uppercase; line-height:1; }
+.wm-sm { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; opacity:0.38; margin-top:12px; }
+
+.folk-border {
+  border:1.5px solid var(--ink);
+  padding:28px 36px;
+  position:relative;
+}
+.folk-border::before, .folk-border::after {
+  content:'❧';
+  position:absolute;
+  font-size:14px;
+  opacity:0.25;
+}
+.folk-border::before { top:6px; left:8px; }
+.folk-border::after { bottom:6px; right:8px; transform:rotate(180deg); }
+
+/* ── PALETTE ── */
+.swatches { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:3px; margin-bottom:32px; }
+.sw { height:110px; display:flex; flex-direction:column; justify-content:flex-end; padding:12px; }
+.sw-n { font-size:9px; letter-spacing:0.1em; text-transform:uppercase; opacity:0.55; }
+.sw-h { font-size:12px; font-weight:500; margin-top:3px; opacity:0.8; }
+.sw-role { font-size:9px; opacity:0.4; margin-top:2px; }
+
+/* ── TYPE ── */
+.t-block { padding:32px 0; border-bottom:1px solid var(--warm); }
+.t-lbl { font-size:9px; letter-spacing:0.16em; text-transform:uppercase; color:var(--mist); margin-bottom:14px; }
+
+/* Chalkboard */
+.chalkboard {
+  background:#2A2A22;
+  padding:48px 40px;
+  border-radius:3px;
+  color:#F0EDD5;
+  position:relative;
+}
+.chalkboard::before {
+  content:'';
+  position:absolute; inset:6px;
+  border:1px solid rgba(240,237,213,0.15);
+  pointer-events:none;
+}
+.chalk-title { font-size:38px; font-weight:500; letter-spacing:0.2em; line-height:1.1; }
+.chalk-line { width:60px; height:1px; background:rgba(240,237,213,0.3); margin:16px 0; }
+.chalk-item { font-size:18px; line-height:1.8; opacity:0.85; }
+.chalk-price { float:right; opacity:0.5; font-style:italic; }
+
+.kraft-wrap {
+  background:#D4C4A0;
+  padding:40px;
+  display:flex; align-items:center; justify-content:center;
+}
+.kraft {
+  background:#C8B88A;
+  padding:28px 32px;
+  text-align:center;
+  border:1px solid rgba(0,0,0,0.15);
+  position:relative;
+  min-width:180px;
+}
+.kraft::after {
+  content:'';
+  position:absolute;
+  bottom:-8px; left:50%; transform:translateX(-50%);
+  width:0; height:0;
+  border-left:8px solid transparent;
+  border-right:8px solid transparent;
+  border-top:8px solid #C8B88A;
+}
+
+.wood {
+  background:repeating-linear-gradient(
+    90deg,
+    #5C3D1E 0px, #5C3D1E 3px,
+    #6B4A28 3px, #6B4A28 8px,
+    #5C3D1E 8px, #5C3D1E 12px,
+    #7A5530 12px, #7A5530 18px
+  );
+  padding:40px;
+  display:flex; align-items:center; justify-content:center;
+}
+.wood-inner {
+  background:rgba(90,60,25,0.7);
+  border:2px solid rgba(255,235,180,0.2);
+  padding:32px 44px;
+  text-align:center;
+}
+
+.jar-scene {
+  background:var(--warm);
+  padding:40px;
+  display:flex; align-items:center; justify-content:center;
+}
+.jar-label {
+  background:var(--cream);
+  border:1px solid rgba(0,0,0,0.12);
+  padding:20px 24px;
+  text-align:center;
+  width:140px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+.jar-label::before {
+  content:'';
+  display:block;
+  width:32px; height:1px;
+  background:var(--ink); opacity:0.2;
+  margin:0 auto 12px;
+}
+.jar-label::after {
+  content:'';
+  display:block;
+  width:32px; height:1px;
+  background:var(--ink); opacity:0.2;
+  margin:12px auto 0;
+}
+
+.two { display:grid; grid-template-columns:1fr 1fr; gap:3px; margin-bottom:3px; }
+.one { margin-bottom:3px; }
+</style>
+</head>
+<body>
+
+<a href="/" class="back-btn">← Смета</a>
+
+<div class="nav">
+  <div class="tab on" onclick="show('logos',this)">Логотип</div>
+  <div class="tab" onclick="show('palette',this)">Палитра</div>
+  <div class="tab" onclick="show('type',this)">Шрифт</div>
+  <div class="tab" onclick="show('use',this)">Применение</div>
+</div>
+
+<!-- LOGOS -->
+<div class="pg on" id="logos">
+  <div class="lbl">BERЁZKA — варианты</div>
+  <div class="variants">
+    <div class="v" style="background:var(--cream);border:1px solid var(--warm)">
+      <span class="v-tag">A — основной</span>
+      <div class="wm">BERЁZKA</div>
+      <div class="wm-sm">Café · Florianópolis</div>
+    </div>
+    <div class="v" style="background:var(--warm)">
+      <span class="v-tag">B — с рамкой</span>
+      <div class="folk-border">
+        <div class="wm" style="font-size:30px;letter-spacing:0.25em">BERЁZKA</div>
+        <div style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.4;margin-top:9px;text-align:center">café</div>
+      </div>
+    </div>
+    <div class="v" style="background:#4A6340">
+      <span class="v-tag" style="color:var(--cream)">C — зелёный</span>
+      <div class="wm" style="color:var(--cream)">BERЁZKA</div>
+      <div class="wm-sm" style="color:var(--cream)">Café · Florianópolis</div>
+    </div>
+    <div class="v" style="background:var(--cream);border:1px solid var(--warm)">
+      <span class="v-tag">D — народный</span>
+      <div style="text-align:center">
+        <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#4A6340;margin-bottom:10px;opacity:0.85">✦ кафе ✦</div>
+        <div class="wm">BERЁZKA</div>
+        <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#4A6340;margin-top:10px;opacity:0.85">✦ флорипа ✦</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lbl" style="margin-top:36px">Берёзовый лист — знак отдельно</div>
+  <div style="display:flex;align-items:center;gap:32px;padding:36px;background:var(--warm)">
+    <svg width="60" height="80" viewBox="0 0 30 42" fill="none">
+      <path d="M15 1 C15 1 25 12 25 22 C25 32 21 38 15 41 C9 38 5 32 5 22 C5 12 15 1 15 1Z" fill="none" stroke="var(--ink)" stroke-width="1"/>
+      <path d="M8 15 L6 13 M10 10 L8 8 M12 7 L11 5 M18 7 L19 5 M20 10 L22 8 M22 15 L24 13 M23 21 L25 20 M22 27 L24 27 M20 33 L22 33 M10 33 L8 33 M8 27 L6 27 M7 21 L5 20" stroke="var(--ink)" stroke-width="0.6" stroke-linecap="round"/>
+      <line x1="15" y1="1" x2="15" y2="41" stroke="var(--ink)" stroke-width="0.75"/>
+      <line x1="15" y1="12" x2="21" y2="10" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="19" x2="22" y2="18" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="26" x2="21" y2="26" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="32" x2="20" y2="33" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="12" x2="9"  y2="10" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="19" x2="8"  y2="18" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="26" x2="9"  y2="26" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="32" x2="10" y2="33" stroke="var(--ink)" stroke-width="0.5"/>
+    </svg>
+    <svg width="42" height="56" viewBox="0 0 30 42" fill="none">
+      <path d="M15 1 C15 1 25 12 25 22 C25 32 21 38 15 41 C9 38 5 32 5 22 C5 12 15 1 15 1Z" fill="none" stroke="var(--ink)" stroke-width="1"/>
+      <path d="M8 15 L6 13 M10 10 L8 8 M22 15 L24 13 M20 10 L22 8 M23 21 L25 20 M7 21 L5 20" stroke="var(--ink)" stroke-width="0.6" stroke-linecap="round"/>
+      <line x1="15" y1="1" x2="15" y2="41" stroke="var(--ink)" stroke-width="0.75"/>
+      <line x1="15" y1="12" x2="21" y2="10" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="19" x2="22" y2="18" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="12" x2="9" y2="10" stroke="var(--ink)" stroke-width="0.5"/>
+      <line x1="15" y1="19" x2="8" y2="18" stroke="var(--ink)" stroke-width="0.5"/>
+    </svg>
+    <svg width="28" height="36" viewBox="0 0 30 42" fill="none">
+      <path d="M15 1 C15 1 25 12 25 22 C25 32 21 38 15 41 C9 38 5 32 5 22 C5 12 15 1 15 1Z" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+      <line x1="15" y1="1" x2="15" y2="41" stroke="var(--ink)" stroke-width="0.8"/>
+      <line x1="15" y1="14" x2="21" y2="12" stroke="var(--ink)" stroke-width="0.6"/>
+      <line x1="15" y1="14" x2="9" y2="12" stroke="var(--ink)" stroke-width="0.6"/>
+    </svg>
+    <svg width="18" height="22" viewBox="0 0 30 42" fill="none">
+      <path d="M15 1 C15 1 25 12 25 22 C25 32 21 38 15 41 C9 38 5 32 5 22 C5 12 15 1 15 1Z" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+      <line x1="15" y1="1" x2="15" y2="41" stroke="var(--ink)" stroke-width="1"/>
+    </svg>
+    <div style="font-size:9px;color:var(--mist);letter-spacing:0.1em;margin-left:4px;line-height:2">60px<br>42px<br>28px<br>18px</div>
+  </div>
+</div>
+
+<!-- PALETTE -->
+<div class="pg" id="palette">
+  <div class="lbl">Три цвета + акцент</div>
+  <div class="swatches">
+    <div class="sw" style="background:var(--birch);color:var(--cream)">
+      <span class="sw-n">Берёза / Birch</span>
+      <span class="sw-h">#3A2E22</span>
+      <span class="sw-role">логотип · текст · вывеска</span>
+    </div>
+    <div class="sw" style="background:var(--sage);color:var(--cream)">
+      <span class="sw-n">Sage</span>
+      <span class="sw-h">#4A6340</span>
+      <span class="sw-role">огород · природа</span>
+    </div>
+    <div class="sw" style="background:var(--warm);color:var(--ink);border:1px solid #DDD5C5">
+      <span class="sw-n">Тёплый крем</span>
+      <span class="sw-h">#EBE2D3</span>
+      <span class="sw-role">фон · меню · упаковка</span>
+    </div>
+    <div class="sw" style="background:var(--red);color:var(--cream)">
+      <span class="sw-n">Красный — народный акцент</span>
+      <span class="sw-h">#8B3A2A</span>
+      <span class="sw-role">только акценты</span>
+    </div>
+  </div>
+  <div style="padding:32px;background:var(--warm);margin-bottom:3px">
+    <div class="lbl">вдохновение палитры</div>
+    <div style="font-size:17px;line-height:1.7;color:#666;max-width:480px">
+      Тёмное дерево старого дома. Белые гортензии у забора. Красный петух на кухонном полотенце. Запах смолы и трав.
+      <br><br>
+      <em style="color:var(--mist)">— не минималистичный бренд, а тёплый и живой</em>
+    </div>
+  </div>
+</div>
+
+<!-- TYPE -->
+<div class="pg" id="type">
+  <div class="lbl">Cormorant Garamond — всё что нужно</div>
+  <div class="t-block">
+    <div class="t-lbl">Вывеска · Display 500</div>
+    <div style="font-size:58px;font-weight:500;letter-spacing:0.08em;line-height:1">BERЁZKA</div>
+  </div>
+  <div class="t-block">
+    <div class="t-lbl">Меню · названия блюд</div>
+    <div style="font-size:26px;font-weight:500;line-height:1.4">Борщ со сметаной</div>
+    <div style="font-size:14px;letter-spacing:0.08em;color:var(--mist);margin-top:6px">свёкла · квасоля · кріп</div>
+    <div style="font-size:22px;font-weight:500;color:var(--red);margin-top:2px">R$ 38</div>
+  </div>
+  <div class="t-block">
+    <div class="t-lbl">Добро пожаловать · приветственный текст</div>
+    <div style="font-size:20px;line-height:1.8;max-width:420px;color:#555">
+      Берёзка — это место где замедляются. Где дети кормят кур, мамы пьют чай с вареньем, а время течёт иначе.
+    </div>
+  </div>
+  <div class="t-block">
+    <div class="t-lbl">Метки · таблички · категории меню</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
+      <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;border:1px solid var(--ink);padding:5px 14px">ЗАВТРАКИ</span>
+      <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;border:1px solid var(--sage);color:var(--sage);padding:5px 14px">ОГОРОД</span>
+      <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;border:1px solid var(--red);color:var(--red);padding:5px 14px">ВЫПЕЧКА</span>
+    </div>
+  </div>
+</div>
+
+<!-- USAGE -->
+<div class="pg" id="use">
+  <div class="lbl">Применение — в духе русской деревни</div>
+  <div class="one">
+    <div class="chalkboard">
+      <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.35;margin-bottom:20px">меловая доска</div>
+      <div class="chalk-title">BERЁZKA</div>
+      <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.4;margin-top:6px;margin-bottom:20px">сегодня в меню</div>
+      <div class="chalk-line"></div>
+      <div class="chalk-item">Борщ со сметаной <span class="chalk-price">38</span></div>
+      <div class="chalk-item">Блины с вареньем <span class="chalk-price">28</span></div>
+      <div class="chalk-item">Пирожки с капустой <span class="chalk-price">14</span></div>
+      <div class="chalk-line"></div>
+      <div style="font-style:italic;font-size:14px;opacity:0.35;margin-top:12px">все блюда готовятся из свежих продуктов</div>
+    </div>
+  </div>
+  <div class="two" style="margin-top:3px">
+    <div class="kraft-wrap">
+      <div>
+        <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(0,0,0,0.3);text-align:center;margin-bottom:16px">этикетка варенья</div>
+        <div class="kraft">
+          <svg width="18" height="24" viewBox="0 0 30 42" fill="none" style="margin:0 auto 8px">
+            <path d="M15 1 C15 1 25 12 25 22 C25 32 21 38 15 41 C9 38 5 32 5 22 C5 12 15 1 15 1Z" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/>
+            <line x1="15" y1="1" x2="15" y2="41" stroke="rgba(0,0,0,0.4)" stroke-width="0.8"/>
+            <line x1="15" y1="12" x2="21" y2="10" stroke="rgba(0,0,0,0.3)" stroke-width="0.6"/>
+            <line x1="15" y1="19" x2="22" y2="18" stroke="rgba(0,0,0,0.3)" stroke-width="0.6"/>
+            <line x1="15" y1="12" x2="9" y2="10" stroke="rgba(0,0,0,0.3)" stroke-width="0.6"/>
+            <line x1="15" y1="19" x2="8" y2="18" stroke="rgba(0,0,0,0.3)" stroke-width="0.6"/>
+          </svg>
+          <div style="font-size:15px;font-weight:500;letter-spacing:0.2em;color:rgba(0,0,0,0.75)">BERЁZKA</div>
+          <div style="width:30px;height:0.75px;background:rgba(0,0,0,0.2);margin:8px auto"></div>
+          <div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(0,0,0,0.45)">Варенье<br>Черника</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#4A6340;padding:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0">
+      <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:16px">Instagram пост</div>
+      <div style="width:180px;height:180px;background:var(--warm);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+        <svg width="28" height="38" viewBox="0 0 30 42" fill="none">
+          <path d="M15 1 C15 1 25 12 25 22 C25 32 21 38 15 41 C9 38 5 32 5 22 C5 12 15 1 15 1Z" fill="none" stroke="var(--birch)" stroke-width="1.2"/>
+          <line x1="15" y1="1" x2="15" y2="41" stroke="var(--birch)" stroke-width="0.8"/>
+          <line x1="15" y1="12" x2="21" y2="10" stroke="var(--birch)" stroke-width="0.6"/>
+          <line x1="15" y1="19" x2="22" y2="18" stroke="var(--birch)" stroke-width="0.6"/>
+          <line x1="15" y1="26" x2="21" y2="26" stroke="var(--birch)" stroke-width="0.6"/>
+          <line x1="15" y1="12" x2="9" y2="10" stroke="var(--birch)" stroke-width="0.6"/>
+          <line x1="15" y1="19" x2="8" y2="18" stroke="var(--birch)" stroke-width="0.6"/>
+          <line x1="15" y1="26" x2="9" y2="26" stroke="var(--birch)" stroke-width="0.6"/>
+        </svg>
+        <div style="font-size:20px;font-weight:500;letter-spacing:0.22em;color:var(--birch)">BERЁZKA</div>
+        <div style="font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--mist)">café · florianópolis</div>
+      </div>
+    </div>
+  </div>
+  <div style="background:var(--warm);padding:36px;margin-top:3px;display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap">
+    <div style="font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--mist);width:100%;margin-bottom:8px">таблички для огорода</div>
+    <div style="background:var(--cream);border:1px solid var(--warm);padding:8px 16px;font-size:14px;font-weight:500;letter-spacing:0.08em">Мята</div>
+    <div style="background:var(--cream);border:1px solid var(--warm);padding:8px 16px;font-size:14px;font-weight:500;letter-spacing:0.08em">Укроп</div>
+    <div style="background:var(--cream);border:1px solid var(--warm);padding:8px 16px;font-size:14px;font-weight:500;letter-spacing:0.08em">Базилік</div>
+    <div style="background:var(--cream);border:1px solid var(--warm);padding:8px 16px;font-size:14px;font-weight:500;letter-spacing:0.08em">Томати</div>
+    <div style="background:var(--cream);border:1px solid var(--warm);padding:8px 16px;font-size:14px;font-weight:500;letter-spacing:0.08em">Чорниця</div>
+  </div>
+</div>
+
+<script>
+function show(id,el){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  el.classList.add('on');
+}
+</script>
+</body>
+</html>

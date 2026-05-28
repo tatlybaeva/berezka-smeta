@@ -285,6 +285,12 @@ export default function InvestmentCalc() {
         <div>
           <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "#999", textTransform: "uppercase", marginBottom: 4 }}>Конструктор инвестиций</div>
           <div style={{ fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>БЕРЁЗКА — Смета по зонам</div>
+          <a href="/brand.html" style={{
+            display: "inline-block", marginTop: 8,
+            fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
+            color: "#4A6340", textDecoration: "none", borderBottom: "1px solid #4A634044",
+            paddingBottom: 1,
+          }}>Дизайн-код →</a>
         </div>
         <div style={{ fontSize: 11, marginTop: 6, color: syncStatus === "saved" ? "#16a34a" : syncStatus === "saving" ? "#aaa" : syncStatus === "error" ? "#dc2626" : "transparent" }}>
           {syncStatus === "saving" && "сохранение…"}
