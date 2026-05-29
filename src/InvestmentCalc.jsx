@@ -279,7 +279,7 @@ export default function InvestmentCalc() {
   const grandTotal = equipTotal + depositTotal + workingCap + reserve;
 
   return (
-    <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: "1rem" }}>
+    <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: "1rem 1rem 2rem" }}>
 
       <div style={{ marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
