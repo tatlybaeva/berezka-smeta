@@ -184,6 +184,21 @@ const ZONES = [
   },
 ];
 
+const COSTS_PHASE1_FIXED = 7480 + 3060 + 700 + 1500 + 430 + 600 + 200 + 120 + 200 + 800; // without rent placeholder
+const COSTS_PHASE3_FIXED = 9520 + 7480 + 3400 + 3060 + 700 + 2500 + 600 + 200 + 120 + 250; // without rent placeholder
+
+const AVG_CHECK = 52;
+const FOOD_COST_PCT = 0.30;
+const TAX_PCT = 0.08;
+
+function breakEven(rent, phase) {
+  const costs_fixed = (phase === 1 ? COSTS_PHASE1_FIXED : COSTS_PHASE3_FIXED) + rent;
+  const netPerCheck = AVG_CHECK * (1 - (phase >= 2 ? FOOD_COST_PCT : 0.15) - TAX_PCT);
+  const checksPerMonth = Math.ceil(costs_fixed / netPerCheck);
+  const checksPerDay = Math.ceil(checksPerMonth / 30);
+  return { fixed: costs_fixed, netPerCheck: Math.round(netPerCheck), checksPerMonth, checksPerDay };
+}
+
 export default function InvestmentCalc() {
   const [rentType, setRentType] = useState("house"); // "house" | "land"
   const [rent, setRent] = useState(11000);
@@ -202,6 +217,8 @@ export default function InvestmentCalc() {
   );
   const [expanded, setExpanded] = useState({});
   const [editing, setEditing] = useState({});
+  const [beOpen, setBeOpen] = useState(false);
+  const [bePhase, setBePhase] = useState(1);
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | saving | saved | error
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
@@ -341,6 +358,95 @@ export default function InvestmentCalc() {
           ))}
         </div>
       </div>
+
+      {/* BREAK-EVEN SECTION */}
+      {(() => {
+        const be = breakEven(rent, bePhase);
+        const currentChecksDay = 10; // placeholder
+        const progress = Math.min(1, currentChecksDay / be.checksPerDay);
+        return (
+          <div style={{ background: "#fff", borderRadius: 12, marginBottom: 12, border: "1px solid #ebebeb", overflow: "hidden" }}>
+            <div
+              onClick={() => setBeOpen(p => !p)}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", cursor: "pointer" }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>📉 Точка безубыточности</div>
+              <span style={{ fontSize: 12, color: "#bbb" }}>{beOpen ? "▲" : "▼"}</span>
+            </div>
+            {beOpen && (
+              <div style={{ borderTop: "1px solid #f0f0f0", padding: "14px 16px" }}>
+                {/* Phase selector */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                  {[
+                    { phase: 1, label: "Этап 1 (кофе)" },
+                    { phase: 3, label: "Этап 3 (полный)" },
+                  ].map(opt => (
+                    <button
+                      key={opt.phase}
+                      onClick={() => setBePhase(opt.phase)}
+                      style={{
+                        flex: 1, padding: "8px 10px", borderRadius: 8, cursor: "pointer",
+                        border: "none",
+                        background: bePhase === opt.phase ? "#1a1a1a" : "#f4f3f0",
+                        color: bePhase === opt.phase ? "#fff" : "#555",
+                        fontSize: 12, fontFamily: "'Georgia', serif", fontWeight: bePhase === opt.phase ? 600 : 400,
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Stats grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+                  <div style={{ background: "#f7f7f5", borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 10, color: "#999", marginBottom: 2 }}>Постоянные расходы/мес</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>R${be.fixed.toLocaleString()}</div>
+                    <div style={{ fontSize: 11, color: "#aaa" }}>~${Math.round(be.fixed / RATE).toLocaleString()}</div>
+                  </div>
+                  <div style={{ background: "#f7f7f5", borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 10, color: "#999", marginBottom: 2 }}>Чистая прибыль с чека</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>R${be.netPerCheck}</div>
+                    <div style={{ fontSize: 11, color: "#aaa" }}>после food cost + налог</div>
+                  </div>
+                  <div style={{ background: "#f7f7f5", borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 10, color: "#999", marginBottom: 2 }}>Чеков/месяц для БУ</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>{be.checksPerMonth.toLocaleString()}</div>
+                  </div>
+                  <div style={{ background: "#EAF3DE", borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 10, color: "#3B6D11", marginBottom: 2 }}>Чеков/день для БУ</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: "#27500A" }}>{be.checksPerDay} чек/день</div>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 11, color: "#666" }}>
+                    <span>Текущий прогноз: ~{currentChecksDay} чек/день</span>
+                    <span>Нужно: {be.checksPerDay} чек/день</span>
+                  </div>
+                  <div style={{ height: 10, background: "#f0f0f0", borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%",
+                      width: `${progress * 100}%`,
+                      background: progress >= 1 ? "#3B6D11" : progress >= 0.6 ? "#BA7517" : "#A32D2D",
+                      borderRadius: 99,
+                      transition: "width 0.3s",
+                    }} />
+                  </div>
+                  <div style={{ fontSize: 11, color: "#999", marginTop: 6 }}>
+                    {progress >= 1 ? "✅ Уже выше точки безубыточности!" : `${Math.round(progress * 100)}% от нужного трафика`}
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 10, fontSize: 11, color: "#aaa", lineHeight: 1.5 }}>
+                  💡 Средний чек R${AVG_CHECK} · Food cost {bePhase >= 2 ? "30" : "15"}% · Налог 8%
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* RENT TYPE SWITCHER */}
       <div style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: "1px solid #ebebeb" }}>

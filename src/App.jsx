@@ -3,12 +3,16 @@ import InvestmentCalc from './InvestmentCalc'
 import ResponsibilityCalc from './ResponsibilityCalc'
 import BrandTab from './BrandTab'
 import KnowledgeBase from './KnowledgeBase'
+import BusinessPlan from './BusinessPlan'
+import MenuPricing from './MenuPricing'
 
 const TABS = [
-  { id: 'smeta', label: '📊 Смета' },
-  { id: 'brand', label: '🎨 Дизайн-код' },
-  { id: 'resp',  label: '👥 Ответственность' },
-  { id: 'kb',    label: '📚 База знаний' },
+  { id: 'smeta',   label: '📊 Смета' },
+  { id: 'bizplan', label: '📋 Бизнес-план' },
+  { id: 'menu',    label: '🍽️ Меню' },
+  { id: 'brand',   label: '🎨 Дизайн-код' },
+  { id: 'resp',    label: '👥 Ответственность' },
+  { id: 'kb',      label: '📚 База знаний' },
 ]
 
 function getInitTab() {
@@ -64,10 +68,12 @@ export default function App() {
         ))}
       </div>
 
-      {tab === 'smeta' && <InvestmentCalc />}
-      {tab === 'brand' && <BrandTab />}
-      {tab === 'resp'  && <ResponsibilityCalc onNavigate={handleNavigate} />}
-      {tab === 'kb'    && <KnowledgeBase />}
+      {tab === 'smeta'   && <InvestmentCalc />}
+      {tab === 'bizplan' && <BusinessPlan />}
+      {tab === 'menu'    && <MenuPricing />}
+      {tab === 'brand'   && <BrandTab />}
+      {tab === 'resp'    && <ResponsibilityCalc onNavigate={handleNavigate} />}
+      {tab === 'kb'      && <KnowledgeBase />}
     </div>
   )
 }
