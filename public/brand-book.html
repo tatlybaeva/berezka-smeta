@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BERЁZKA · Дизайн-система</title>
+<style>
+/* ============================================================
+   BERЁZKA — Design Tokens · v2
+   "Northern soulfulness, with a little southern light."
+   A dark mortise-wood izba, white lace, an evening lamp.
+   ------------------------------------------------------------
+   v2 flips the polarity of v1: the system is now DARK-FIRST and
+   high-contrast. Two heroes — charred wood (near-black, warm)
+   and lace (warm white). Forest green + Falun folk-red carry
+   character; lamp-light & clay are warm accents only.
+   Palette sampled directly from the brand moodboards.
+   ============================================================ */
+
+/* ---- Fonts (Google Fonts CDN; full Cyrillic + Latin) ----
+   Spectral — display / headings : literary, slightly dark serif
+   Manrope  — body / UI          : geometric-humanist sans
+   Caveat   — handwritten accent : chalk/marker hand
+   No local files bundled — see README "Caveats". */
+@import url('https://fonts.googleapis.com/css2?family=Forum&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ========== COLOR ========== */
+
+  /* --- HERO 1 · charred / mortise wood (near-black, always warm) --- */
+  --wood-black:  #1A1613;  /* deepest — evening page background */
+  --wood:        #241F1A;  /* raised dark surface, cards on dark */
+  --wood-soft:   #322B24;  /* hover on dark, quiet dark panels */
+  --bark:        #4A4035;  /* muted dark brown, dark dividers' tint */
+
+  /* --- HERO 2 · lace / linen (warm white) --- */
+  --lace-bright: #FAF6EC;  /* brightest surface, "fresh linen" */
+  --lace:        #F1EBDD;  /* primary light surface — lace white */
+  --lace-dim:    #E4DCC9;  /* hover light / secondary light panel */
+  --linen:       #D8CDB4;  /* sand, soft blocks, skeletons */
+
+  /* --- Forest green — painted cabin, garden --- */
+  --forest:      #3C4A33;  /* secondary dark, green sections */
+  --forest-deep: #21362A;  /* deepest green */
+  --moss:        #6A7548;  /* herb tags, lighter green accent */
+  --moss-pale:   #D9DFC3;  /* soft sage fills on light — warm natural green */
+
+  /* --- Falun folk-red — the painted cabinet, the cottage --- */
+  --folk-red:      #A2382B;  /* PRIMARY accent — folk red */
+  --folk-red-soft: #BE4937;  /* hover — same brick hue, one step lighter */
+  --folk-red-deep: #7C2E22;  /* pressed */
+  --folk-red-pale: #EACDC8;  /* soft red tint on light — desaturated brick, not peach */
+
+  /* --- Warm accents — lamp light & kilim clay (sparing) --- */
+  --lamp:        #DA9C46;  /* evening lamp glow, highlights */
+  --lamp-soft:   #EAC487;  /* soft amber wash */
+  --clay:        #C0744E;  /* kilim terracotta — tertiary only */
+
+  /* --- Text on light --- */
+  --ink:         #211D19;  /* headlines on lace — warm near-black */
+  --ink-mid:     #4C4338;  /* body on lace */
+  --ink-light:   #837A68;  /* meta on lace */
+  --ink-faint:   #B3A88F;  /* placeholders / disabled on lace */
+
+  /* --- Text on dark --- */
+  --on-dark:       #F1EBDD;  /* headlines / body on wood */
+  --on-dark-mid:   #C7BDA6;  /* secondary on wood */
+  --on-dark-faint: #8E8470;  /* meta on wood */
+
+  /* --- Hairlines --- */
+  --rule-light: #DDD2BB;             /* on lace */
+  --rule-dark:  rgba(241,235,221,.14); /* on wood */
+
+  /* --- Semantic (dark-first) --- */
+  --color-bg:        var(--wood-black);
+  --color-primary:   var(--folk-red);
+  --color-link:      var(--folk-red-soft);
+  --color-success:   var(--moss);
+  --focus-ring:      var(--lamp);
+
+  /* ========== TYPOGRAPHY ========== */
+  /* Forum — inscriptional serif, a hint of Old-Slavonic lapidary letterforms */
+  --font-display: 'Forum', 'Spectral', Georgia, serif;
+  --font-ui:      'Manrope', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-hand:    'Caveat', 'Spectral', cursive;
+
+  /* Type scale — editorial, generous. */
+  --fs-display:  76px;
+  --fs-h1:       46px;
+  --fs-h2:       33px;
+  --fs-h3:       24px;
+  --fs-h4:       20px;
+  --fs-body-lg:  20px;
+  --fs-body:     18px;
+  --fs-small:    15px;
+  --fs-meta:     13px;
+  --fs-kicker:   13px;
+
+  /* ========== SPACING — 4pt grid ========== */
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:   12px;
+  --space-lg:   16px;
+  --space-xl:   24px;
+  --space-2xl:  40px;
+  --space-3xl:  64px;
+  --space-4xl:  96px;
+  --space-5xl:  140px;
+
+  /* ========== RADII — soft, hand-formed (a touch tighter than v1) ========== */
+  --radius-sm:    8px;
+  --radius-md:    13px;
+  --radius-lg:    22px;
+  --radius-xl:    34px;
+  --radius-full:  999px;
+  --radius-blob:  42% 58% 56% 44% / 54% 46% 54% 46%;
+
+  /* ========== SHADOWS — evening, deep & warm (never blue-black) ========== */
+  --shadow-card:       0 1px 3px rgba(10,8,6,.20), 0 8px 24px rgba(10,8,6,.18);
+  --shadow-card-hover: 0 3px 10px rgba(10,8,6,.26), 0 18px 40px rgba(10,8,6,.24);
+  --shadow-float:      0 16px 50px rgba(10,8,6,.42);
+  --shadow-inset:      inset 0 1px 2px rgba(10,8,6,.22);
+  /* lamp glow — for hovered accents in the dark */
+  --glow-lamp: 0 0 0 1px rgba(218,156,70,.4), 0 6px 22px rgba(218,156,70,.22);
+
+  /* ========== MOTION ========== */
+  --ease-soft: cubic-bezier(.22,.61,.36,1);
+  --dur-fast:  140ms;
+  --dur-base:  240ms;
+  --dur-slow:  420ms;
+
+  /* ========== SIGNATURE MOTIFS ========== */
+  /* Birch-stroke divider — black dashes on bark, like birch bark.
+     Use: border-image or a thin element with this background. */
+  --birch-stroke: repeating-linear-gradient(90deg,
+      var(--ink) 0 7px, transparent 7px 11px,
+      var(--ink) 11px 13px, transparent 13px 26px);
+}
+
+/* ============================================================
+   SEMANTIC TYPE CLASSES  (default to LIGHT text — system is dark-first)
+   On a light surface, add .on-light to a scope to flip ink colours.
+   ============================================================ */
+.t-display { font-family: var(--font-display); font-size: var(--fs-display); font-weight: 400; line-height: 1.06; letter-spacing: 0.004em; color: var(--on-dark); }
+.t-h1 { font-family: var(--font-display); font-size: var(--fs-h1); font-weight: 400; line-height: 1.12; letter-spacing: 0.006em; color: var(--on-dark); }
+.t-h2 { font-family: var(--font-display); font-size: var(--fs-h2); font-weight: 400; line-height: 1.2; letter-spacing: 0.008em; color: var(--on-dark); }
+.t-h3 { font-family: var(--font-display); font-size: var(--fs-h3); font-weight: 400; line-height: 1.26; letter-spacing: 0.008em; color: var(--on-dark); }
+.t-h4 { font-family: var(--font-display); font-size: var(--fs-h4); font-weight: 400; line-height: 1.32; letter-spacing: 0.01em; color: var(--on-dark); }
+.t-body-lg { font-family: var(--font-ui); font-size: var(--fs-body-lg); font-weight: 400; line-height: 1.6; color: var(--on-dark-mid); }
+.t-body { font-family: var(--font-ui); font-size: var(--fs-body); font-weight: 400; line-height: 1.62; color: var(--on-dark-mid); }
+.t-small { font-family: var(--font-ui); font-size: var(--fs-small); font-weight: 400; line-height: 1.5; color: var(--on-dark-mid); }
+.t-meta { font-family: var(--font-ui); font-size: var(--fs-meta); font-weight: 400; line-height: 1.45; color: var(--on-dark-faint); }
+/* Kicker — tracked all-caps; lamp or folk-red */
+.t-kicker { font-family: var(--font-ui); font-size: var(--fs-kicker); font-weight: 700; line-height: 1.4; letter-spacing: 0.18em; text-transform: uppercase; color: var(--lamp); }
+/* Handwritten accent */
+.t-hand { font-family: var(--font-hand); font-size: 32px; font-weight: 600; line-height: 1.1; color: var(--lamp-soft); }
+
+/* On-light overrides */
+.on-light .t-display, .on-light .t-h1, .on-light .t-h2, .on-light .t-h3, .on-light .t-h4 { color: var(--ink); }
+.on-light .t-body-lg, .on-light .t-body, .on-light .t-small { color: var(--ink-mid); }
+.on-light .t-meta { color: var(--ink-light); }
+.on-light .t-kicker { color: var(--folk-red); }
+.on-light .t-hand { color: var(--folk-red); }
+
+/* ============================================================
+   BASE SCOPE
+   ============================================================ */
+.berezka-scope {
+  background: var(--color-bg);
+  color: var(--on-dark-mid);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  font-family: var(--font-ui); font-size: var(--fs-small); font-weight: 700; letter-spacing: 0.005em;
+  -webkit-appearance: none; appearance: none; border: none; border-radius: var(--radius-full);
+  padding: 14px 26px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  transition: background var(--dur-fast) var(--ease-soft), color var(--dur-fast) var(--ease-soft),
+              transform var(--dur-fast) var(--ease-soft), box-shadow var(--dur-fast) var(--ease-soft);
+}
+.btn:active { transform: scale(0.97); }
+/* Primary — folk red */
+.btn-primary { background: var(--folk-red); color: var(--lace); }
+.btn-primary:hover  { background: var(--folk-red-soft); }
+.btn-primary:active { background: var(--folk-red-deep); }
+/* Forest */
+.btn-forest { background: var(--forest); color: var(--lace); }
+.btn-forest:hover { background: var(--forest-deep); }
+/* Lace — light button for dark backgrounds */
+.btn-lace { background: var(--lace); color: var(--ink); }
+.btn-lace:hover { background: var(--lace-bright); }
+/* Ghost on dark — lace outline */
+.btn-ghost { background: transparent; color: var(--lace); box-shadow: inset 0 0 0 1.5px rgba(241,235,221,.4); }
+.btn-ghost:hover { background: rgba(241,235,221,.08); box-shadow: inset 0 0 0 1.5px rgba(241,235,221,.7); }
+/* Ghost on light */
+.on-light .btn-ghost { color: var(--folk-red-deep); box-shadow: inset 0 0 0 1.5px var(--folk-red); }
+.on-light .btn-ghost:hover { background: var(--folk-red-pale); }
+/* Quiet */
+.btn-quiet { background: var(--wood-soft); color: var(--on-dark); box-shadow: inset 0 0 0 1px var(--rule-dark); }
+.btn-quiet:hover { background: var(--bark); }
+.on-light .btn-quiet { background: var(--lace-dim); color: var(--ink); box-shadow: inset 0 0 0 1px var(--rule-light); }
+
+/* ============================================================
+   CARDS, CHIPS, INPUTS
+   ============================================================ */
+/* Dark card (default, on the evening page) */
+.card { background: var(--wood); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--space-xl); }
+/* Light card — lace surface */
+.card-lace { background: var(--lace); color: var(--ink-mid); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--space-xl); }
+.card-interactive { cursor: pointer; transition: box-shadow var(--dur-base) var(--ease-soft), transform var(--dur-base) var(--ease-soft); }
+@media (hover: hover) { .card-interactive:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-2px); } }
+.card-interactive:active { transform: scale(0.985); }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-ui); font-size: var(--fs-meta); font-weight: 600;
+  padding: 6px 12px; border-radius: var(--radius-full);
+  background: var(--moss-pale); color: var(--forest-deep);
+}
+.chip-red  { background: var(--folk-red-pale); color: var(--folk-red-deep); }
+.chip-lamp { background: var(--lamp-soft); color: #6E4E12; }
+/* chips on dark */
+.chip-dark { background: rgba(241,235,221,.1); color: var(--on-dark); }
+
+.input {
+  font-family: var(--font-ui); font-size: var(--fs-body); color: var(--on-dark);
+  background: var(--wood-soft); border: none; border-radius: var(--radius-md);
+  padding: 14px 16px; width: 100%; box-shadow: inset 0 0 0 1px var(--rule-dark);
+  transition: box-shadow var(--dur-fast) var(--ease-soft);
+}
+.input::placeholder { color: var(--on-dark-faint); }
+.input:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--lamp); }
+.on-light .input { background: var(--lace-bright); color: var(--ink); box-shadow: inset 0 0 0 1px var(--rule-light); }
+.on-light .input::placeholder { color: var(--ink-faint); }
+.on-light .input:focus { box-shadow: inset 0 0 0 1.5px var(--folk-red); }
+
+/* ============================================================
+   SIGNATURE — birch-stroke divider
+   <div class="birch-divider"></div>
+   ============================================================ */
+.birch-divider { height: 13px; background: var(--birch-stroke); opacity: .5; }
+.on-dark .birch-divider, .berezka-scope .birch-divider {
+  background: repeating-linear-gradient(90deg,
+      var(--on-dark) 0 7px, transparent 7px 11px,
+      var(--on-dark) 11px 13px, transparent 13px 26px);
+  opacity: .35;
+}
+
+</style>
+<style>
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--wood-black);color:var(--on-dark-mid);
+    font-family:var(--font-ui);font-size:18px;line-height:1.62;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--folk-red);color:var(--lace)}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- layout ---------- */
+  .wrap{max-width:1200px;margin:0 auto;padding:0 48px}
+  section{position:relative}
+  .sec-pad{padding:120px 0}
+  .lead{font-size:25px;line-height:1.5;color:var(--on-dark-mid);max-width:760px}
+  .lead b{color:var(--lace);font-weight:700}
+
+  /* section header — numbered kicker + Forum heading */
+  .sec-head{display:flex;align-items:baseline;gap:26px;margin-bottom:30px}
+  .sec-num{font-family:var(--font-display);font-weight:400;font-size:30px;color:var(--lamp);line-height:1;flex:0 0 auto}
+  .sec-h{font-family:var(--font-display);font-weight:400;font-size:62px;color:var(--lace);line-height:1;letter-spacing:.004em;margin:0}
+  .sec-sub{font-family:var(--font-ui);font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:none;color:var(--on-dark-faint);margin:8px 0 0}
+
+  /* ---------- top nav ---------- */
+  nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+      padding:18px 48px;background:rgba(20,17,14,.72);backdrop-filter:blur(14px);
+      border-bottom:1px solid var(--rule-dark);transition:transform .4s var(--ease-soft)}
+  .nav-logo{font-family:'Spectral',Georgia,serif;font-weight:700;font-size:24px;color:var(--lace);letter-spacing:-.01em}
+  .nav-logo .yo{color:var(--folk-red)}
+  .nav-links{display:flex;gap:30px;align-items:center}
+  .nav-links a{font-size:14px;font-weight:600;color:var(--on-dark-mid);transition:color .2s}
+  .nav-links a:hover{color:var(--lamp)}
+  @media(max-width:880px){.nav-links{display:none}}
+
+  /* ---------- hero ---------- */
+  .hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden}
+  .hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 64%;filter:saturate(.9) brightness(1.06)}
+  .hero-scrim{position:absolute;inset:0;
+    background:linear-gradient(90deg,rgba(20,17,14,.96) 0%,rgba(20,17,14,.88) 30%,rgba(20,17,14,.42) 60%,rgba(20,17,14,.08) 100%),
+               linear-gradient(180deg,transparent 52%,rgba(20,17,14,.55) 82%,var(--wood-black) 100%),
+               radial-gradient(120% 80% at 22% 42%,rgba(218,156,70,.12),transparent 58%)}
+  .hero-in{position:relative;z-index:2}
+  .hero-kick{font-family:var(--font-ui);font-weight:700;font-size:14px;letter-spacing:.26em;text-transform:uppercase;color:var(--lamp);margin:0 0 28px}
+  .hero-mark{font-family:'Spectral',Georgia,serif;font-weight:700;font-size:clamp(88px,14vw,184px);line-height:.9;color:var(--lace);letter-spacing:-.01em;margin:0}
+  .hero-mark .yo{color:var(--folk-red)}
+  .hero-tag{font-family:'Spectral',Georgia,serif;font-style:italic;font-weight:600;font-size:clamp(26px,3.4vw,42px);color:var(--lamp-soft);margin:24px 0 0;line-height:1.12;text-shadow:0 1px 2px rgba(20,17,14,.55),0 3px 26px rgba(20,17,14,.8)}
+  .hero-line{font-size:20px;color:var(--on-dark);max-width:620px;margin:34px 0 0;line-height:1.55;text-shadow:0 1px 16px rgba(20,17,14,.7)}
+  .hero-meta{display:flex;gap:30px;flex-wrap:wrap;margin-top:44px;font-size:14px;color:var(--on-dark-faint)}
+  .hero-meta span{display:flex;align-items:center;gap:9px}
+  .hero-meta b{color:var(--on-dark);font-weight:700}
+  .hero-dot{width:6px;height:6px;border-radius:50%;background:var(--folk-red)}
+
+  /* ---------- lace divider strip ---------- */
+  .lace-strip{height:30px;width:100%;
+    background:url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2080%2046%22%20width%3D%2280%22%20height%3D%2246%22%20preserveAspectRatio%3D%22xMidYMin%20slice%22%3E%20%3Cdefs%3E%20%3Cpattern%20id%3D%22dots%22%20width%3D%2280%22%20height%3D%2246%22%20patternUnits%3D%22userSpaceOnUse%22%3E%3C%2Fpattern%3E%20%3C%2Fdefs%3E%20%3Cg%20fill%3D%22%23F1EBDD%22%3E%20%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%2280%22%20height%3D%229%22%3E%3C%2Frect%3E%20%3Cpath%20d%3D%22M0%209h40a20%2020%200%200%201-40%200z%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M40%209h40a20%2020%200%200%201-40%200z%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M20%2028l4%208%204-8z%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M60%2028l4%208%204-8z%22%3E%3C%2Fpath%3E%20%3C%2Fg%3E%20%3Cg%20fill%3D%22%231A1613%22%3E%20%3Ccircle%20cx%3D%2220%22%20cy%3D%2213%22%20r%3D%223.4%22%3E%3C%2Fcircle%3E%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2213%22%20r%3D%223.4%22%3E%3C%2Fcircle%3E%20%3Ccircle%20cx%3D%2214%22%20cy%3D%2220%22%20r%3D%222%22%3E%3C%2Fcircle%3E%3Ccircle%20cx%3D%2226%22%20cy%3D%2220%22%20r%3D%222%22%3E%3C%2Fcircle%3E%20%3Ccircle%20cx%3D%2254%22%20cy%3D%2220%22%20r%3D%222%22%3E%3C%2Fcircle%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2220%22%20r%3D%222%22%3E%3C%2Fcircle%3E%20%3Ccircle%20cx%3D%220%22%20cy%3D%2213%22%20r%3D%222.6%22%3E%3C%2Fcircle%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2213%22%20r%3D%222.6%22%3E%3C%2Fcircle%3E%20%3Ccircle%20cx%3D%2240%22%20cy%3D%2213%22%20r%3D%222.6%22%3E%3C%2Fcircle%3E%20%3C%2Fg%3E%20%3C%2Fsvg%3E') repeat-x top center;background-size:auto 30px}
+  .lace-strip.flip{transform:scaleY(-1)}
+
+  /* ---------- roles ---------- */
+  .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:46px}
+  .role{background:var(--wood);border:1px solid var(--rule-dark);border-radius:var(--radius-lg);padding:32px 30px;transition:transform .3s var(--ease-soft),box-shadow .3s var(--ease-soft)}
+  .role:hover{transform:translateY(-3px);box-shadow:var(--shadow-card-hover)}
+  .role i{font-size:30px;color:var(--lamp);display:block;margin-bottom:18px}
+  .role h3{font-family:var(--font-display);font-weight:500;font-size:26px;color:var(--lace);margin:0 0 10px}
+  .role p{font-size:15.5px;color:var(--on-dark-mid);margin:0 0 18px;line-height:1.55}
+  .role .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .role .tg{font-size:12px;font-weight:600;color:var(--on-dark-faint);background:rgba(241,235,221,.06);border:1px solid var(--rule-dark);padding:5px 11px;border-radius:var(--radius-full)}
+  @media(max-width:880px){.roles{grid-template-columns:1fr}}
+
+  /* ---------- essence ---------- */
+  .ess-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:64px;align-items:start}
+  .ess-rows{margin-top:18px}
+  .ess-row{display:grid;grid-template-columns:170px 1fr;gap:24px;padding:20px 0;border-bottom:1px solid var(--rule-dark)}
+  .ess-row .k{font-family:var(--font-ui);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--lamp);padding-top:3px}
+  .ess-row .v{font-size:17px;color:var(--on-dark);line-height:1.5}
+  .ess-photos{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .ess-photos img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:var(--radius-md);display:block}
+  .ess-photos .tall{grid-row:span 2;height:100%}
+  @media(max-width:880px){.ess-grid{grid-template-columns:1fr;gap:40px}.ess-row{grid-template-columns:130px 1fr}}
+
+  /* ---------- color ---------- */
+  .pal{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  .pal .c{background:var(--wood);border:1px solid var(--rule-dark);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column}
+  .pal .chip{height:150px}
+  .pal .b{padding:18px}
+  .pal .nm{font-family:var(--font-display);font-weight:500;font-size:19px;color:var(--lace);line-height:1.15}
+  .pal .hx{font-family:'Manrope',monospace;font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--on-dark-faint);margin-top:6px}
+  .pal .ds{font-size:13px;color:var(--on-dark-mid);margin-top:12px;line-height:1.45}
+  .ratio{display:flex;height:22px;border-radius:var(--radius-full);overflow:hidden;margin-top:36px;border:1px solid var(--rule-dark)}
+  .ratio span{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(255,255,255,.7)}
+  @media(max-width:980px){.pal{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:560px){.pal{grid-template-columns:repeat(2,1fr)}}
+
+  /* ---------- type ---------- */
+  .type-grid{display:flex;flex-direction:column;gap:2px}
+  .type-row{display:grid;grid-template-columns:240px 1fr;gap:48px;align-items:center;padding:38px 0;border-bottom:1px solid var(--rule-dark)}
+  .type-meta .fam{font-family:var(--font-display);font-weight:500;font-size:28px;color:var(--lace);margin:0}
+  .type-meta .role-t{font-size:14px;color:var(--lamp);font-weight:700;margin:6px 0 12px}
+  .type-meta .det{font-size:14px;color:var(--on-dark-faint);line-height:1.5}
+  .spec-display{font-family:var(--font-display);font-weight:400;font-size:72px;color:var(--lace);line-height:1.02;letter-spacing:.004em}
+  .spec-body{font-family:var(--font-ui);font-size:21px;color:var(--on-dark);line-height:1.5}
+  .spec-body .w{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--on-dark-faint)}
+  .spec-hand{font-family:var(--font-hand);font-weight:600;font-size:52px;color:var(--lamp-soft);line-height:1}
+  @media(max-width:880px){.type-row{grid-template-columns:1fr;gap:18px}.spec-display{font-size:52px}}
+
+  /* ---------- logo ---------- */
+  .logo-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .logo-card{border-radius:var(--radius-lg);padding:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:230px;border:1px solid var(--rule-dark)}
+  .logo-card .mk{font-family:'Spectral',Georgia,serif;font-weight:700;font-size:76px;line-height:1;letter-spacing:-.008em}
+  .logo-card .mk .yo{color:var(--folk-red)}
+  .logo-card .cap{font-size:13px;letter-spacing:.04em}
+  .lc-dark{background:var(--wood)}
+  .lc-dark .mk{color:var(--lace)}
+  .lc-light{background:var(--lace)}
+  .lc-light .mk{color:var(--ink)}
+  .lc-light .cap{color:var(--ink-light)}
+  .logo-detail{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+  .seal-card,.construct-card{background:var(--wood);border:1px solid var(--rule-dark);border-radius:var(--radius-lg);padding:40px;display:flex;align-items:center;gap:34px}
+  .seal{width:128px;height:128px;border-radius:50%;border:2px solid var(--folk-red);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .seal span{font-family:'Spectral',Georgia,serif;font-weight:700;font-size:74px;color:var(--folk-red);line-height:1}
+  .construct-card .big{font-family:'Spectral',Georgia,serif;font-weight:700;font-size:120px;color:var(--folk-red);line-height:1;flex:0 0 auto}
+  .ldesc h4{font-family:var(--font-display);font-weight:500;font-size:21px;color:var(--lace);margin:0 0 8px}
+  .ldesc p{font-size:14.5px;color:var(--on-dark-mid);margin:0;line-height:1.5}
+  @media(max-width:880px){.logo-grid,.logo-detail{grid-template-columns:1fr}}
+
+  /* ---------- motifs ---------- */
+  .motif-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .motif{background:var(--wood);border:1px solid var(--rule-dark);border-radius:var(--radius-lg);padding:30px;display:flex;flex-direction:column;align-items:center;gap:18px}
+  .motif img{width:96px;height:96px}
+  .motif .nm{font-size:14px;font-weight:700;color:var(--on-dark)}
+  @media(max-width:880px){.motif-grid{grid-template-columns:repeat(2,1fr)}}
+
+  /* ---------- components ---------- */
+  .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:8px}
+  .comp-box{background:var(--wood);border:1px solid var(--rule-dark);border-radius:var(--radius-lg);padding:34px}
+  .comp-box .lbl{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--on-dark-faint);margin:0 0 22px}
+  .btn-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .chip-row{display:flex;flex-wrap:wrap;gap:10px}
+  .input-demo{display:flex;flex-direction:column;gap:12px;max-width:340px}
+  @media(max-width:880px){.comp-grid{grid-template-columns:1fr}}
+
+  /* ---------- imagery ---------- */
+  .img-grid{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:180px;gap:14px}
+  .img-grid figure{margin:0;position:relative;border-radius:var(--radius-md);overflow:hidden}
+  .img-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s var(--ease-soft)}
+  .img-grid figure:hover img{transform:scale(1.05)}
+  .img-grid figcaption{position:absolute;left:0;right:0;bottom:0;padding:30px 18px 14px;font-family:'Spectral',Georgia,serif;font-style:italic;font-size:18px;color:var(--lace);
+    background:linear-gradient(transparent,rgba(20,17,14,.82))}
+  .g-a{grid-column:span 4;grid-row:span 2}
+  .g-b{grid-column:span 2;grid-row:span 1}
+  .g-c{grid-column:span 2;grid-row:span 1}
+  .g-d{grid-column:span 3;grid-row:span 1}
+  .g-e{grid-column:span 3;grid-row:span 1}
+  @media(max-width:880px){.img-grid{grid-template-columns:1fr 1fr}.g-a,.g-b,.g-c,.g-d,.g-e{grid-column:span 1;grid-row:span 1}}
+
+  /* ---------- voice (light section) ---------- */
+  .voice{background:var(--lace);color:var(--ink-mid)}
+  .voice .sec-h{color:var(--ink)}
+  .voice .sec-num{color:var(--folk-red)}
+  .voice .lead{color:var(--ink-mid)}
+  .voice .lead b{color:var(--ink)}
+  .voice-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:46px}
+  .vq{background:var(--lace-bright);border:1px solid var(--rule-light);border-radius:var(--radius-lg);padding:34px}
+  .vq .t{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--folk-red);margin:0 0 14px}
+  .vq .ru{font-family:'Spectral',Georgia,serif;font-weight:500;font-size:27px;color:var(--ink);line-height:1.25;margin:0}
+  .vq .hand{font-family:var(--font-hand);font-weight:600;font-size:34px;color:var(--folk-red)}
+  .vq .pt{font-size:14px;color:var(--ink-light);margin:10px 0 0;font-style:italic}
+  .vrules{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+  .vrules .r{font-size:13.5px;font-weight:600;color:var(--forest-deep);background:var(--moss-pale);border-radius:var(--radius-full);padding:8px 15px}
+  .vrules .r.no{color:var(--folk-red-deep);background:var(--folk-red-pale)}
+  @media(max-width:880px){.voice-grid{grid-template-columns:1fr}}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--wood-black);padding:90px 0 70px;text-align:center}
+  .foot-mark{font-family:'Spectral',Georgia,serif;font-weight:700;font-size:64px;color:var(--lace);letter-spacing:-.01em;margin:0}
+  .foot-mark .yo{color:var(--folk-red)}
+  .foot-tag{font-family:'Spectral',Georgia,serif;font-style:italic;font-size:22px;color:var(--lamp-soft);margin:14px 0 0}
+  .foot-meta{font-size:13px;color:var(--on-dark-faint);margin-top:34px;line-height:1.7}
+  .foot-meta a{color:var(--lamp);font-weight:600}
+
+  .fade{opacity:0;transform:translateY(26px);transition:opacity .7s var(--ease-soft),transform .7s var(--ease-soft)}
+  .fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a class="nav-logo" href="#top">ber<span class="yo">ё</span>zka</a>
+  <div class="nav-links">
+    <a href="#essence">Суть</a>
+    <a href="#color">Цвет</a>
+    <a href="#type">Шрифт</a>
+    <a href="#logo">Логотип</a>
+    <a href="#motifs">Мотивы</a>
+    <a href="#components">Компоненты</a>
+    <a href="#voice">Голос</a>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero" id="top">
+  
+  <div class="hero-scrim"></div>
+  <div class="wrap hero-in">
+    <p class="hero-kick">Дизайн-система бренда · v2</p>
+    <h1 class="hero-mark">ber<span class="yo">ё</span>zka</h1>
+    <p class="hero-line">Тёмная изба из мореного дерева под высокими деревьями — белое кружево, гортензия, вечерняя лампа. Семейное кафе во Флорианополисе, где русско-татарская кухня встречает бразильскую природу и скандинавский покой.</p>
+    <div class="hero-meta">
+      <span><i class="hero-dot"></i><b>Флорианополис</b>, Бразилия</span>
+      <span><i class="hero-dot"></i>Русско-татарская кухня</span>
+      <span><i class="hero-dot"></i>Семейное дневное кафе</span>
+    </div>
+  </div>
+</header>
+
+<div class="lace-strip"></div>
+
+<!-- ===================== ROLES ===================== -->
+<section class="sec-pad">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">00</span><div><h2 class="sec-h">Этот документ</h2><p class="sec-sub">Один язык бренда — для всех, кто его строит и рассказывает</p></div></div>
+    <p class="lead">BERЁZKA переводит чувство «возвращения домой» в работающий визуальный язык: шрифты, цвет, логотип, народные мотивы, компоненты. Ниже — то, что нужно каждому, кто прикасается к бренду.</p>
+    <div class="roles">
+      <div class="role fade">
+        <i class="ph ph-pen-nib"></i>
+        <h3>Дизайнерам</h3>
+        <p>Токены, типографика, компоненты и сетки — готовые к работе. Тёмная палитра, две гарнитуры, народные мотивы как фирменный слой.</p>
+        <div class="tags"><span class="tg">Цвет</span><span class="tg">Шрифт</span><span class="tg">Компоненты</span><span class="tg">Мотивы</span></div>
+      </div>
+      <div class="role fade">
+        <i class="ph ph-megaphone-simple"></i>
+        <h3>Маркетологам</h3>
+        <p>Голос бренда, тон, образность и примеры фраз. Как BERЁZKA говорит «заходите» вместо «оформите заказ» — двуязычно и по-домашнему.</p>
+        <div class="tags"><span class="tg">Голос</span><span class="tg">Образность</span><span class="tg">Тон</span></div>
+      </div>
+      <div class="role fade">
+        <i class="ph ph-compass"></i>
+        <h3>Инвесторам и партнёрам</h3>
+        <p>Позиционирование, аудитория и характер бренда. Чёткая ниша: остров привычного для эмигрантской семьи — и тёплое место для местных.</p>
+        <div class="tags"><span class="tg">Суть</span><span class="tg">Аудитория</span><span class="tg">Ниша</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ESSENCE ===================== -->
+<section class="sec-pad" id="essence" style="background:var(--wood)">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-h">Суть бренда</h2></div>
+    <div class="ess-grid">
+      <div>
+        <p class="lead"><b>Не ресторан — а ощущение бабушкиного загородного дома.</b> Дети кормят кур и играют в вальдорфском дворе, пока мама наконец выдыхает у лампы. Остров привычного — редкая возможность выдохнуть.</p>
+        <div class="ess-rows">
+          <div class="ess-row"><div class="k">Одной строкой</div><div class="v">Тёмная изба под высокими деревьями — кружево, гортензия, вечерняя лампа.</div></div>
+          <div class="ess-row"><div class="k">Эмоция</div><div class="v">Возвращение домой. Тепло без приторности, тихая ностальгия.</div></div>
+          <div class="ess-row"><div class="k">Аудитория</div><div class="v">Мамы с детьми, русскоязычная диаспора, любопытные местные. Те, кто ценит настоящее и рукотворное.</div></div>
+          <div class="ess-row"><div class="k">Характер</div><div class="v">Тёплый · природный · неспешный · честный · домашний · заботливый.</div></div>
+          <div class="ess-row"><div class="k">Смешение</div><div class="v">Русско-татарские корни + скандинавский покой + бразильская открытость.</div></div>
+          <div class="ess-row"><div class="k">Анти-вектор</div><div class="v">Не гламур, не холодный минимализм, не корпоративность, не «инстаграм-глянец», не молочно-пастельное.</div></div>
+        </div>
+      </div>
+      <div class="ess-photos">
+        <img src="" alt="Тёмная изба под высокими деревьями">
+        <img src="" alt="Интерьер: роспись, кружево, лампа">
+        <img src="" alt="Веранда и общий стол в саду">
+        <img src="" alt="Роспись, травы, чаепитие, детский двор">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== COLOR ===================== -->
+<section class="sec-pad" id="color">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-h">Цвет</h2></div>
+    <p class="lead" style="margin-bottom:48px">Два героя — <b>мореное дерево</b> и <b>белое кружево</b>. Лес и фолк-красный дают характер, глина и свет лампы — тёплый акцент. Палитра снята прямо с фотографий бренда.</p>
+    <div class="pal">
+      <div class="c"><div class="chip" style="background:#211D19;box-shadow:inset 0 0 0 1px var(--rule-dark)"></div><div class="b"><div class="nm">Мореное дерево</div><div class="hx">#211D19</div><div class="ds">Фон-герой, изба, тёмное.</div></div></div>
+      <div class="c"><div class="chip" style="background:#F1EBDD"></div><div class="b"><div class="nm">Кружево</div><div class="hx">#F1EBDD</div><div class="ds">Белый-герой: текст, лён, гортензия.</div></div></div>
+      <div class="c"><div class="chip" style="background:#3C4A33"></div><div class="b"><div class="nm">Лес</div><div class="hx">#3C4A33</div><div class="ds">Зелёная изба, листва, спокойствие.</div></div></div>
+      <div class="c"><div class="chip" style="background:#A2382B"></div><div class="b"><div class="nm">Фолк-красный</div><div class="hx">#A2382B</div><div class="ds">Роспись, ё, фалунская вывеска.</div></div></div>
+      <div class="c"><div class="chip" style="background:#C0744E"></div><div class="b"><div class="nm">Глина</div><div class="hx">#C0744E</div><div class="ds">Килим, горшки, керамика — акцент.</div></div></div>
+      <div class="c"><div class="chip" style="background:#DA9C46"></div><div class="b"><div class="nm">Свет лампы</div><div class="hx">#DA9C46</div><div class="ds">Вечернее тепло, окна, радость.</div></div></div>
+    </div>
+    <div class="ratio">
+      <span style="background:#211D19;flex:60">60 · дерево</span>
+      <span style="background:#F1EBDD;flex:18;color:#4C4338">18 · кружево</span>
+      <span style="background:#3C4A33;flex:12">12 · лес</span>
+      <span style="background:#A2382B;flex:7">7 · красный</span>
+      <span style="background:#DA9C46;flex:3;color:#6E4E12">3</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TYPE ===================== -->
+<section class="sec-pad" id="type" style="background:var(--wood)">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-h">Шрифт</h2></div>
+    <p class="lead" style="margin-bottom:24px">Литературная засечная для заголовков, спокойный гротеск для текста, рукописный акцент — для подписей у печи.</p>
+    <div class="type-grid">
+      <div class="type-row">
+        <div class="type-meta">
+          <p class="fam">Spectral</p>
+          <p class="role-t">Заголовки · логотип</p>
+          <p class="det">Литературная, чуть тёмная засечная. 300–700 + курсив. Крупно и плотно.</p>
+        </div>
+        <div class="spec-display">Дом у океана<br>casa à beira-mar</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <p class="fam">Manrope</p>
+          <p class="role-t">Текст · интерфейс</p>
+          <p class="det">Геометрично-гуманистический гротеск. 400–800. Спокойный и читаемый.</p>
+        </div>
+        <div>
+          <div class="spec-body">Печём каждое утро, пока тёплое. Заходите на чай с вареньем — у нас всегда найдётся место за столом и тёплый угол у окна.</div>
+          <div class="w"><span>400 Regular</span><span>500 Medium</span><span>600 SemiBold</span><span>700 Bold</span><span>800 ExtraBold</span></div>
+        </div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <p class="fam">Caveat</p>
+          <p class="role-t">Рукописный акцент</p>
+          <p class="det">Мел/маркер. Для специалов, подписей, садовых табличек. Приправа, не абзацы.</p>
+        </div>
+        <div class="spec-hand">с любовью, у печи</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LOGO ===================== -->
+<section class="sec-pad" id="logo">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-h">Логотип</h2></div>
+    <p class="lead" style="margin-bottom:48px">Строчная засечная Spectral 700. Русское <b>ё</b> передаётся латинской <b>ë</b> — единственная цветная буква, фолк-красная. Две точки диерезиса — часть глифа.</p>
+    <div class="logo-grid">
+      <div class="logo-card lc-dark"><div class="mk">ber<span class="yo">ё</span>zka</div><div class="cap" style="color:var(--on-dark-faint)">на мореном дереве</div></div>
+      <div class="logo-card lc-light"><div class="mk">ber<span class="yo">ё</span>zka</div><div class="cap">на кружеве</div></div>
+    </div>
+    <div class="logo-detail">
+      <div class="seal-card">
+        <div class="seal"><span>ё</span></div>
+        <div class="ldesc"><h4>Печать · фавикон</h4><p>Буква ё работает как самостоятельный знак — печать, фавикон, тиснение. Фолк-красный круг.</p></div>
+      </div>
+      <div class="construct-card">
+        <div class="big">ё</div>
+        <div class="ldesc"><h4>Конструкция</h4><p>Две точки — мягкие капли-ягоды фолк-красного, перекликаются с северной росписью. Только строчная.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MOTIFS ===================== -->
+<section class="sec-pad" id="motifs" style="background:var(--wood)">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">05</span><div><h2 class="sec-h">Народные мотивы и кружево</h2><p class="sec-sub">Фирменный графический слой — взамен типовых эко-иконок</p></div></div>
+    <p class="lead" style="margin-bottom:46px">Северная роспись (мезень / городец) в фолк-красном и угольном: петух, птица, конь, солярный ромб. Вязаное кружево — второй фирменный знак, рамки и разделители.</p>
+    <div class="motif-grid">
+      <div class="motif"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20120%22%20fill%3D%22none%22%3E%20%3Cg%20fill%3D%22%23A2382B%22%3E%20%3Cpath%20d%3D%22M60%2056%20C%2078%2050%2091%2040%2096%2026%22%20stroke%3D%22%23A2382B%22%20stroke-width%3D%223.4%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M58%2065%20C%2076%2061%2089%2053%2097%2042%22%20stroke%3D%22%23A2382B%22%20stroke-width%3D%223.4%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M33%2058%20C%2033%2048%2044%2043%2056%2047%20C%2068%2051%2072%2064%2065%2075%20C%2058%2084%2042%2083%2035%2073%20C%2031%2067%2031%2062%2033%2058%20Z%22%3E%3C%2Fpath%3E%20%3Ccircle%20cx%3D%2237%22%20cy%3D%2247%22%20r%3D%227.5%22%3E%3C%2Fcircle%3E%20%3Cpath%20d%3D%22M33%2040%20c%200%20-5%205%20-6%207%20-2%20c%201%20-4%206%20-3%206%201%20c%203%200%203%204%200%205%20c%20-4%20-2%20-8%20-3%20-13%20-4%20Z%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M30%2045%20l%20-11%201%20l%2010%205%20Z%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M45%2080%20v16%20M55%2080%20v15%22%20stroke%3D%22%23A2382B%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M40%2096%20h11%20M51%2095%20h11%22%20stroke%3D%22%23A2382B%22%20stroke-width%3D%222.8%22%20stroke-linecap%3D%22round%22%3E%3C%2Fpath%3E%20%3C%2Fg%3E%20%3Cpath%20d%3D%22M38%2064%20C%2045%2070%2055%2070%2062%2063%22%20stroke%3D%22%23F2EBDD%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22%20opacity%3D%22.85%22%3E%3C%2Fpath%3E%20%3Ccircle%20cx%3D%2239%22%20cy%3D%2246%22%20r%3D%222.1%22%20fill%3D%22%23F2EBDD%22%3E%3C%2Fcircle%3E%20%3C%2Fsvg%3E" alt="Петух"><div class="nm">Петух</div></div>
+      <div class="motif"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20120%22%20fill%3D%22none%22%3E%20%3Cg%20fill%3D%22%23A2382B%22%3E%20%3Cpath%20d%3D%22M14%2066%20C%2026%2053%2056%2049%2076%2055%20C%2087%2058%2089%2066%2080%2070%20C%2064%2078%2034%2078%2022%2073%20C%2016%2070%2013%2068%2014%2066%20Z%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M16%2065%20C%209%2060%206%2053%207%2046%20C%2011%2051%2016%2056%2021%2060%22%20stroke%3D%22%23A2382B%22%20stroke-width%3D%223.2%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22%3E%3C%2Fpath%3E%20%3Ccircle%20cx%3D%2279%22%20cy%3D%2255%22%20r%3D%227%22%3E%3C%2Fcircle%3E%20%3Cpath%20d%3D%22M86%2053%20l%2011%202%20l%20-10%205%20Z%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M52%2076%20v12%20M62%2076%20v12%22%20stroke%3D%22%23A2382B%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%3E%3C%2Fpath%3E%20%3C%2Fg%3E%20%3Cpath%20d%3D%22M30%2064%20C%2044%2070%2060%2070%2073%2061%22%20stroke%3D%22%23F2EBDD%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22%20opacity%3D%22.85%22%3E%3C%2Fpath%3E%20%3Ccircle%20cx%3D%2280%22%20cy%3D%2254%22%20r%3D%222.1%22%20fill%3D%22%23F2EBDD%22%3E%3C%2Fcircle%3E%20%3C%2Fsvg%3E" alt="Птица"><div class="nm">Птица</div></div>
+      <div class="motif"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20120%22%20fill%3D%22none%22%3E%20%3Cg%20fill%3D%22%23A2382B%22%3E%20%3Cpath%20d%3D%22M30%2098%20L30%2070%20C%2030%2054%2040%2044%2056%2044%20C%2072%2044%2080%2054%2080%2070%20L80%2098%20L67%2098%20L67%2072%20C%2067%2064%2062%2060%2055%2060%20C%2047%2060%2043%2065%2043%2073%20L43%2098%20Z%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M40%2052%20C%2035%2044%2033%2034%2040%2028%20C%2045%2024%2052%2027%2051%2034%20C%2050%2042%2047%2049%2044%2053%20Z%22%3E%3C%2Fpath%3E%20%3C%2Fg%3E%20%3Cpath%20d%3D%22M41%2029%20l%200%20-12%20l%207%2010%20Z%22%20fill%3D%22%23E7A33E%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M45%2064%20C%2052%2069%2060%2069%2066%2062%22%20stroke%3D%22%23F2EBDD%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22%20opacity%3D%22.85%22%3E%3C%2Fpath%3E%20%3Ccircle%20cx%3D%2244%22%20cy%3D%2234%22%20r%3D%222.1%22%20fill%3D%22%23F2EBDD%22%3E%3C%2Fcircle%3E%20%3C%2Fsvg%3E" alt="Конь"><div class="nm">Конь</div></div>
+      <div class="motif"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20120%22%20fill%3D%22none%22%3E%20%3Cpath%20d%3D%22M60%208%20L70%2050%20L112%2060%20L70%2070%20L60%20112%20L50%2070%20L8%2060%20L50%2050%20Z%22%20fill%3D%22%23A2382B%22%3E%3C%2Fpath%3E%20%3Cg%20fill%3D%22%23E7A33E%22%3E%20%3Cpath%20d%3D%22M60%206%20l5%209%20l-5%209%20l-5%20-9%20Z%22%3E%3C%2Fpath%3E%20%3Cpath%20d%3D%22M60%20114%20l5%20-9%20l-5%20-9%20l-5%209%20Z%22%3E%3C%2Fpath%3E%20%3C%2Fg%3E%20%3Cg%20stroke%3D%22%23E7A33E%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%3E%20%3Cpath%20d%3D%22M90%2054%20v12%20M30%2054%20v12%22%3E%3C%2Fpath%3E%20%3C%2Fg%3E%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%228%22%20fill%3D%22%23A2382B%22%3E%3C%2Fcircle%3E%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%223.2%22%20fill%3D%22%23F2EBDD%22%3E%3C%2Fcircle%3E%20%3C%2Fsvg%3E" alt="Солярный ромб"><div class="nm">Солярный ромб</div></div>
+    </div>
+  </div>
+</section>
+<div class="lace-strip"></div>
+
+<!-- ===================== COMPONENTS ===================== -->
+<section class="sec-pad berezka-scope" id="components">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-h" style="color:var(--lace)">Компоненты</h2></div>
+    <p class="lead" style="margin-bottom:40px">Кнопки-пилюли, мягкие карточки, тёплые чипы и поля ввода — собранные на токенах системы.</p>
+    <div class="comp-grid">
+      <div class="comp-box">
+        <p class="lbl">Кнопки</p>
+        <div class="btn-row">
+          <button class="btn btn-primary">Забронировать стол</button>
+          <button class="btn btn-forest">В меню</button>
+          <button class="btn btn-lace">Позвонить</button>
+          <button class="btn btn-ghost">Подробнее</button>
+        </div>
+      </div>
+      <div class="comp-box">
+        <p class="lbl">Чипы</p>
+        <div class="chip-row">
+          <span class="chip">Огород</span>
+          <span class="chip chip-red">Печь</span>
+          <span class="chip chip-lamp">Сезонное</span>
+          <span class="chip chip-dark">Для детей</span>
+        </div>
+        <p class="lbl" style="margin:26px 0 14px">Поля</p>
+        <div class="input-demo">
+          <input class="input" placeholder="Ваше имя">
+          <input class="input" placeholder="Сколько гостей?">
+        </div>
+      </div>
+      <div class="comp-box" style="background:var(--lace);color:var(--ink-mid)" >
+        <p class="lbl" style="color:var(--ink-light)">Светлая карточка · .card-lace</p>
+        <h3 style="font-family:var(--font-display);font-weight:500;font-size:26px;color:var(--ink);margin:0 0 8px">Печём каждое утро</h3>
+        <p style="font-size:15px;color:var(--ink-mid);margin:0 0 18px;line-height:1.5">Пока тёплое — заходите на чай с вареньем у окна.</p>
+        <div class="on-light"><button class="btn btn-primary">Меню завтраков</button></div>
+      </div>
+      <div class="comp-box">
+        <p class="lbl">Тёмная карточка · .card</p>
+        <h3 style="font-family:var(--font-display);font-weight:500;font-size:26px;color:var(--lace);margin:0 0 8px">Вечер у лампы</h3>
+        <p style="font-size:15px;color:var(--on-dark-mid);margin:0 0 18px;line-height:1.5">Тёплый угол, тихая музыка и неспешный ужин по-домашнему.</p>
+        <button class="btn btn-ghost">Забронировать вечер</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== IMAGERY ===================== -->
+<section class="sec-pad" id="imagery" style="background:var(--wood)">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-h">Образность</h2></div>
+    <p class="lead" style="margin-bottom:46px">Тёплая, документальная, неприглаженная — день <i>и</i> вечер. Лампа, патина, тёмное дерево с белым кружевом и гортензией. Никогда — глянцевый сток.</p>
+    <div class="img-grid">
+      <figure class="g-a"><img src="" alt="Тёмная изба, белая гортензия"><figcaption>Тёмная изба, белая гортензия</figcaption></figure>
+      <figure class="g-b"><img src="" alt="Вальдорфский двор"><figcaption>Вальдорфский двор</figcaption></figure>
+      <figure class="g-c"><img src="" alt="Роспись, кружево, дерево"><figcaption>Роспись, кружево, дерево</figcaption></figure>
+      <figure class="g-d"><img src="" alt="Сад и общий стол"><figcaption>Сад и общий стол</figcaption></figure>
+      <figure class="g-e"><img src="" alt="Еда как из детства"><figcaption>Еда как из детства.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== VOICE ===================== -->
+<section class="sec-pad voice on-light" id="voice">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-h">Голос</h2></div>
+    <p class="lead"><b>Добрый, домашний — как близкий человек.</b> Тепло без сладости, тихая ностальгия. Говорит «заходите», а не «оформите заказ». Двуязычно: русский — сердце, португальский рядом.</p>
+    <div class="voice-grid">
+      <div class="vq"><p class="t">Хедлайн</p><p class="ru">«Дом у океана»</p><p class="pt">casa à beira-mar</p></div>
+      <div class="vq"><p class="t">Кикер</p><p class="ru" style="letter-spacing:.16em;font-family:var(--font-ui);font-weight:700;font-size:18px;text-transform:uppercase;color:var(--folk-red)">КУХНЯ · ОГОРОД · ПЕЧЬ</p></div>
+      <div class="vq"><p class="t">Меню</p><p class="ru">«Печём каждое утро, пока тёплое»</p></div>
+      <div class="vq"><p class="t">Подпись от руки</p><p class="hand">с любовью, у печи</p></div>
+    </div>
+    <div class="vrules">
+      <span class="r">Обращение на «вы», по-домашнему</span>
+      <span class="r">Sentence case везде</span>
+      <span class="r">Разделитель — только ·</span>
+      <span class="r no">Без эмодзи</span>
+      <span class="r no">Без стат-слопа</span>
+      <span class="r no">Без корпоративного тона</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<div class="lace-strip flip"></div>
+<footer>
+  <div class="wrap">
+    <p class="foot-mark">ber<span class="yo">ё</span>zka</p>
+    <p class="foot-tag">Северная душевность под южным солнцем</p>
+    <p class="foot-meta">
+      Дизайн-система v2 · мореное дерево, белое кружево, вечерняя лампа<br>
+      Полные токены и компоненты — <a href="README.md">README</a> · <a href="colors_and_type.css">colors_and_type.css</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script>
+  // sticky nav hide on scroll down
+  let lastY = 0;
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    nav.style.transform = (y > lastY && y > 200) ? 'translateY(-100%)' : 'translateY(0)';
+    lastY = y;
+  }, {passive:true});
+
+  // reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:.15});
+  document.querySelectorAll('.fade').forEach(el => io.observe(el));
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="#1A1613"/>
+    <text x="50" y="62" font-family="Georgia,serif" font-weight="700" font-size="42" text-anchor="middle" fill="#F1EBDD">b<tspan fill="#A2382B">ё</tspan></text>
+  </svg>
+</template>
+
+</body>
+</html>
