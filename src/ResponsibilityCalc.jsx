@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 
 const CATS = [
-  { name:"Концепция и стратегия", emoji:"🎯", tasks:[
+  { name:"Концепция и стратегия", emoji:"🎯", kbAnchor:"kb-value-design", tasks:[
     {id:1, task:"Развитие концепции Берёзки", hrs:2},
     {id:2, task:"Цели, KPI, контроль результатов", hrs:2},
     {id:3, task:"Запуск новых направлений (йога, ивенты, магазин)", hrs:3},
     {id:4, task:"Ключевые партнёрства и договорённости", hrs:2},
   ]},
-  { name:"Финансы и учёт", emoji:"💰", tasks:[
+  { name:"Финансы и учёт", emoji:"💰", kbAnchor:"kb-financial-model", tasks:[
     {id:5, task:"Бюджет — план vs факт каждую неделю", hrs:2},
     {id:6, task:"Учёт доходов и расходов (дневная выручка)", hrs:3},
     {id:7, task:"Платежи: PIX, SumUp, аренда, поставщики", hrs:2},
@@ -43,7 +43,7 @@ const CATS = [
     {id:28, task:"Куры, огород — уход и контент", hrs:2},
     {id:29, task:"Коммуникация с родителями и мамами", hrs:2},
   ]},
-  { name:"Маркетинг и SMM", emoji:"📱", tasks:[
+  { name:"Маркетинг и SMM", emoji:"📱", kbAnchor:"kb-value-design", tasks:[
     {id:30, task:"Instagram / TikTok — съёмка и монтаж", hrs:5},
     {id:31, task:"Посты, сторис, Reels — каждый день", hrs:4},
     {id:32, task:"Реклама: таргет, Google, локальные группы", hrs:2},
@@ -58,7 +58,7 @@ const CATS = [
     {id:39, task:"Детские дни рождения — организация", hrs:3},
     {id:40, task:"Корпоративы и закрытые вечеринки", hrs:2},
   ]},
-  { name:"HR и команда", emoji:"👥", tasks:[
+  { name:"HR и команда", emoji:"👥", kbAnchor:"kb-metrics", tasks:[
     {id:41, task:"Найм: повар, бариста, auxiliar, заготовщик", hrs:3},
     {id:42, task:"Обучение и адаптация новых сотрудников", hrs:3},
     {id:43, task:"Мотивация, атмосфера в команде", hrs:2},
@@ -84,47 +84,37 @@ const CATS = [
   ]},
 ];
 
-const SPLITS = [
-  { label:"Р",     desc:"Только Регина", r:1.0, e:0.0 },
-  { label:"70·30", desc:"Больше Регина",  r:0.7, e:0.3 },
-  { label:"50·50", desc:"Пополам",        r:0.5, e:0.5 },
-  { label:"30·70", desc:"Больше Елена",   r:0.3, e:0.7 },
-  { label:"Е",     desc:"Только Елена",   r:0.0, e:1.0 },
+const PARTNER_COLORS = ['#3A5A94','#8B3A2A','#4A6340','#7A5C8A','#C4873A','#2A7A7A'];
+const DEFAULT_PARTNERS = [
+  { id: 'r', name: 'Регина', color: '#3A5A94' },
+  { id: 'e', name: 'Елена',  color: '#8B3A2A' },
 ];
 
 const HRS_OPTS = [0.5,1,2,3,4,5,6,8,10];
-const R_COL = [58,90,148];
-const E_COL = [139,58,42];
-
-function lerp(t) {
-  return [0,1,2].map(i => Math.round(R_COL[i] + (E_COL[i] - R_COL[i]) * t));
-}
-function bgColor(t, sel) {
-  const [r,g,b] = lerp(t);
-  return sel ? `rgb(${r},${g},${b})` : `rgba(${r},${g},${b},0.10)`;
-}
-function fgColor(t, sel) {
-  if (sel) return "#fff";
-  const [r,g,b] = lerp(t);
-  return `rgb(${r},${g},${b})`;
-}
 
 const ALL = CATS.flatMap(c => c.tasks);
 const TASK_MAP = Object.fromEntries(ALL.map(t => [t.id, t.task]));
 const INIT_HRS = Object.fromEntries(ALL.map(t => [t.id, t.hrs]));
+
+function initAsgn(partners) {
+  const asgn = {};
+  const ids = partners.map(p => p.id);
+  ALL.forEach((t, i) => {
+    asgn[t.id] = ids[i % ids.length];
+  });
+  return asgn;
+}
 
 function diffStates(oldA, oldH, newA, newH) {
   const changes = [];
   const ids = new Set([...Object.keys(oldA), ...Object.keys(newA), ...Object.keys(oldH), ...Object.keys(newH)]);
   ids.forEach(id => {
     const tid = Number(id);
-    const oldSi = oldA[id]; const newSi = newA[id];
+    const oldP = oldA[id]; const newP = newA[id];
     const oldHr = oldH[id]; const newHr = newH[id];
     const taskName = TASK_MAP[tid] || `Задача ${id}`;
-    if (oldSi !== newSi) {
-      const from = oldSi != null ? SPLITS[oldSi].label : "—";
-      const to   = newSi != null ? SPLITS[newSi].label : "—";
-      changes.push({ task: taskName, field: "кому", from, to });
+    if (oldP !== newP) {
+      changes.push({ task: taskName, field: "кому", from: oldP ?? "—", to: newP ?? "—" });
     }
     if (oldHr !== newHr && oldHr != null && newHr != null) {
       changes.push({ task: taskName, field: "часы", from: `${oldHr}ч`, to: `${newHr}ч` });
@@ -139,26 +129,30 @@ function fmtDt(iso) {
   return d.toLocaleString("ru-RU", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
 }
 
-export default function ResponsibilityCalc() {
-  const [asgn, setAsgn]         = useState({});
-  const [hrs, setHrs]           = useState(INIT_HRS);
-  const [open, setOpen]         = useState({ "Концепция и стратегия": true });
-  const [loaded, setLoaded]     = useState(false);
+export default function ResponsibilityCalc({ onNavigate }) {
+  const [partners, setPartners]   = useState(DEFAULT_PARTNERS);
+  const [asgn, setAsgn]           = useState(() => initAsgn(DEFAULT_PARTNERS));
+  const [hrs, setHrs]             = useState(INIT_HRS);
+  const [open, setOpen]           = useState({ "Концепция и стратегия": true });
+  const [loaded, setLoaded]       = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [filter, setFilter]     = useState("all");
+  const [filter, setFilter]       = useState("all");
   const [syncStatus, setSyncStatus] = useState("idle");
-  const [lastAt, setLastAt]     = useState(null);
-  const [history, setHistory]   = useState([]);
+  const [lastAt, setLastAt]       = useState(null);
+  const [history, setHistory]     = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showPartners, setShowPartners] = useState(false);
+  const [newPartnerName, setNewPartnerName] = useState('');
   const saveTimer   = useRef(null);
-  const prevState   = useRef({ asgn: {}, hrs: INIT_HRS });
+  const prevState   = useRef({ asgn: {}, hrs: INIT_HRS, partners: DEFAULT_PARTNERS });
   const isRemote    = useRef(false);
 
   const applyState = (s) => {
     if (!s) return;
     isRemote.current = true;
-    if (s.asgn) setAsgn(s.asgn);
-    if (s.hrs)  setHrs(s.hrs);
+    if (s.asgn)     setAsgn(s.asgn);
+    if (s.hrs)      setHrs(s.hrs);
+    if (s.partners) setPartners(s.partners);
     setTimeout(() => { isRemote.current = false; }, 0);
   };
 
@@ -167,7 +161,6 @@ export default function ResponsibilityCalc() {
     if (data) setHistory(data);
   };
 
-  // initial load + realtime
   useEffect(() => {
     supabase.from("resp_state").select("state,updated_at").eq("id","main").maybeSingle()
       .then(({ data }) => {
@@ -193,13 +186,12 @@ export default function ResponsibilityCalc() {
     return () => supabase.removeChannel(ch);
   }, []);
 
-  // auto-save + diff
   useEffect(() => {
     if (!loaded || isRemote.current) return;
     setSyncStatus("saving");
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      const state = { asgn, hrs };
+      const state = { asgn, hrs, partners };
       const changes = diffStates(prevState.current.asgn || {}, prevState.current.hrs || INIT_HRS, asgn, hrs);
 
       const { error } = await supabase.from("resp_state").upsert({ id:"main", state, updated_at: new Date().toISOString() });
@@ -216,22 +208,21 @@ export default function ResponsibilityCalc() {
         setSyncStatus("error");
       }
     }, 800);
-  }, [asgn, hrs, loaded]);
+  }, [asgn, hrs, partners, loaded]);
 
-  let tR = 0, tE = 0;
-  ALL.forEach(t => {
-    const si = asgn[t.id];
-    if (si == null) return;
-    const h = hrs[t.id] || 1;
-    tR += SPLITS[si].r * h;
-    tE += SPLITS[si].e * h;
-  });
-  const den = tR + tE;
-  const pR  = den > 0 ? tR / den : 0.5;
-  const pE  = den > 0 ? tE / den : 0.5;
-  const done = ALL.filter(t => asgn[t.id] != null).length;
+  const getPartner = (pid) => partners.find(p => p.id === pid);
 
-  const toggle  = (id, si) => setAsgn(p => ({ ...p, [id]: p[id] === si ? undefined : si }));
+  const cyclePartner = (taskId) => {
+    const currentPid = asgn[taskId];
+    const idx = partners.findIndex(p => p.id === currentPid);
+    const nextIdx = (idx + 1) % partners.length;
+    setAsgn(prev => ({ ...prev, [taskId]: partners[nextIdx].id }));
+  };
+
+  const unassign = (taskId) => {
+    setAsgn(prev => { const next = {...prev}; delete next[taskId]; return next; });
+  };
+
   const changeH = (id, dir) => setHrs(p => {
     const i = HRS_OPTS.indexOf(p[id] ?? 2);
     const next = i + dir;
@@ -239,8 +230,40 @@ export default function ResponsibilityCalc() {
     return { ...p, [id]: HRS_OPTS[next] };
   });
 
-  const rColor = `rgb(${R_COL.join(",")})`;
-  const eColor = `rgb(${E_COL.join(",")})`;
+  const addPartner = () => {
+    const name = newPartnerName.trim();
+    if (!name) return;
+    const usedColors = partners.map(p => p.color);
+    const color = PARTNER_COLORS.find(c => !usedColors.includes(c)) || PARTNER_COLORS[partners.length % PARTNER_COLORS.length];
+    const id = 'p' + Date.now();
+    setPartners(prev => [...prev, { id, name, color }]);
+    setNewPartnerName('');
+  };
+
+  const removePartner = (pid) => {
+    if (partners.length <= 2) return;
+    const fallbackId = partners.find(p => p.id !== pid)?.id;
+    setPartners(prev => prev.filter(p => p.id !== pid));
+    setAsgn(prev => {
+      const next = {};
+      Object.entries(prev).forEach(([k, v]) => { next[k] = v === pid ? fallbackId : v; });
+      return next;
+    });
+  };
+
+  // Totals
+  const partnerHrs = {};
+  const partnerCount = {};
+  partners.forEach(p => { partnerHrs[p.id] = 0; partnerCount[p.id] = 0; });
+  ALL.forEach(t => {
+    const pid = asgn[t.id];
+    if (pid && partnerHrs[pid] != null) {
+      partnerHrs[pid] += hrs[t.id] || 1;
+      partnerCount[pid]++;
+    }
+  });
+
+  const done = ALL.filter(t => asgn[t.id] != null).length;
 
   const visibleCats = CATS.map(cat => {
     const tasks = filter === "done"
@@ -271,20 +294,25 @@ export default function ResponsibilityCalc() {
           </div>
         </div>
 
+        {/* Partner summary bar */}
         <div style={{height:9,borderRadius:9,overflow:"hidden",display:"flex",background:"#E5DED4"}}>
-          <div style={{width:`${pR*100}%`,background:rColor,transition:"width 0.35s cubic-bezier(.4,0,.2,1)"}}/>
-          <div style={{width:`${pE*100}%`,background:eColor,transition:"width 0.35s cubic-bezier(.4,0,.2,1)"}}/>
+          {partners.map(p => {
+            const total = Object.values(partnerHrs).reduce((a,b) => a+b, 0);
+            const pct = total > 0 ? (partnerHrs[p.id] || 0) / total : 1 / partners.length;
+            return <div key={p.id} style={{width:`${pct*100}%`,background:p.color,transition:"width 0.35s cubic-bezier(.4,0,.2,1)"}} />;
+          })}
         </div>
-        <div style={{display:"flex",justifyContent:"space-between",marginTop:5,alignItems:"center"}}>
-          <span style={{fontSize:13,fontWeight:800,color:rColor}}>
-            Регина {Math.round(pR*100)}%
-            <span style={{fontWeight:400,fontSize:11,color:"#B0A898",marginLeft:4}}>{Math.round(tR*10)/10} ч/нед</span>
-          </span>
-          <span style={{fontSize:10,color:"#C5BDB5"}}>нагрузка</span>
-          <span style={{fontSize:13,fontWeight:800,color:eColor}}>
-            <span style={{fontWeight:400,fontSize:11,color:"#B0A898",marginRight:4}}>{Math.round(tE*10)/10} ч/нед</span>
-            Елена {Math.round(pE*100)}%
-          </span>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:6,flexWrap:"wrap",gap:6}}>
+          {partners.map(p => {
+            const total = Object.values(partnerHrs).reduce((a,b) => a+b, 0);
+            const pct = total > 0 ? Math.round((partnerHrs[p.id] || 0) / total * 100) : Math.round(100/partners.length);
+            return (
+              <span key={p.id} style={{fontSize:12,fontWeight:700,color:p.color}}>
+                {p.name} {pct}%
+                <span style={{fontWeight:400,fontSize:11,color:"#B0A898",marginLeft:4}}>{Math.round((partnerHrs[p.id]||0)*10)/10} ч</span>
+              </span>
+            );
+          })}
         </div>
 
         <div style={{display:"flex",gap:4,marginTop:10}}>
@@ -296,16 +324,42 @@ export default function ResponsibilityCalc() {
         </div>
       </div>
 
-      {/* LEGEND */}
-      <div style={{padding:"12px 14px 0",display:"flex",gap:4,flexWrap:"wrap"}}>
-        {SPLITS.map((sp, si) => (
-          <span key={si} style={{padding:"4px 10px",borderRadius:20,fontSize:10,fontWeight:700,background:bgColor(si/4,true),color:"#fff",letterSpacing:0.1}}>
-            {sp.label} — {sp.desc}
-          </span>
-        ))}
+      {/* PARTNERS MANAGEMENT */}
+      <div style={{margin:"12px 10px 0",background:"#fff",borderRadius:16,boxShadow:"0 2px 10px rgba(58,46,34,0.07)",overflow:"hidden",border:"1.5px solid #EBE2D3"}}>
+        <button onClick={() => setShowPartners(p => !p)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 15px",background:"transparent",border:"none",cursor:"pointer"}}>
+          <span style={{fontSize:13,fontWeight:700,color:"#2D2820",fontFamily:"'Outfit',sans-serif"}}>👥 Партнёры</span>
+          <span style={{fontSize:10,color:"#D0C8BC",transform:showPartners?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+        </button>
+        {showPartners && (
+          <div style={{borderTop:"1px solid #F4EFE8",padding:"10px 15px 14px"}}>
+            {partners.map(p => (
+              <div key={p.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                <span style={{width:12,height:12,borderRadius:"50%",background:p.color,flexShrink:0,display:"inline-block"}} />
+                <span style={{fontSize:13,fontWeight:600,color:"#2D2820",flex:1}}>{p.name}</span>
+                <span style={{fontSize:11,color:"#B0A898"}}>{partnerCount[p.id]} задач · {Math.round((partnerHrs[p.id]||0)*10)/10} ч</span>
+                {partners.length > 2 && (
+                  <button onClick={() => removePartner(p.id)} style={{background:"none",border:"none",cursor:"pointer",color:"#D0C8BC",fontSize:16,lineHeight:1,padding:0}}>×</button>
+                )}
+              </div>
+            ))}
+            <div style={{display:"flex",gap:6,marginTop:10}}>
+              <input
+                value={newPartnerName}
+                onChange={e => setNewPartnerName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addPartner()}
+                placeholder="Имя партнёра"
+                style={{flex:1,padding:"7px 10px",borderRadius:8,border:"1.5px solid #EBE2D3",fontSize:12,fontFamily:"'Outfit',sans-serif",outline:"none"}}
+              />
+              <button onClick={addPartner} style={{padding:"7px 14px",borderRadius:8,border:"none",background:"#3A2E22",color:"#F5F0E8",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+                + Добавить
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-      <div style={{padding:"5px 16px 10px",fontSize:10,color:"#C5BDB5"}}>
-        ⏱ нажмите ± чтобы изменить трудозатраты
+
+      <div style={{padding:"10px 14px 6px",fontSize:10,color:"#C5BDB5"}}>
+        💡 нажмите на имя партнёра чтобы переназначить задачу · долгое нажатие снимает назначение
       </div>
 
       {/* CATEGORIES */}
@@ -314,67 +368,122 @@ export default function ResponsibilityCalc() {
           const catDone = cat.tasks.filter(t => asgn[t.id] != null).length;
           const allDone = catDone === cat.tasks.length;
           const isOpen  = !!open[cat.name];
+
+          // Per-zone distribution bar
+          const catPartnerHrs = {};
+          partners.forEach(p => { catPartnerHrs[p.id] = 0; });
+          cat.tasks.forEach(t => {
+            const pid = asgn[t.id];
+            if (pid && catPartnerHrs[pid] != null) catPartnerHrs[pid] += hrs[t.id] || 1;
+          });
+          const catTotal = Object.values(catPartnerHrs).reduce((a,b) => a+b, 0);
+
           return (
             <div key={cat.name} style={{background:"#fff",borderRadius:18,boxShadow:"0 2px 10px rgba(58,46,34,0.07)",overflow:"hidden",border:allDone?"1.5px solid #C8F5D4":"1.5px solid transparent",transition:"border 0.3s"}}>
 
               <button onClick={() => setOpen(p => ({...p,[cat.name]:!p[cat.name]}))} style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"13px 15px",background:"transparent",border:"none",cursor:"pointer",textAlign:"left"}}>
                 <span style={{fontSize:22,lineHeight:1,flexShrink:0}}>{cat.emoji}</span>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,fontWeight:600,color:"#1A1410",lineHeight:1.2}}>{cat.name}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,fontWeight:600,color:"#1A1410",lineHeight:1.2}}>{cat.name}</span>
+                    {cat.kbAnchor && onNavigate && (
+                      <button
+                        onClick={e => { e.stopPropagation(); onNavigate('kb', cat.kbAnchor); }}
+                        title="Открыть в Базе знаний"
+                        style={{background:"none",border:"none",cursor:"pointer",fontSize:13,padding:0,lineHeight:1,opacity:0.6}}
+                      >📖</button>
+                    )}
+                  </div>
                   <div style={{fontSize:10,marginTop:2,fontWeight:600,color:allDone?"#16A34A":catDone>0?"#92400E":"#C5BDB5"}}>
                     {allDone?"✓ все назначены":catDone>0?`${catDone} из ${cat.tasks.length} назначено`:`${cat.tasks.length} задач`}
                   </div>
+                  {/* Mini bar */}
+                  {catTotal > 0 && (
+                    <div style={{display:"flex",height:4,borderRadius:4,overflow:"hidden",marginTop:5,gap:1}}>
+                      {partners.map(p => {
+                        const pct = catPartnerHrs[p.id] / catTotal * 100;
+                        return pct > 0 ? <div key={p.id} style={{width:`${pct}%`,background:p.color,borderRadius:4}} /> : null;
+                      })}
+                    </div>
+                  )}
                 </div>
                 <span style={{fontSize:10,color:"#D0C8BC",transform:isOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",flexShrink:0}}>▼</span>
               </button>
 
               {isOpen && (
                 <div style={{borderTop:"1px solid #F4EFE8"}}>
-                  {cat.tasks.map((t, ti) => (
-                    <div key={t.id} style={{padding:"11px 13px",borderTop:ti>0?"1px solid #F4EFE8":"none",background:asgn[t.id]!=null?"#FAFFFC":"#fff",transition:"background 0.2s"}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:7,gap:8}}>
-                        <div style={{fontSize:12.5,fontWeight:600,color:"#2D2820",flex:1,lineHeight:1.4}}>{t.task}</div>
-                        <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
-                          <button onClick={() => changeH(t.id,-1)} disabled={HRS_OPTS.indexOf(hrs[t.id])===0} style={{width:26,height:26,borderRadius:6,border:"none",background:HRS_OPTS.indexOf(hrs[t.id])===0?"#F5F2ED":"#F0EBE2",color:HRS_OPTS.indexOf(hrs[t.id])===0?"#D8D0C8":"#8A7D6E",fontSize:14,fontWeight:800,cursor:HRS_OPTS.indexOf(hrs[t.id])===0?"default":"pointer",lineHeight:1,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
-                          <span style={{fontSize:11,fontWeight:700,color:"#8A7D6E",minWidth:28,textAlign:"center"}}>{hrs[t.id]} ч</span>
-                          <button onClick={() => changeH(t.id,+1)} disabled={HRS_OPTS.indexOf(hrs[t.id])===HRS_OPTS.length-1} style={{width:26,height:26,borderRadius:6,border:"none",background:HRS_OPTS.indexOf(hrs[t.id])===HRS_OPTS.length-1?"#F5F2ED":"#F0EBE2",color:HRS_OPTS.indexOf(hrs[t.id])===HRS_OPTS.length-1?"#D8D0C8":"#8A7D6E",fontSize:14,fontWeight:800,cursor:HRS_OPTS.indexOf(hrs[t.id])===HRS_OPTS.length-1?"default":"pointer",lineHeight:1,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                  {cat.tasks.map((t, ti) => {
+                    const assignedPid = asgn[t.id];
+                    const assignedPartner = assignedPid ? getPartner(assignedPid) : null;
+                    return (
+                      <div key={t.id} style={{padding:"11px 13px",borderTop:ti>0?"1px solid #F4EFE8":"none",background:assignedPid?"#FAFFFC":"#fff",transition:"background 0.2s"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8,gap:8}}>
+                          <div style={{fontSize:12.5,fontWeight:600,color:"#2D2820",flex:1,lineHeight:1.4}}>{t.task}</div>
+                          <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
+                            <button onClick={() => changeH(t.id,-1)} disabled={HRS_OPTS.indexOf(hrs[t.id])===0} style={{width:26,height:26,borderRadius:6,border:"none",background:HRS_OPTS.indexOf(hrs[t.id])===0?"#F5F2ED":"#F0EBE2",color:HRS_OPTS.indexOf(hrs[t.id])===0?"#D8D0C8":"#8A7D6E",fontSize:14,fontWeight:800,cursor:HRS_OPTS.indexOf(hrs[t.id])===0?"default":"pointer",lineHeight:1,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+                            <span style={{fontSize:11,fontWeight:700,color:"#8A7D6E",minWidth:28,textAlign:"center"}}>{hrs[t.id]} ч</span>
+                            <button onClick={() => changeH(t.id,+1)} disabled={HRS_OPTS.indexOf(hrs[t.id])===HRS_OPTS.length-1} style={{width:26,height:26,borderRadius:6,border:"none",background:HRS_OPTS.indexOf(hrs[t.id])===HRS_OPTS.length-1?"#F5F2ED":"#F0EBE2",color:HRS_OPTS.indexOf(hrs[t.id])===HRS_OPTS.length-1?"#D8D0C8":"#8A7D6E",fontSize:14,fontWeight:800,cursor:HRS_OPTS.indexOf(hrs[t.id])===HRS_OPTS.length-1?"default":"pointer",lineHeight:1,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                          </div>
+                        </div>
+
+                        {/* Partner assignment chips */}
+                        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                          {partners.map(p => {
+                            const sel = assignedPid === p.id;
+                            return (
+                              <button
+                                key={p.id}
+                                onClick={() => setAsgn(prev => ({ ...prev, [t.id]: p.id }))}
+                                style={{
+                                  padding:"5px 12px",borderRadius:20,border:"none",cursor:"pointer",
+                                  fontSize:11,fontWeight:sel?800:500,
+                                  background:sel ? p.color : `${p.color}18`,
+                                  color:sel ? "#fff" : p.color,
+                                  transition:"all 0.15s",
+                                  transform:sel?"scale(1.05)":"scale(1)",
+                                  boxShadow:sel?"0 2px 6px rgba(0,0,0,0.15)":"none",
+                                  fontFamily:"'Outfit',sans-serif",
+                                }}
+                              >
+                                {p.name}
+                              </button>
+                            );
+                          })}
+                          {assignedPid && (
+                            <button
+                              onClick={() => unassign(t.id)}
+                              title="Снять назначение"
+                              style={{padding:"5px 8px",borderRadius:20,border:"1px solid #E5DDD4",background:"transparent",cursor:"pointer",fontSize:10,color:"#C5BDB5",fontFamily:"'Outfit',sans-serif"}}
+                            >✕</button>
+                          )}
                         </div>
                       </div>
-                      <div style={{display:"flex",gap:3}}>
-                        {SPLITS.map((sp, si) => {
-                          const sel = asgn[t.id] === si;
-                          const tv  = si / 4;
-                          return (
-                            <button key={si} onClick={() => toggle(t.id, si)} style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:bgColor(tv,sel),color:fgColor(tv,sel),fontWeight:sel?800:600,fontSize:11,cursor:"pointer",transition:"all 0.15s ease",transform:sel?"scale(1.07)":"scale(1)",boxShadow:sel?"0 2px 7px rgba(0,0,0,0.13)":"none",fontFamily:"'Outfit',sans-serif"}}>
-                              {sp.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           );
         })}
 
+        {/* SUMMARY */}
         {done === ALL.length && (
           <div style={{background:"linear-gradient(135deg,#1A1410 0%,#3A2E22 100%)",borderRadius:18,padding:"20px 18px",color:"#F5F0E8",textAlign:"center"}}>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase"}}>БЕРЁЗКА</div>
             <div style={{fontSize:11,opacity:0.4,letterSpacing:"0.12em",textTransform:"uppercase",marginTop:2}}>Café · Campeche · Florianópolis</div>
-            <div style={{marginTop:16,display:"flex",justifyContent:"center",gap:28}}>
-              <div>
-                <div style={{fontSize:30,fontWeight:800,color:rColor}}>{Math.round(pR*100)}%</div>
-                <div style={{fontSize:11,opacity:0.55,marginTop:2}}>Регина</div>
-                <div style={{fontSize:11,opacity:0.35}}>{Math.round(tR)} ч/нед</div>
-              </div>
-              <div style={{width:1,background:"rgba(255,255,255,0.1)"}}/>
-              <div>
-                <div style={{fontSize:30,fontWeight:800,color:eColor}}>{Math.round(pE*100)}%</div>
-                <div style={{fontSize:11,opacity:0.55,marginTop:2}}>Елена</div>
-                <div style={{fontSize:11,opacity:0.35}}>{Math.round(tE)} ч/нед</div>
-              </div>
+            <div style={{marginTop:16,display:"flex",justifyContent:"center",gap:20,flexWrap:"wrap"}}>
+              {partners.map((p, i) => {
+                const total = Object.values(partnerHrs).reduce((a,b) => a+b, 0);
+                const pct = total > 0 ? Math.round((partnerHrs[p.id]||0) / total * 100) : Math.round(100/partners.length);
+                return (
+                  <div key={p.id}>
+                    {i > 0 && <div style={{width:1,background:"rgba(255,255,255,0.1)",display:"none"}} />}
+                    <div style={{fontSize:30,fontWeight:800,color:p.color}}>{pct}%</div>
+                    <div style={{fontSize:11,opacity:0.55,marginTop:2}}>{p.name}</div>
+                    <div style={{fontSize:11,opacity:0.35}}>{Math.round(partnerHrs[p.id]||0)} ч/нед</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -425,7 +534,7 @@ export default function ResponsibilityCalc() {
             <div style={{fontSize:13,color:"#9A3412",fontWeight:700,marginBottom:12,textAlign:"center"}}>Сбросить все назначения?</div>
             <div style={{display:"flex",gap:8}}>
               <button onClick={() => setConfirmReset(false)} style={{flex:1,padding:"10px",borderRadius:9,border:"1.5px solid #E5DDD4",background:"#fff",fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600,color:"#888"}}>Отмена</button>
-              <button onClick={() => {setAsgn({});setConfirmReset(false);}} style={{flex:1,padding:"10px",borderRadius:9,border:"none",background:eColor,color:"#fff",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Сбросить</button>
+              <button onClick={() => {setAsgn({});setConfirmReset(false);}} style={{flex:1,padding:"10px",borderRadius:9,border:"none",background:"#8B3A2A",color:"#fff",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Сбросить</button>
             </div>
           </div>
         )}

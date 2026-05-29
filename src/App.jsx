@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
 import InvestmentCalc from './InvestmentCalc'
 import ResponsibilityCalc from './ResponsibilityCalc'
+import BrandTab from './BrandTab'
+import KnowledgeBase from './KnowledgeBase'
 
 const TABS = [
   { id: 'smeta', label: '📊 Смета' },
-  { id: 'resp',  label: '👥 Задачи' },
+  { id: 'brand', label: '🎨 Дизайн-код' },
+  { id: 'resp',  label: '👥 Ответственность' },
+  { id: 'kb',    label: '📚 База знаний' },
 ]
 
 function getInitTab() {
@@ -14,10 +18,26 @@ function getInitTab() {
 
 export default function App() {
   const [tab, setTab] = useState(getInitTab)
+  const [pendingAnchor, setPendingAnchor] = useState(null)
 
   useEffect(() => {
     window.location.hash = tab
   }, [tab])
+
+  useEffect(() => {
+    if (tab === 'kb' && pendingAnchor) {
+      setTimeout(() => {
+        const el = document.getElementById(pendingAnchor)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        setPendingAnchor(null)
+      }, 100)
+    }
+  }, [tab, pendingAnchor])
+
+  const handleNavigate = (targetTab, anchor) => {
+    setTab(targetTab)
+    if (anchor) setPendingAnchor(anchor)
+  }
 
   return (
     <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh" }}>
@@ -45,7 +65,9 @@ export default function App() {
       </div>
 
       {tab === 'smeta' && <InvestmentCalc />}
-      {tab === 'resp'  && <ResponsibilityCalc />}
+      {tab === 'brand' && <BrandTab />}
+      {tab === 'resp'  && <ResponsibilityCalc onNavigate={handleNavigate} />}
+      {tab === 'kb'    && <KnowledgeBase />}
     </div>
   )
 }
