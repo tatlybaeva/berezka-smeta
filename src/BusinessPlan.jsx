@@ -561,6 +561,7 @@ export default function BusinessPlan() {
   const [phasesState, setPhasesState] = useState(phases);
   const [styleState, setStyleState] = useState(visualData);
   const [finInputs, setFinInputs] = useState(null);
+  const [smetaTotal, setSmetaTotal] = useState(null);
   const [syncStatus, setSyncStatus] = useState("idle");
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
@@ -597,6 +598,9 @@ export default function BusinessPlan() {
     supabase.from('finance_state').select('data').eq('id', 'main').single()
       .then(({ data }) => { if (data?.data?.inputs) setFinInputs(data.data.inputs); });
 
+    supabase.from('smeta_state').select('state').eq('id', 'main').maybeSingle()
+      .then(({ data }) => { if (data?.state?.grandTotal) setSmetaTotal(data.state.grandTotal); });
+
     const channel = supabase.channel("biz_plan_realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "business_plan_state" }, (payload) => {
         if (!payload.new?.state) return;
@@ -619,9 +623,17 @@ export default function BusinessPlan() {
       })
       .subscribe();
 
+    const smetaChannel = supabase.channel('smeta_rt_in_biz')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'smeta_state' }, (payload) => {
+        const s = payload.new?.state;
+        if (s?.grandTotal !== undefined) setSmetaTotal(s.grandTotal);
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(finChannel);
+      supabase.removeChannel(smetaChannel);
     };
   }, []);
 
@@ -770,6 +782,7 @@ export default function BusinessPlan() {
       marginPct2: b2.marginPct,
       minCash,
       paybackYears: paybackMonths ? paybackMonths/12 : null,
+      fot1,
     };
   })() : null;
 
@@ -847,6 +860,41 @@ export default function BusinessPlan() {
           <div style={{ fontSize:9, color:"#bbb", marginTop:5, lineHeight:1.45 }}>
             Количество месяцев, пока накопленная операционная прибыль не покроет CAPEX. Сезонность учтена.<br/>
             &lt; 3 лет — хорошо, &lt; 2 лет — отлично.
+          </div>
+        </div>
+
+        {/* 5. Инвестиции на запуск */}
+        <div style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px" }}>
+          <div style={{ fontSize:11, color:"#999", marginBottom:4 }}>🏗️ Инвестиции на запуск</div>
+          {smetaTotal != null ? (
+            <div style={{ fontSize:15, fontWeight:600, color:"#1a1a1a" }}>
+              {Math.round(smetaTotal).toLocaleString()} R$
+            </div>
+          ) : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
+          <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Из раздела Бюджет</div>
+          <div style={{ fontSize:9, color:"#bbb", marginTop:5, lineHeight:1.45 }}>
+            Оборудование + залог + оборотный капитал + резерв.<br/>
+            Обновляется автоматически при изменении Бюджета.
+          </div>
+        </div>
+
+        {/* 6. Регулярные расходы */}
+        <div style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px" }}>
+          <div style={{ fontSize:11, color:"#999", marginBottom:4 }}>📆 Регулярные расходы/мес</div>
+          {finMetrics ? (() => {
+            const { rent=0, utilities=0, marketing=0, accountant=0, other=0 } = finInputs || {};
+            const fixedNoFot = rent + utilities + marketing + accountant + other;
+            const monthly = fixedNoFot + finMetrics.fot1;
+            return (
+              <div style={{ fontSize:15, fontWeight:600, color:"#1a1a1a" }}>
+                {Math.round(monthly).toLocaleString()} R$
+              </div>
+            );
+          })() : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
+          <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Аренда + ФОТ Этап 1 + прочие</div>
+          <div style={{ fontSize:9, color:"#bbb", marginTop:5, lineHeight:1.45 }}>
+            Постоянные расходы без food cost — то что платишь даже в пустой день.<br/>
+            Из раздела Финансы.
           </div>
         </div>
 

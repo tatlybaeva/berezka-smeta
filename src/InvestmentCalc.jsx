@@ -255,7 +255,7 @@ export default function InvestmentCalc() {
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
-  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls, ac, bst, bot) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls, avgCheck: ac, beStaff: bst, beOther: bot });
+  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls, ac, bst, bot, gt) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls, avgCheck: ac, beStaff: bst, beOther: bot, grandTotal: gt });
 
   const applyState = (s) => {
     if (!s) return;
@@ -343,7 +343,7 @@ export default function InvestmentCalc() {
   };
 
   useEffect(() => {
-    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls, avgCheck, beStaff, beOther));
+    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls, avgCheck, beStaff, beOther, grandTotal));
   }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls, avgCheck, beStaff, beOther]);
 
   const getUrl = (key, item) => itemUrls[key] !== undefined ? itemUrls[key] : (item?.url || "");
