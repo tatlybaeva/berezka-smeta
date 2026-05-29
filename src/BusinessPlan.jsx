@@ -728,16 +728,16 @@ export default function BusinessPlan() {
       </div>
 
       {/* Mini dashboard */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:20 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:8, marginBottom:20 }}>
         {[
           { emoji:"💡", label:"Идеи", value:`${ideas.length}` },
           { emoji:"🎨", label:"Стиль", value:`${totalStyleItems} элем.` },
           { emoji:"👶", label:"Дет. зона", value:`${kidsDone}/${kidsZone.length} · R$${kidsBrl.toLocaleString()}` },
           { emoji:"💰", label:"Доходы/мес", value:`R$${realisticTotal.toLocaleString()}` },
         ].map(s=>(
-          <div key={s.label} style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"10px 12px" }}>
-            <div style={{ fontSize:10, color:"#999", marginBottom:3 }}>{s.emoji} {s.label}</div>
-            <div style={{ fontSize:13, fontWeight:600, color:"#1a1a1a" }}>{s.value}</div>
+          <div key={s.label} style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px" }}>
+            <div style={{ fontSize:11, color:"#999", marginBottom:4 }}>{s.emoji} {s.label}</div>
+            <div style={{ fontSize:15, fontWeight:600, color:"#1a1a1a" }}>{s.value}</div>
           </div>
         ))}
       </div>
