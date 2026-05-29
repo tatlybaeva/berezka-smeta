@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#FAF6EF"/>
+  <!-- subtle grain texture lines -->
+  <rect width="1200" height="630" fill="url(#grain)" opacity="0.03"/>
+
+  <!-- leaf large -->
+  <g transform="translate(560, 95) scale(7)">
+    <path d="M7 0 C7 0 14 8 14 15 C14 22 11.5 26 7 28 C2.5 26 0 22 0 15 C0 8 7 0 7 0Z" fill="none" stroke="#3A2E22" stroke-width="1.1"/>
+    <line x1="7" y1="0" x2="7" y2="28" stroke="#3A2E22" stroke-width="0.7"/>
+    <line x1="7" y1="7.5" x2="11.5" y2="6" stroke="#3A2E22" stroke-width="0.5"/>
+    <line x1="7" y1="12.5" x2="12" y2="11.5" stroke="#3A2E22" stroke-width="0.5"/>
+    <line x1="7" y1="17.5" x2="11.5" y2="17.5" stroke="#3A2E22" stroke-width="0.5"/>
+    <line x1="7" y1="7.5" x2="2.5" y2="6" stroke="#3A2E22" stroke-width="0.5"/>
+    <line x1="7" y1="12.5" x2="2" y2="11.5" stroke="#3A2E22" stroke-width="0.5"/>
+    <line x1="7" y1="17.5" x2="2.5" y2="17.5" stroke="#3A2E22" stroke-width="0.5"/>
+  </g>
+
+  <!-- BERЁZKA wordmark -->
+  <text x="100" y="340" font-family="Georgia, serif" font-size="96" font-weight="400" letter-spacing="18" fill="#3A2E22">BERЁZKA</text>
+
+  <!-- subtitle -->
+  <text x="102" y="410" font-family="Georgia, serif" font-size="32" fill="#8C7B6B" letter-spacing="4">Планирование кафе · Флорианополис</text>
+
+  <!-- bottom line -->
+  <line x1="100" y1="460" x2="1100" y2="460" stroke="#EBE2D3" stroke-width="1.5"/>
+  <text x="100" y="500" font-family="Georgia, serif" font-size="26" fill="#B0A090" letter-spacing="2">berezka-smeta.vercel.app</text>
+</svg>
