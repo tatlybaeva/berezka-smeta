@@ -601,6 +601,7 @@ export default function BusinessPlan() {
   const [phaseDraft, setPhaseDraft] = useState("");
   const [editingStyle, setEditingStyle] = useState(null);
   const [styleDraft, setStyleDraft] = useState("");
+  const [styleCostDraft, setStyleCostDraft] = useState("");
   const [addingStyle, setAddingStyle] = useState(null);
   const [styleNewItem, setStyleNewItem] = useState({ name: '', cost: 0, diy: false });
 
@@ -722,12 +723,13 @@ export default function BusinessPlan() {
     setStyleState(next); saveAll({styleState:next});
   };
   const startStyleEdit = (zoneType, zoneIdx, itemIdx) => {
-    setEditingStyle({zoneType,zoneIdx,itemIdx}); setStyleDraft(styleState[zoneType][zoneIdx].items[itemIdx].name);
+    const item = styleState[zoneType][zoneIdx].items[itemIdx];
+    setEditingStyle({zoneType,zoneIdx,itemIdx}); setStyleDraft(item.name); setStyleCostDraft(String(item.cost));
   };
   const saveStyleEdit = () => {
     if (!styleDraft.trim() || !editingStyle) return;
     const {zoneType,zoneIdx,itemIdx} = editingStyle;
-    const next = {...styleState, [zoneType]:styleState[zoneType].map((z,zi)=>zi!==zoneIdx?z:{...z,items:z.items.map((x,j)=>j!==itemIdx?x:{...x,name:styleDraft.trim()})})};
+    const next = {...styleState, [zoneType]:styleState[zoneType].map((z,zi)=>zi!==zoneIdx?z:{...z,items:z.items.map((x,j)=>j!==itemIdx?x:{...x,name:styleDraft.trim(),cost:Number(styleCostDraft)||0})})};
     setStyleState(next); setEditingStyle(null); saveAll({styleState:next});
   };
   const addStyleItem = () => {
@@ -1017,10 +1019,13 @@ export default function BusinessPlan() {
               <div style={{ fontSize:13, fontWeight:600, color:"#1a1a1a", marginBottom:8 }}>{section.zone}</div>
               {section.items.map((item,ii)=>(
                 editingStyle?.zoneType===zoneType && editingStyle?.zoneIdx===si && editingStyle?.itemIdx===ii ? (
-                  <div key={ii} style={{ display:"flex", gap:6, padding:"4px 0", alignItems:"center" }}>
+                  <div key={ii} style={{ display:"flex", gap:6, padding:"4px 0", alignItems:"center", flexWrap:"wrap" }}>
                     <input autoFocus value={styleDraft} onChange={e=>setStyleDraft(e.target.value)}
                       onKeyDown={e=>{ if(e.key==="Enter") saveStyleEdit(); if(e.key==="Escape") setEditingStyle(null); }}
-                      style={{ flex:1, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
+                      style={{ flex:1, minWidth:100, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
+                    <input value={styleCostDraft} onChange={e=>setStyleCostDraft(e.target.value)} type="number" min="0"
+                      onKeyDown={e=>{ if(e.key==="Enter") saveStyleEdit(); if(e.key==="Escape") setEditingStyle(null); }}
+                      placeholder="R$" style={{ width:72, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
                     <button onClick={saveStyleEdit} style={{ background:"none", border:"none", cursor:"pointer", color:"#16a34a", fontSize:14 }}>✓</button>
                     <button onClick={()=>setEditingStyle(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"#aaa", fontSize:14 }}>✗</button>
                   </div>
