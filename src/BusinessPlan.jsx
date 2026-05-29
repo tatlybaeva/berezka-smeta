@@ -56,7 +56,7 @@ const initialKidsZone = [
   { name: "Ящики с природными материалами", who: "сама", brl: 200, done: false, zone: "outdoor" },
 ];
 
-const pillars = [
+const initialPillars = [
   { icon: "☕", title: "Specialty кофе и напитки", desc: "Фильтр-кофе, капучино, матча латте, травяные чаи — с первого дня на Этапе 1" },
   { icon: "🍳", title: "Завтраки как в Москве", desc: "Сырники, каша, авокадо-тост, яйца benedict — с Этапа 2" },
   { icon: "🥟", title: "Русская еда весь день", desc: "Борщ, пельмени, блины, оливье, пирожки — полное меню с Этапа 2" },
@@ -542,6 +542,9 @@ function Section({ title, open, onToggle, children }) {
 
 export default function BusinessPlan() {
   const [openSections, setOpenSections] = useState({});
+  const [pillars, setPillars] = useState(initialPillars);
+  const [newPillar, setNewPillar] = useState({ icon: "⭐", title: "", desc: "" });
+  const [showNewPillar, setShowNewPillar] = useState(false);
   const [ideas, setIdeas] = useState(initialIdeas);
   const [newIdea, setNewIdea] = useState("");
   const [newIdeaTag, setNewIdeaTag] = useState("💡 Концепция");
@@ -586,6 +589,7 @@ export default function BusinessPlan() {
         isRemoteUpdate.current = true;
         const s = data.state;
         if (s.ideas) setIdeas(s.ideas);
+        if (s.pillars) setPillars(s.pillars);
         if (s.kidsZone) setKidsZone(s.kidsZone);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
@@ -603,6 +607,7 @@ export default function BusinessPlan() {
         isRemoteUpdate.current = true;
         const s = payload.new.state;
         if (s.ideas) setIdeas(s.ideas);
+        if (s.pillars) setPillars(s.pillars);
         if (s.kidsZone) setKidsZone(s.kidsZone);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
@@ -637,7 +642,7 @@ export default function BusinessPlan() {
   };
 
   const saveAll = (overrides = {}) => {
-    scheduleSave({ ideas, kidsZone, bdrScenario, metrics, phasesState, styleState, ...overrides });
+    scheduleSave({ ideas, pillars, kidsZone, bdrScenario, metrics, phasesState, styleState, ...overrides });
   };
 
   // Ideas
@@ -848,45 +853,79 @@ export default function BusinessPlan() {
 
       {/* SECTION 1: КОНЦЕПЦИЯ */}
       <Section title="💡 1. Концепция" open={openSections[0]} onToggle={()=>toggleSection(0)}>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:16 }}>
+        {/* Pillar cards */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
           {pillars.map((p,i)=>(
-            <div key={i} style={{ background:"#faf9f6", border:"1px solid #ebebeb", borderRadius:10, padding:"8px 10px" }}>
+            <div key={i} style={{ position:"relative", background:"#faf9f6", border:"1px solid #ebebeb", borderRadius:10, padding:"8px 10px 8px 10px" }}>
+              <button onClick={()=>{ const next=pillars.filter((_,j)=>j!==i); setPillars(next); saveAll({pillars:next}); }}
+                style={{ position:"absolute", top:4, right:6, background:"none", border:"none", cursor:"pointer", color:"#ccc", fontSize:14, lineHeight:1, padding:0 }}>×</button>
               <div style={{ fontSize:16, marginBottom:3 }}>{p.icon}</div>
-              <div style={{ fontSize:11, fontWeight:600, color:"#1a1a1a", marginBottom:2 }}>{p.title}</div>
+              <div style={{ fontSize:11, fontWeight:600, color:"#1a1a1a", marginBottom:2, paddingRight:14 }}>{p.title}</div>
               <div style={{ fontSize:10, color:"#666", lineHeight:1.4 }}>{p.desc}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize:13, fontWeight:600, marginBottom:8 }}>Идеи</div>
-        {ideas.map((idea,i)=>(
-          <div key={i} style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 0", borderBottom:"0.5px solid #f0f0f0" }}>
-            <span style={{ fontSize:9, padding:"1px 6px", borderRadius:99, background:TAG_COLORS[idea.tag]||"#f0f0f0", color:TAG_TEXT[idea.tag]||"#333", flexShrink:0, whiteSpace:"nowrap" }}>
-              {idea.tag}
-            </span>
-            {editingIdeaIdx===i ? (
-              <input
-                autoFocus value={ideaDraft} onChange={e=>setIdeaDraft(e.target.value)}
-                onKeyDown={e=>{ if(e.key==="Enter") saveIdeaEdit(i); if(e.key==="Escape") setEditingIdeaIdx(null); }}
-                onBlur={()=>saveIdeaEdit(i)}
-                style={{ flex:1, border:"1px solid #ddd", borderRadius:6, padding:"3px 8px", fontFamily:"Georgia,serif", fontSize:12, outline:"none" }}
-              />
-            ) : (
-              <span style={{ flex:1, fontSize:12, color:"#1a1a1a", lineHeight:1.4 }}>{idea.text}</span>
-            )}
-            <button onClick={()=>startEditIdea(i)} style={{ background:"none", border:"none", cursor:"pointer", color:"#bbb", fontSize:12, padding:"0 2px" }}>✏️</button>
-            <button onClick={()=>deleteIdea(i)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ccc", fontSize:15, padding:"0 2px", lineHeight:1 }}>×</button>
+        {/* Add pillar */}
+        {showNewPillar ? (
+          <div style={{ border:"1px solid #ddd", borderRadius:10, padding:"10px 12px", marginBottom:12, background:"#fff" }}>
+            <div style={{ display:"flex", gap:6, marginBottom:6 }}>
+              <input value={newPillar.icon} onChange={e=>setNewPillar(p=>({...p,icon:e.target.value}))}
+                style={{ width:44, border:"1px solid #ddd", borderRadius:6, padding:"4px 6px", fontFamily:"Georgia,serif", fontSize:16, textAlign:"center" }} />
+              <input value={newPillar.title} onChange={e=>setNewPillar(p=>({...p,title:e.target.value}))}
+                placeholder="Название блока"
+                style={{ flex:1, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12, outline:"none" }} />
+            </div>
+            <textarea value={newPillar.desc} onChange={e=>setNewPillar(p=>({...p,desc:e.target.value}))}
+              placeholder="Описание..."
+              rows={2} style={{ width:"100%", border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12, outline:"none", resize:"none", boxSizing:"border-box" }} />
+            <div style={{ display:"flex", gap:6, marginTop:6 }}>
+              <button onClick={()=>{
+                if (!newPillar.title.trim()) return;
+                const next=[...pillars, {...newPillar}];
+                setPillars(next); saveAll({pillars:next});
+                setNewPillar({icon:"⭐",title:"",desc:""}); setShowNewPillar(false);
+              }} style={{ padding:"5px 14px", borderRadius:7, border:"none", background:"#1a1a1a", color:"#fff", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Добавить</button>
+              <button onClick={()=>setShowNewPillar(false)} style={{ padding:"5px 12px", borderRadius:7, border:"1px solid #ddd", background:"#fff", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Отмена</button>
+            </div>
           </div>
-        ))}
+        ) : (
+          <button onClick={()=>setShowNewPillar(true)}
+            style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 12px", borderRadius:8, border:"1.5px dashed #ddd", background:"transparent", fontSize:12, color:"#999", cursor:"pointer", marginBottom:14, fontFamily:"Georgia,serif" }}>
+            + Добавить блок
+          </button>
+        )}
 
-        <div style={{ display:"flex", gap:6, marginTop:10, flexWrap:"wrap" }}>
+        {/* Ideas — compact */}
+        <div style={{ fontSize:12, fontWeight:600, color:"#555", marginBottom:6, letterSpacing:"0.05em", textTransform:"uppercase" }}>Идеи</div>
+        <div style={{ marginBottom:8 }}>
+          {ideas.map((idea,i)=>(
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:5, padding:"3px 0", borderBottom:"0.5px solid #f5f5f5" }}>
+              <span style={{ fontSize:8, padding:"1px 5px", borderRadius:99, background:TAG_COLORS[idea.tag]||"#f0f0f0", color:TAG_TEXT[idea.tag]||"#333", flexShrink:0, whiteSpace:"nowrap", lineHeight:"16px" }}>
+                {idea.tag}
+              </span>
+              {editingIdeaIdx===i ? (
+                <input autoFocus value={ideaDraft} onChange={e=>setIdeaDraft(e.target.value)}
+                  onKeyDown={e=>{ if(e.key==="Enter") saveIdeaEdit(i); if(e.key==="Escape") setEditingIdeaIdx(null); }}
+                  onBlur={()=>saveIdeaEdit(i)}
+                  style={{ flex:1, border:"1px solid #ddd", borderRadius:5, padding:"2px 6px", fontFamily:"Georgia,serif", fontSize:11, outline:"none" }} />
+              ) : (
+                <span style={{ flex:1, fontSize:11, color:"#333", lineHeight:1.35 }}>{idea.text}</span>
+              )}
+              <button onClick={()=>startEditIdea(i)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ccc", fontSize:11, padding:"0 1px", lineHeight:1 }}>✏️</button>
+              <button onClick={()=>deleteIdea(i)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ccc", fontSize:14, padding:"0 1px", lineHeight:1 }}>×</button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
           <select value={newIdeaTag} onChange={e=>setNewIdeaTag(e.target.value)}
-            style={{ border:"1px solid #ddd", borderRadius:8, padding:"6px 8px", fontFamily:"Georgia,serif", fontSize:12, background:"#faf9f6" }}>
+            style={{ border:"1px solid #ddd", borderRadius:7, padding:"5px 6px", fontFamily:"Georgia,serif", fontSize:11, background:"#faf9f6" }}>
             {Object.keys(TAG_COLORS).map(t=><option key={t}>{t}</option>)}
           </select>
           <input value={newIdea} onChange={e=>setNewIdea(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addIdea()}
-            placeholder="Новая идея..." style={{ flex:1, minWidth:120, border:"1px solid #ddd", borderRadius:8, padding:"6px 10px", fontFamily:"Georgia,serif", fontSize:12, outline:"none" }} />
-          <button onClick={addIdea} style={{ padding:"6px 14px", borderRadius:8, border:"none", background:"#1a1a1a", color:"#fff", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>+</button>
+            placeholder="Новая идея..." style={{ flex:1, minWidth:100, border:"1px solid #ddd", borderRadius:7, padding:"5px 8px", fontFamily:"Georgia,serif", fontSize:11, outline:"none" }} />
+          <button onClick={addIdea} style={{ padding:"5px 12px", borderRadius:7, border:"none", background:"#1a1a1a", color:"#fff", fontSize:11, cursor:"pointer", fontFamily:"Georgia,serif" }}>+</button>
         </div>
       </Section>
 
