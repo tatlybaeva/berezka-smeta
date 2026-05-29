@@ -471,7 +471,7 @@ function SectionInputs({ inputs, setInput, model }) {
             <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>{label}</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {MONTHS.map((mo, i) => (
-                <div key={i} style={{ textAlign: 'center' }}>
+                <div key={i}>
                   <div style={{ fontSize: 10, color: '#999', marginBottom: 2 }}>{mo}</div>
                   <NumInput
                     value={inputs[key][i]}

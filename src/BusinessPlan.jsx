@@ -370,16 +370,16 @@ function KeyMetrics({ metrics, setMetrics }) {
             { op: '=' },
             { label: 'В день макс.', value: `R$${maxDayRev.toLocaleString()}`, highlight: true },
           ].map((item, i) => {
-            if (item.op) return <div key={i} style={{ textAlign: 'center', color: '#555', fontSize: 16 }}>{item.op}</div>;
+            if (item.op) return <div key={i} style={{ color: '#555', fontSize: 16 }}>{item.op}</div>;
             if (item.highlight) return (
-              <div key={i} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+              <div key={i} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 10px' }}>
                 <div style={{ fontSize: 9, color: '#666', marginBottom: 2 }}>{item.label}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#4ade80' }}>{item.value}</div>
                 <div style={{ fontSize: 9, color: '#555', marginTop: 1 }}>~{Math.round(maxDayRev * 26 / 1000)}к/мес</div>
               </div>
             );
             return (
-              <div key={i} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+              <div key={i} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 8, padding: '8px 10px' }}>
                 <div style={{ fontSize: 9, color: '#666', marginBottom: 2 }}>{item.label}</div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
                   {item.suffix === 'R$' ? 'R$' : ''}{metrics[item.key]}{item.suffix !== 'R$' ? ' ' + item.suffix : ''}

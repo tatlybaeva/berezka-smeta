@@ -143,6 +143,9 @@ export default function ResponsibilityCalc({ onNavigate }) {
   const [showHistory, setShowHistory] = useState(false);
   const [showPartners, setShowPartners] = useState(false);
   const [newPartnerName, setNewPartnerName] = useState('');
+  const [customTasks, setCustomTasks] = useState({});
+  const [addingCat, setAddingCat] = useState(null);
+  const [newTaskText, setNewTaskText] = useState('');
   const saveTimer   = useRef(null);
   const prevState   = useRef({ asgn: {}, hrs: INIT_HRS, partners: DEFAULT_PARTNERS });
   const isRemote    = useRef(false);
@@ -150,9 +153,10 @@ export default function ResponsibilityCalc({ onNavigate }) {
   const applyState = (s) => {
     if (!s) return;
     isRemote.current = true;
-    if (s.asgn)     setAsgn(s.asgn);
-    if (s.hrs)      setHrs(s.hrs);
-    if (s.partners) setPartners(s.partners);
+    if (s.asgn)        setAsgn(s.asgn);
+    if (s.hrs)         setHrs(s.hrs);
+    if (s.partners)    setPartners(s.partners);
+    if (s.customTasks) setCustomTasks(s.customTasks);
     setTimeout(() => { isRemote.current = false; }, 0);
   };
 
@@ -191,7 +195,7 @@ export default function ResponsibilityCalc({ onNavigate }) {
     setSyncStatus("saving");
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      const state = { asgn, hrs, partners };
+      const state = { asgn, hrs, partners, customTasks };
       const changes = diffStates(prevState.current.asgn || {}, prevState.current.hrs || INIT_HRS, asgn, hrs);
 
       const { error } = await supabase.from("resp_state").upsert({ id:"main", state, updated_at: new Date().toISOString() });
@@ -208,7 +212,7 @@ export default function ResponsibilityCalc({ onNavigate }) {
         setSyncStatus("error");
       }
     }, 800);
-  }, [asgn, hrs, partners, loaded]);
+  }, [asgn, hrs, partners, customTasks, loaded]);
 
   const getPartner = (pid) => partners.find(p => p.id === pid);
 
@@ -251,11 +255,28 @@ export default function ResponsibilityCalc({ onNavigate }) {
     });
   };
 
+  const addCustomTask = (catName) => {
+    const text = newTaskText.trim();
+    if (!text) return;
+    const id = `ct_${Date.now()}`;
+    setCustomTasks(prev => ({ ...prev, [catName]: [...(prev[catName] || []), { id, task: text, hrs: 2 }] }));
+    setHrs(prev => ({ ...prev, [id]: 2 }));
+    setNewTaskText('');
+    setAddingCat(null);
+  };
+
+  const removeCustomTask = (catName, taskId) => {
+    setCustomTasks(prev => ({ ...prev, [catName]: (prev[catName] || []).filter(t => t.id !== taskId) }));
+    setAsgn(prev => { const n = {...prev}; delete n[taskId]; return n; });
+  };
+
   // Totals
+  const allCustomFlat = Object.values(customTasks).flat();
+  const allTasks = [...ALL, ...allCustomFlat];
   const partnerHrs = {};
   const partnerCount = {};
   partners.forEach(p => { partnerHrs[p.id] = 0; partnerCount[p.id] = 0; });
-  ALL.forEach(t => {
+  allTasks.forEach(t => {
     const pid = asgn[t.id];
     if (pid && partnerHrs[pid] != null) {
       partnerHrs[pid] += hrs[t.id] || 1;
@@ -263,14 +284,16 @@ export default function ResponsibilityCalc({ onNavigate }) {
     }
   });
 
-  const done = ALL.filter(t => asgn[t.id] != null).length;
+  const done = allTasks.filter(t => asgn[t.id] != null).length;
+  const totalTasks = allTasks.length;
 
   const visibleCats = CATS.map(cat => {
+    const merged = [...cat.tasks, ...(customTasks[cat.name] || [])];
     const tasks = filter === "done"
-      ? cat.tasks.filter(t => asgn[t.id] != null)
+      ? merged.filter(t => asgn[t.id] != null)
       : filter === "todo"
-      ? cat.tasks.filter(t => asgn[t.id] == null)
-      : cat.tasks;
+      ? merged.filter(t => asgn[t.id] == null)
+      : merged;
     return { ...cat, tasks };
   }).filter(cat => cat.tasks.length > 0);
 
@@ -289,8 +312,8 @@ export default function ResponsibilityCalc({ onNavigate }) {
               Распределение задач
             </div>
           </div>
-          <div style={{background:done===ALL.length?"#DCF5E0":"#EDE9E3",color:done===ALL.length?"#166534":"#999",borderRadius:20,padding:"4px 11px",fontSize:12,fontWeight:700,transition:"all 0.3s",border:done===ALL.length?"1.5px solid #BBF7D0":"1.5px solid transparent"}}>
-            {done}/{ALL.length} {done===ALL.length?"✓":""}
+          <div style={{background:done===totalTasks?"#DCF5E0":"#EDE9E3",color:done===totalTasks?"#166534":"#999",borderRadius:20,padding:"4px 11px",fontSize:12,fontWeight:700,transition:"all 0.3s",border:done===totalTasks?"1.5px solid #BBF7D0":"1.5px solid transparent"}}>
+            {done}/{totalTasks} {done===totalTasks?"✓":""}
           </div>
         </div>
 
@@ -415,10 +438,16 @@ export default function ResponsibilityCalc({ onNavigate }) {
                   {cat.tasks.map((t, ti) => {
                     const assignedPid = asgn[t.id];
                     const assignedPartner = assignedPid ? getPartner(assignedPid) : null;
+                    const isCustom = String(t.id).startsWith('ct_');
                     return (
                       <div key={t.id} style={{padding:"11px 13px",borderTop:ti>0?"1px solid #F4EFE8":"none",background:assignedPid?"#FAFFFC":"#fff",transition:"background 0.2s"}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8,gap:8}}>
-                          <div style={{fontSize:12.5,fontWeight:600,color:"#2D2820",flex:1,lineHeight:1.4}}>{t.task}</div>
+                          <div style={{display:"flex",alignItems:"flex-start",gap:4,flex:1,minWidth:0}}>
+                            <div style={{fontSize:12.5,fontWeight:600,color:"#2D2820",flex:1,lineHeight:1.4}}>{t.task}</div>
+                            {isCustom && (
+                              <button onClick={() => removeCustomTask(cat.name, t.id)} title="Удалить задачу" style={{background:"none",border:"none",cursor:"pointer",color:"#D0C8BC",fontSize:13,lineHeight:1,padding:"2px 0",flexShrink:0}}>✕</button>
+                            )}
+                          </div>
                           <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
                             <button onClick={() => changeH(t.id,-1)} disabled={HRS_OPTS.indexOf(hrs[t.id])===0} style={{width:26,height:26,borderRadius:6,border:"none",background:HRS_OPTS.indexOf(hrs[t.id])===0?"#F5F2ED":"#F0EBE2",color:HRS_OPTS.indexOf(hrs[t.id])===0?"#D8D0C8":"#8A7D6E",fontSize:14,fontWeight:800,cursor:HRS_OPTS.indexOf(hrs[t.id])===0?"default":"pointer",lineHeight:1,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
                             <span style={{fontSize:11,fontWeight:700,color:"#8A7D6E",minWidth:28,textAlign:"center"}}>{hrs[t.id]} ч</span>
@@ -460,6 +489,26 @@ export default function ResponsibilityCalc({ onNavigate }) {
                       </div>
                     );
                   })}
+
+                  {/* Add task row */}
+                  {addingCat === cat.name ? (
+                    <div style={{padding:"10px 13px",borderTop:"1px solid #F4EFE8",display:"flex",gap:6,alignItems:"center"}}>
+                      <input
+                        autoFocus
+                        value={newTaskText}
+                        onChange={e => setNewTaskText(e.target.value)}
+                        onKeyDown={e => { if (e.key==='Enter') addCustomTask(cat.name); if (e.key==='Escape') { setAddingCat(null); setNewTaskText(''); } }}
+                        placeholder="Название задачи…"
+                        style={{flex:1,padding:"7px 10px",borderRadius:8,border:"1.5px solid #EBE2D3",fontSize:12,fontFamily:"'Outfit',sans-serif",outline:"none",color:"#2D2820"}}
+                      />
+                      <button onClick={() => addCustomTask(cat.name)} style={{padding:"7px 12px",borderRadius:8,border:"none",background:"#3A2E22",color:"#F5F0E8",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>+</button>
+                      <button onClick={() => { setAddingCat(null); setNewTaskText(''); }} style={{padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5DDD4",background:"transparent",fontSize:12,color:"#C5BDB5",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>✕</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => { setAddingCat(cat.name); setNewTaskText(''); }} style={{width:"100%",padding:"9px 13px",background:"transparent",border:"none",borderTop:"1px solid #F4EFE8",cursor:"pointer",fontSize:11,color:"#B0A898",fontWeight:600,fontFamily:"'Outfit',sans-serif",textAlign:"left"}}>
+                      + Добавить задачу
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -467,8 +516,8 @@ export default function ResponsibilityCalc({ onNavigate }) {
         })}
 
         {/* SUMMARY */}
-        {done === ALL.length && (
-          <div style={{background:"linear-gradient(135deg,#1A1410 0%,#3A2E22 100%)",borderRadius:18,padding:"20px 18px",color:"#F5F0E8",textAlign:"center"}}>
+        {done === totalTasks && (
+          <div style={{background:"linear-gradient(135deg,#1A1410 0%,#3A2E22 100%)",borderRadius:18,padding:"20px 18px",color:"#F5F0E8"}}>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase"}}>БЕРЁЗКА</div>
             <div style={{fontSize:11,opacity:0.4,letterSpacing:"0.12em",textTransform:"uppercase",marginTop:2}}>Café · Campeche · Florianópolis</div>
             <div style={{marginTop:16,display:"flex",justifyContent:"center",gap:20,flexWrap:"wrap"}}>
@@ -531,7 +580,7 @@ export default function ResponsibilityCalc({ onNavigate }) {
           </button>
         ) : (
           <div style={{background:"#FFF5F0",borderRadius:14,padding:14,border:"1.5px solid #FFD5C0"}}>
-            <div style={{fontSize:13,color:"#9A3412",fontWeight:700,marginBottom:12,textAlign:"center"}}>Сбросить все назначения?</div>
+            <div style={{fontSize:13,color:"#9A3412",fontWeight:700,marginBottom:12}}>Сбросить все назначения?</div>
             <div style={{display:"flex",gap:8}}>
               <button onClick={() => setConfirmReset(false)} style={{flex:1,padding:"10px",borderRadius:9,border:"1.5px solid #E5DDD4",background:"#fff",fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600,color:"#888"}}>Отмена</button>
               <button onClick={() => {setAsgn({});setConfirmReset(false);}} style={{flex:1,padding:"10px",borderRadius:9,border:"none",background:"#8B3A2A",color:"#fff",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Сбросить</button>
