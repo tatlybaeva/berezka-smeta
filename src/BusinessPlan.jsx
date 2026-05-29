@@ -267,6 +267,138 @@ const revenueStreams = [
   },
 ];
 
+// ── КЛЮЧЕВЫЕ МЕТРИКИ ─────────────────────────────────────────────────────────
+function KeyMetrics({ metrics, setMetrics }) {
+  const upd = (key, val) => setMetrics({ ...metrics, [key]: val });
+
+  const rev = metrics.monthlyRevenue || 1;
+  const foodPct  = metrics.foodCost / 100;
+  const laborPct = metrics.laborCost / 100;
+  const rentPct  = (metrics.rent / rev) * 100;
+  const ebitda   = rev - rev * foodPct - rev * laborPct - metrics.rent;
+  const ebitdaPct = (ebitda / rev) * 100;
+  const maxDayRev = metrics.avgCheck * metrics.tableTurns * metrics.seats;
+
+  const status = (val, [lo, hi]) => {
+    if (val >= lo && val <= hi) return { color: '#16a34a', bg: '#f0fdf4', label: '✓ цель' };
+    if (val < lo) return { color: '#d97706', bg: '#fffbeb', label: '↓ ниже цели' };
+    return { color: '#dc2626', bg: '#fef2f2', label: '↑ выше цели' };
+  };
+
+  const foodSt  = status(metrics.foodCost,  [28, 32]);
+  const laborSt = status(metrics.laborCost, [25, 30]);
+  const rentSt  = status(rentPct,           [0,  12]);
+  const ebitdaSt = status(ebitdaPct,        [15, 20]);
+
+  const MetricRow = ({ label, value, unit, range, st, children }) => (
+    <div style={{ background: st.bg, border: `1px solid ${st.color}33`, borderRadius: 10, padding: '12px 14px', marginBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{label}</div>
+          <div style={{ fontSize: 10, color: '#aaa', marginTop: 1 }}>цель: {range[0]}–{range[1]}{unit}</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: st.color }}>{typeof value === 'number' ? value.toFixed(1) : value}{unit}</div>
+          <div style={{ fontSize: 10, color: st.color, fontWeight: 500 }}>{st.label}</div>
+        </div>
+      </div>
+      {children}
+      {/* Progress bar */}
+      <div style={{ height: 4, background: '#e5e7eb', borderRadius: 99, marginTop: 6 }}>
+        <div style={{ height: '100%', borderRadius: 99, background: st.color, width: `${Math.min(100, (parseFloat(value) / range[1]) * 100)}%`, transition: 'width 0.3s' }} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      {/* Divider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <div style={{ flex: 1, height: 1, background: '#e8e0d4' }} />
+        <span style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#aaa' }}>Ключевые метрики</span>
+        <div style={{ flex: 1, height: 1, background: '#e8e0d4' }} />
+      </div>
+
+      {/* Revenue input */}
+      <div style={{ background: '#f7f7f5', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, color: '#888', marginBottom: 8 }}>Введи текущую выручку/мес для расчёта метрик</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 12, color: '#666', flexShrink: 0 }}>Выручка/мес R$</span>
+          <input type="number" value={metrics.monthlyRevenue} min={0} step={1000}
+            onChange={e => upd('monthlyRevenue', Number(e.target.value) || 0)}
+            style={{ flex: 1, border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 14, fontWeight: 600, fontFamily: "'Georgia',serif", textAlign: 'right' }} />
+        </div>
+      </div>
+
+      {/* Метрики */}
+      <MetricRow label="Food cost" value={metrics.foodCost} unit="%" range={[28,32]} st={foodSt}>
+        <input type="range" min={10} max={60} step={0.5} value={metrics.foodCost}
+          onChange={e => upd('foodCost', Number(e.target.value))}
+          style={{ width: '100%', accentColor: foodSt.color }} />
+        <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>= R${Math.round(rev * foodPct).toLocaleString()}/мес</div>
+      </MetricRow>
+
+      <MetricRow label="Labor cost (зарплаты + encargos)" value={metrics.laborCost} unit="%" range={[25,30]} st={laborSt}>
+        <input type="range" min={10} max={60} step={0.5} value={metrics.laborCost}
+          onChange={e => upd('laborCost', Number(e.target.value))}
+          style={{ width: '100%', accentColor: laborSt.color }} />
+        <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>= R${Math.round(rev * laborPct).toLocaleString()}/мес</div>
+      </MetricRow>
+
+      <MetricRow label="Аренда / выручка" value={rentPct} unit="%" range={[0,12]} st={rentSt}>
+        <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
+          R${metrics.rent.toLocaleString()}/мес аренда ÷ R${rev.toLocaleString()} выручка
+        </div>
+      </MetricRow>
+
+      <MetricRow label="EBITDA margin" value={ebitdaPct} unit="%" range={[15,20]} st={ebitdaSt}>
+        <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>
+          Выручка − food − labor − аренда = R${Math.round(ebitda).toLocaleString()}/мес
+        </div>
+      </MetricRow>
+
+      {/* Формула максимальной выручки дня */}
+      <div style={{ background: '#1a1a1a', borderRadius: 10, padding: '14px 16px', marginTop: 4 }}>
+        <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#666', marginBottom: 10 }}>Макс. выручка дня</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto 1fr auto 1fr', gap: 4, alignItems: 'center', marginBottom: 12 }}>
+          {[
+            { label: 'Ср. чек', key: 'avgCheck', min: 10, max: 200, step: 5, suffix: 'R$' },
+            { op: '×' },
+            { label: 'Оборот стола', key: 'tableTurns', min: 1, max: 8, step: 0.5, suffix: 'x/день' },
+            { op: '×' },
+            { label: 'Мест', key: 'seats', min: 5, max: 200, step: 5, suffix: 'мест' },
+            { op: '=' },
+            { label: 'В день макс.', value: `R$${maxDayRev.toLocaleString()}`, highlight: true },
+          ].map((item, i) => {
+            if (item.op) return <div key={i} style={{ textAlign: 'center', color: '#555', fontSize: 16 }}>{item.op}</div>;
+            if (item.highlight) return (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                <div style={{ fontSize: 9, color: '#666', marginBottom: 2 }}>{item.label}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#4ade80' }}>{item.value}</div>
+                <div style={{ fontSize: 9, color: '#555', marginTop: 1 }}>~{Math.round(maxDayRev * 26 / 1000)}к/мес</div>
+              </div>
+            );
+            return (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                <div style={{ fontSize: 9, color: '#666', marginBottom: 2 }}>{item.label}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                  {item.suffix === 'R$' ? 'R$' : ''}{metrics[item.key]}{item.suffix !== 'R$' ? ' ' + item.suffix : ''}
+                </div>
+                <input type="range" min={item.min} max={item.max} step={item.step} value={metrics[item.key]}
+                  onChange={e => upd(item.key, Number(e.target.value))}
+                  style={{ width: '100%', marginTop: 4, accentColor: '#4ade80' }} />
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: 10, color: '#555', lineHeight: 1.5 }}>
+          При 26 рабочих днях: до R${(maxDayRev * 26).toLocaleString()}/мес · ~${Math.round(maxDayRev * 26 / RATE).toLocaleString()}/мес
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── БДР 5 ЛЕТ ────────────────────────────────────────────────────────────────
 const BDR_SCENARIOS = [
   {
@@ -569,6 +701,15 @@ export default function BusinessPlan() {
   const [todos, setTodos] = useState(initialTodos);
   const [admin, setAdmin] = useState(initialAdmin);
   const [bdrScenario, setBdrScenario] = useState('realistic');
+  const [metrics, setMetrics] = useState({
+    monthlyRevenue: 35000,  // текущая выручка/мес
+    foodCost: 30,           // % от выручки
+    laborCost: 28,          // % от выручки
+    rent: 11000,            // R$/мес (фиксировано)
+    avgCheck: 55,           // R$
+    tableTurns: 2.5,        // оборот стола в день
+    seats: 40,              // посадочных мест
+  });
   const [syncStatus, setSyncStatus] = useState("idle");
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
@@ -588,6 +729,7 @@ export default function BusinessPlan() {
         if (s.todos) setTodos(s.todos);
         if (s.admin) setAdmin(s.admin);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
+        if (s.metrics) setMetrics(s.metrics);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       });
 
@@ -602,6 +744,7 @@ export default function BusinessPlan() {
         if (s.todos) setTodos(s.todos);
         if (s.admin) setAdmin(s.admin);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
+        if (s.metrics) setMetrics(s.metrics);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       })
       .subscribe();
@@ -621,7 +764,7 @@ export default function BusinessPlan() {
   };
 
   const saveAll = (overrides = {}) => {
-    scheduleSave({ ideas, kidsZone, staff, todos, admin, bdrScenario, ...overrides });
+    scheduleSave({ ideas, kidsZone, staff, todos, admin, bdrScenario, metrics, ...overrides });
   };
 
   const addIdea = () => {
@@ -817,6 +960,7 @@ export default function BusinessPlan() {
           <div style={{ fontSize: 22, fontWeight: 600 }}>R${realisticTotal.toLocaleString()}</div>
           <div style={{ fontSize: 11, color: "#888" }}>~${Math.round(realisticTotal / RATE).toLocaleString()}/мес</div>
         </div>
+        <KeyMetrics metrics={metrics} setMetrics={(m) => { setMetrics(m); saveAll({ metrics: m }); }} />
         <BDRTable active={bdrScenario} setActive={(v) => { setBdrScenario(v); saveAll({ bdrScenario: v }); }} />
       </Section>
 
