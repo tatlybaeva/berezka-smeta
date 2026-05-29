@@ -92,12 +92,15 @@ body { background:var(--cream); color:var(--ink); font-family:'Cormorant Garamon
 }
 .v2-cta a:hover { opacity: 0.85; }
 
-.nav { display:flex; padding:0 36px; border-bottom:1.5px solid var(--warm); position:sticky; top:0; background:var(--cream); z-index:10; }
-.tab { padding:18px 18px 15px; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--mist); cursor:pointer; border-bottom:2px solid transparent; }
-.tab.on { color:var(--ink); border-bottom-color:var(--ink); }
-
-.pg { display:none; padding:48px 36px; }
-.pg.on { display:block; }
+.pg { padding:48px 36px; }
+.section-title {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mist);
+  padding: 20px 36px 0;
+  border-top: 1px solid var(--warm);
+}
 .lbl { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--mist); margin-bottom:24px; }
 
 /* ── LOGO PAGE ── */
@@ -240,15 +243,9 @@ body { background:var(--cream); color:var(--ink); font-family:'Cormorant Garamon
   </div>
 </div>
 
-<div class="nav">
-  <div class="tab on" onclick="show('logos',this)">Логотип</div>
-  <div class="tab" onclick="show('palette',this)">Палитра</div>
-  <div class="tab" onclick="show('type',this)">Шрифт</div>
-  <div class="tab" onclick="show('use',this)">Применение</div>
-</div>
-
 <!-- LOGOS -->
-<div class="pg on" id="logos">
+<div class="section-title">01 — Логотип</div>
+<div class="pg" id="logos">
   <div class="lbl">BERЁZKA — варианты</div>
   <div class="variants">
     <div class="v" style="background:var(--cream);border:1px solid var(--warm)">
@@ -317,6 +314,7 @@ body { background:var(--cream); color:var(--ink); font-family:'Cormorant Garamon
 </div>
 
 <!-- PALETTE -->
+<div class="section-title">02 — Палитра</div>
 <div class="pg" id="palette">
   <div class="lbl">Три цвета + акцент</div>
   <div class="swatches">
@@ -352,6 +350,7 @@ body { background:var(--cream); color:var(--ink); font-family:'Cormorant Garamon
 </div>
 
 <!-- TYPE -->
+<div class="section-title">03 — Шрифт</div>
 <div class="pg" id="type">
   <div class="lbl">Cormorant Garamond — всё что нужно</div>
   <div class="t-block">
@@ -381,6 +380,7 @@ body { background:var(--cream); color:var(--ink); font-family:'Cormorant Garamon
 </div>
 
 <!-- USAGE -->
+<div class="section-title">04 — Применение</div>
 <div class="pg" id="use">
   <div class="lbl">Применение — в духе русской деревни</div>
   <div class="one">
@@ -451,13 +451,5 @@ body { background:var(--cream); color:var(--ink); font-family:'Cormorant Garamon
   <a href="/brand-v2.html">Смотреть v2 →</a>
 </div>
 
-<script>
-function show(id,el){
-  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  document.getElementById(id).classList.add('on');
-  el.classList.add('on');
-}
-</script>
 </body>
 </html>
