@@ -208,7 +208,7 @@ const FOOD_COST_PCT = 0.30;
 const TAX_PCT = 0.08;
 
 function computeBEP(rent, avgCheck, staff, other, phase) {
-  const foodCost = phase >= 2 ? FOOD_COST_PCT : 0.15;
+  const foodCost = phase === 1 ? 0.15 : FOOD_COST_PCT; // этап 1: только напитки 15%, этап 2+: еда 30%
   const fixed = rent + staff + other;
   const netPerCheck = Math.round(avgCheck * (1 - foodCost - TAX_PCT));
   const checksPerMonth = netPerCheck > 0 ? Math.ceil(fixed / netPerCheck) : 0;
@@ -246,8 +246,8 @@ export default function InvestmentCalc() {
   const [itemUrls, setItemUrls] = useState({});      // { key: "https://..." } overrides
   // BEP editable inputs
   const [avgCheck, setAvgCheck] = useState(52);
-  const [beStaff, setBeStaff] = useState({ 1: 8500, 3: 15000 });   // ФОТ по этапам
-  const [beOther, setBeOther] = useState({ 1: 3500, 3: 6000 });    // прочие расходы по этапам
+  const [beStaff, setBeStaff] = useState({ 1: 8500, 2: 15000, 3: 15000 });   // ФОТ по этапам
+  const [beOther, setBeOther] = useState({ 1: 3500, 2: 5000,  3: 6000 });    // прочие расходы по этапам
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
@@ -405,7 +405,7 @@ export default function InvestmentCalc() {
         const other = beOther[bePhase] || 3500;
         const be = computeBEP(rent, avgCheck, staff, other, bePhase);
         const progress = Math.min(1, currentChecksDay / (be.checksPerDay || 1));
-        const foodCostPct = bePhase >= 2 ? 30 : 15;
+        const foodCostPct = bePhase === 1 ? 15 : 30;
         return (
           <div style={{ background: "#fff", borderRadius: 12, marginBottom: 12, border: "1px solid #ebebeb", overflow: "hidden" }}>
             <div onClick={() => setBeOpen(p => !p)}
@@ -418,7 +418,7 @@ export default function InvestmentCalc() {
 
                 {/* Phase selector */}
                 <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-                  {[{ phase: 1, label: "Этап 1 (кофе·напитки)" }, { phase: 3, label: "Этап 3 (полный формат)" }].map(opt => (
+                  {[{ phase: 1, label: "Этап 1" }, { phase: 2, label: "Этап 2" }, { phase: 3, label: "Этап 3" }].map(opt => (
                     <button key={opt.phase} onClick={() => setBePhase(opt.phase)} style={{
                       flex: 1, padding: "8px 10px", borderRadius: 8, cursor: "pointer", border: "none",
                       background: bePhase === opt.phase ? "#1a1a1a" : "#f4f3f0",
@@ -435,7 +435,7 @@ export default function InvestmentCalc() {
                     { label: "🏠 Аренда", value: rent, note: "из слайдера выше", readOnly: true },
                     { label: "👥 ФОТ (персонал + налоги)", value: staff, note: "зарплаты + encargos",
                       onChange: v => setBeStaff(p => ({ ...p, [bePhase]: v })) },
-                    { label: "⚡ Прочее (счета, расходники, связь)", value: other, note: "коммунальные, упаковка…",
+                    { label: "⚡ Прочее (счета, расходники, хоз.)", value: other, note: "коммуналка, уборка, семена, корм для кур, упаковка, связь…",
                       onChange: v => setBeOther(p => ({ ...p, [bePhase]: v })) },
                   ].map(({ label, value, note, readOnly, onChange }) => (
                     <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
