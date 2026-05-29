@@ -710,6 +710,9 @@ export default function BusinessPlan() {
     tableTurns: 2.5,        // оборот стола в день
     seats: 40,              // посадочных мест
   });
+  const [projectInfo, setProjectInfo] = useState({ city: 'Флорианополис', area: 200, rent: 8000 });
+  const [editingProjectInfo, setEditingProjectInfo] = useState(false);
+  const [projectInfoDraft, setProjectInfoDraft] = useState(null);
   const [syncStatus, setSyncStatus] = useState("idle");
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
@@ -730,6 +733,7 @@ export default function BusinessPlan() {
         if (s.admin) setAdmin(s.admin);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
+        if (s.projectInfo) setProjectInfo(s.projectInfo);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       });
 
@@ -745,6 +749,7 @@ export default function BusinessPlan() {
         if (s.admin) setAdmin(s.admin);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
+        if (s.projectInfo) setProjectInfo(s.projectInfo);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       })
       .subscribe();
@@ -764,7 +769,7 @@ export default function BusinessPlan() {
   };
 
   const saveAll = (overrides = {}) => {
-    scheduleSave({ ideas, kidsZone, staff, todos, admin, bdrScenario, metrics, ...overrides });
+    scheduleSave({ ideas, kidsZone, staff, todos, admin, bdrScenario, metrics, projectInfo, ...overrides });
   };
 
   const addIdea = () => {
@@ -831,7 +836,47 @@ export default function BusinessPlan() {
         <div>
           <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "#999", textTransform: "uppercase", marginBottom: 4 }}>Бизнес-план</div>
           <div style={{ fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>БЕРЁЗКА — Бизнес-план</div>
-          <div style={{ fontSize: 12, color: "#777", marginTop: 4 }}>Флорианополис · 200 м² · R$8 000/мес</div>
+          {editingProjectInfo ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+              <input
+                type="text"
+                value={projectInfoDraft.city}
+                onChange={e => setProjectInfoDraft(d => ({ ...d, city: e.target.value }))}
+                style={{ fontFamily: "'Georgia', serif", fontSize: 12, border: "1px solid #ccc", borderRadius: 6, padding: "2px 6px", width: 120 }}
+              />
+              <input
+                type="number"
+                value={projectInfoDraft.area}
+                onChange={e => setProjectInfoDraft(d => ({ ...d, area: Number(e.target.value) }))}
+                style={{ fontFamily: "'Georgia', serif", fontSize: 12, border: "1px solid #ccc", borderRadius: 6, padding: "2px 6px", width: 60 }}
+              />
+              <span style={{ fontSize: 12, color: "#777" }}>м²</span>
+              <span style={{ fontSize: 12, color: "#777" }}>R$</span>
+              <input
+                type="number"
+                value={projectInfoDraft.rent}
+                onChange={e => setProjectInfoDraft(d => ({ ...d, rent: Number(e.target.value) }))}
+                style={{ fontFamily: "'Georgia', serif", fontSize: 12, border: "1px solid #ccc", borderRadius: 6, padding: "2px 6px", width: 80 }}
+              />
+              <span style={{ fontSize: 12, color: "#777" }}>/мес</span>
+              <button
+                onClick={() => {
+                  setProjectInfo(projectInfoDraft);
+                  setEditingProjectInfo(false);
+                  saveAll({ projectInfo: projectInfoDraft });
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#16a34a" }}
+              >✓</button>
+            </div>
+          ) : (
+            <div
+              style={{ fontSize: 12, color: "#777", marginTop: 4, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}
+              onClick={() => { setProjectInfoDraft({ ...projectInfo }); setEditingProjectInfo(true); }}
+            >
+              <span>{projectInfo.city} · {projectInfo.area} м² · R${projectInfo.rent.toLocaleString()}/мес</span>
+              <span style={{ fontSize: 11 }}>✏️</span>
+            </div>
+          )}
         </div>
         <div style={{ fontSize: 11, marginTop: 6, color: syncStatus === "saved" ? "#16a34a" : syncStatus === "saving" ? "#aaa" : syncStatus === "error" ? "#dc2626" : "transparent" }}>
           {syncStatus === "saving" && "сохранение…"}

@@ -5,10 +5,12 @@ import BrandTab from './BrandTab'
 import KnowledgeBase from './KnowledgeBase'
 import BusinessPlan from './BusinessPlan'
 import MenuPricing from './MenuPricing'
+import RentalOptions from './RentalOptions'
 
 const TABS = [
   { id: 'smeta',   label: '📊 Смета' },
   { id: 'bizplan', label: '📋 Бизнес-план' },
+  { id: 'rental',  label: '🏠 Аренда' },
   { id: 'menu',    label: '🍽️ Меню' },
   { id: 'brand',   label: '🎨 Дизайн-код' },
   { id: 'resp',    label: '👥 Ответственность' },
@@ -70,6 +72,7 @@ export default function App() {
 
       {tab === 'smeta'   && <InvestmentCalc />}
       {tab === 'bizplan' && <BusinessPlan />}
+      {tab === 'rental'  && <RentalOptions />}
       {tab === 'menu'    && <MenuPricing />}
       {tab === 'brand'   && <BrandTab />}
       {tab === 'resp'    && <ResponsibilityCalc onNavigate={handleNavigate} />}
