@@ -267,6 +267,182 @@ const revenueStreams = [
   },
 ];
 
+// ── БДР 5 ЛЕТ ────────────────────────────────────────────────────────────────
+const BDR_SCENARIOS = [
+  {
+    id: 'pessimistic',
+    label: 'Пессимистичный',
+    emoji: '📉',
+    color: '#dc2626', bg: '#fef2f2', border: '#fca5a5',
+    // Среднемесячная выручка по годам (R$)
+    rev:   [15000, 25000, 34000, 40000, 45000],
+    // Среднемесячные постоянные расходы по годам (аренда + зарплаты + оверхед, без food cost и налога)
+    fixed: [22000, 35000, 37000, 39000, 41000],
+    foodPct: 0.33,
+    taxPct:  0.08,
+    note: 'Медленный старт, низкий сезонный трафик, минимальная загрузка зала',
+  },
+  {
+    id: 'realistic',
+    label: 'Реалистичный',
+    emoji: '📊',
+    color: '#d97706', bg: '#fffbeb', border: '#fcd34d',
+    rev:   [22000, 38000, 52000, 62000, 70000],
+    fixed: [24000, 38000, 40000, 42000, 44000],
+    foodPct: 0.30,
+    taxPct:  0.08,
+    note: 'Нормальный рост, стабильная аудитория к году 2, активный сезон используется',
+  },
+  {
+    id: 'optimistic',
+    label: 'Оптимистичный',
+    emoji: '📈',
+    color: '#16a34a', bg: '#f0fdf4', border: '#86efac',
+    rev:   [30000, 50000, 68000, 82000, 92000],
+    fixed: [26000, 40000, 43000, 46000, 49000],
+    foodPct: 0.28,
+    taxPct:  0.08,
+    note: 'Вирусный эффект детской зоны, высокий сезон загружен полностью, мастер-классы и аренда работают',
+  },
+];
+
+function calcBDR(sc) {
+  return sc.rev.map((rev, y) => {
+    const annualRev   = rev * 12;
+    const cogs        = Math.round(annualRev * sc.foodPct);
+    const grossProfit = annualRev - cogs;
+    const annualFixed = sc.fixed[y] * 12;
+    const ebitda      = grossProfit - annualFixed;
+    const tax         = Math.round(annualRev * sc.taxPct);
+    const netProfit   = ebitda - tax;
+    return { annualRev, cogs, grossProfit, annualFixed, ebitda, tax, netProfit };
+  });
+}
+
+function BDRTable() {
+  const [active, setActive] = useState('realistic');
+  const sc = BDR_SCENARIOS.find(s => s.id === active);
+  const rows = calcBDR(sc);
+  const cumProfit = rows.reduce((acc, r) => { acc.push((acc[acc.length-1] || 0) + r.netProfit); return acc; }, []);
+
+  const fmtM = (n) => `R$${Math.round(Math.abs(n)/1000)}к`;
+  const sign  = (n) => n >= 0 ? '+' : '−';
+  const col   = (n) => n >= 0 ? '#16a34a' : '#dc2626';
+
+  const ROWS = [
+    { label: '📥 Выручка',           key: 'annualRev',   neutral: true },
+    { label: '🛒 Себестоимость',      key: 'cogs',        neg: true },
+    { label: '= Валовая прибыль',     key: 'grossProfit', bold: true },
+    { label: '🏢 Постоянные расходы', key: 'annualFixed', neg: true },
+    { label: '= EBITDA',              key: 'ebitda',      bold: true },
+    { label: '📋 Налог (~8% выручки)', key: 'tax',        neg: true },
+    { label: '💰 Чистая прибыль',     key: 'netProfit',   bold: true, highlight: true },
+  ];
+
+  return (
+    <div style={{ marginTop: 20 }}>
+      {/* Divider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <div style={{ flex: 1, height: 1, background: '#e8e0d4' }} />
+        <span style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#aaa' }}>БДР · 5 лет</span>
+        <div style={{ flex: 1, height: 1, background: '#e8e0d4' }} />
+      </div>
+
+      {/* Scenario tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+        {BDR_SCENARIOS.map(s => (
+          <button key={s.id} onClick={() => setActive(s.id)} style={{
+            flex: 1, padding: '8px 6px', borderRadius: 8, border: `1.5px solid ${active === s.id ? s.color : '#e8e0d4'}`,
+            background: active === s.id ? s.bg : '#faf9f6',
+            cursor: 'pointer', fontSize: 11, fontFamily: "'Georgia',serif",
+            color: active === s.id ? s.color : '#999', fontWeight: active === s.id ? 600 : 400,
+            transition: 'all 0.15s',
+          }}>
+            <div>{s.emoji}</div>
+            <div style={{ marginTop: 2 }}>{s.label}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Scenario note */}
+      <div style={{ fontSize: 11, color: '#888', background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 8, padding: '8px 12px', marginBottom: 14, lineHeight: 1.5 }}>
+        {sc.note}
+      </div>
+
+      {/* Table */}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #ebebeb' }}>
+              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, color: '#aaa', fontWeight: 400, minWidth: 140 }}>Статья</th>
+              {[1,2,3,4,5].map(y => (
+                <th key={y} style={{ textAlign: 'right', padding: '6px 8px', fontSize: 11, color: '#aaa', fontWeight: 400, minWidth: 72 }}>
+                  Год {y}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {ROWS.map(row => (
+              <tr key={row.key} style={{
+                borderBottom: '1px solid #f0f0f0',
+                background: row.highlight ? sc.bg : 'transparent',
+              }}>
+                <td style={{
+                  padding: '7px 8px', fontSize: 11,
+                  color: row.bold ? '#1a1a1a' : '#555',
+                  fontWeight: row.bold ? 600 : 400,
+                }}>{row.label}</td>
+                {rows.map((r, y) => {
+                  const v = r[row.key];
+                  const isNeg = row.neg;
+                  const c = row.highlight ? col(v) : row.bold ? col(v) : isNeg ? '#888' : '#1a1a1a';
+                  return (
+                    <td key={y} style={{ textAlign: 'right', padding: '7px 8px', fontWeight: row.bold ? 600 : 400, color: c, fontSize: 12 }}>
+                      {isNeg ? '−' : (row.bold || row.highlight) ? sign(v) : ''}{fmtM(v)}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+            {/* Cumulative profit row */}
+            <tr style={{ background: '#1a1a1a' }}>
+              <td style={{ padding: '8px 8px', fontSize: 11, color: '#aaa', fontWeight: 500 }}>📈 Накоплен. итог</td>
+              {cumProfit.map((c, y) => (
+                <td key={y} style={{ textAlign: 'right', padding: '8px 8px', fontWeight: 700, fontSize: 12, color: c >= 0 ? '#4ade80' : '#f87171' }}>
+                  {sign(c)}{fmtM(c)}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Okupaemost */}
+      {(() => {
+        const breakIdx = cumProfit.findIndex(c => c >= 0);
+        return (
+          <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: breakIdx >= 0 ? '#f0fdf4' : '#fef2f2', border: `1px solid ${breakIdx >= 0 ? '#86efac' : '#fca5a5'}`, fontSize: 12 }}>
+            {breakIdx >= 0
+              ? <span style={{ color: '#16a34a', fontWeight: 600 }}>✓ Окупаемость — Год {breakIdx + 1}</span>
+              : <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠ Не выходит в плюс за 5 лет — пересмотри расходы или концепцию</span>
+            }
+            <div style={{ color: '#888', marginTop: 3, lineHeight: 1.4 }}>
+              Итого за 5 лет: <strong style={{ color: col(cumProfit[4]) }}>{sign(cumProfit[4])}{fmtM(cumProfit[4])}</strong>
+              {' · '}Выручка Y5: <strong>R${(sc.rev[4] * 12).toLocaleString()}/год</strong>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Monthly breakdown hint */}
+      <div style={{ marginTop: 10, padding: '8px 12px', background: '#f7f7f5', borderRadius: 8, fontSize: 10, color: '#aaa', lineHeight: 1.6 }}>
+        Допущения: выручка = средняя по месяцам с учётом сезонности · налог Simples Nacional ~8% · food cost {Math.round(sc.foodPct*100)}% · расходы растут по мере найма персонала
+      </div>
+    </div>
+  );
+}
+
 const visualData = {
   vibe: "Русская дача встречает скандинавскую избу во Флорипе. Тёмное дерево, белые распашные окна, гортензии, льняные скатерти, персидские ковры, печь.",
   exterior: [
@@ -639,6 +815,7 @@ export default function BusinessPlan() {
           <div style={{ fontSize: 22, fontWeight: 600 }}>R${realisticTotal.toLocaleString()}</div>
           <div style={{ fontSize: 11, color: "#888" }}>~${Math.round(realisticTotal / RATE).toLocaleString()}/мес</div>
         </div>
+        <BDRTable />
       </Section>
 
       {/* ── SECTION 5: ДЕТСКАЯ ЗОНА ── */}
