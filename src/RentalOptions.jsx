@@ -12,7 +12,7 @@
 -- create policy "public delete" on rental_options for delete using (true);
 */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 
 const BASELINE_REVENUE = 35000;
@@ -175,12 +175,27 @@ const inputStyle = {
 const btnPrimary   = { fontFamily: "'Georgia', serif", fontSize: 13, padding: "7px 18px", borderRadius: 8, border: "none", background: "#1a1a1a", color: "#fff", cursor: "pointer" };
 const btnSecondary = { fontFamily: "'Georgia', serif", fontSize: 13, padding: "7px 18px", borderRadius: 8, border: "1px solid #ccc", background: "#fff", color: "#555", cursor: "pointer" };
 
+const QUESTIONS = [
+  "Можно ли завести кур?",
+  "Можно ли делать ремонт и какой?",
+  "Можно ли сносить стены, чтобы объединить комнаты?",
+  "Можно ли сажать растения в землю на территории?",
+  "Разрешено ли коммерческое использование (alvará de funcionamento) по этому адресу?",
+  "Электрическая мощность (carga elétrica) — хватит ли на кофемашину/кухню?",
+  "Канализация и жироуловитель (caixa de gordura) — есть или можно установить?",
+  "Кто платит IPTU и кондоминиум?",
+  "Срок договора и индексация (reajuste — IGPM/IPCA)?",
+  "Можно ли вывеску/фасад (letreiro/fachada)?",
+];
+
 export default function RentalOptions() {
   const [options, setOptions] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [compareMode, setCompareMode] = useState(false);
   const [syncStatus, setSyncStatus] = useState("idle");
+  const [qAnswers, setQAnswers] = useState({});
+  const qSaveTimer = useRef(null);
 
   const loadAll = async () => {
     const { data } = await supabase
@@ -197,8 +212,32 @@ export default function RentalOptions() {
         loadAll();
       })
       .subscribe();
+
+    // Load qAnswers from supabase
+    supabase.from("rental_options").select("data").eq("id", "00000000-0000-0000-0000-000000000001").maybeSingle()
+      .then(({ data }) => { if (data?.data?.qAnswers) setQAnswers(data.data.qAnswers); });
+
     return () => supabase.removeChannel(channel);
   }, []);
+
+  const saveQAnswers = (next) => {
+    clearTimeout(qSaveTimer.current);
+    qSaveTimer.current = setTimeout(() => {
+      supabase.from("rental_options").upsert({
+        id: "00000000-0000-0000-0000-000000000001",
+        data: { qAnswers: next },
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "id" });
+    }, 600);
+  };
+
+  const setQField = (idx, field, value) => {
+    setQAnswers(prev => {
+      const next = { ...prev, [idx]: { ...(prev[idx] || {}), [field]: value } };
+      saveQAnswers(next);
+      return next;
+    });
+  };
 
   const handleAdd = async (formData) => {
     setSyncStatus("saving");
@@ -396,6 +435,61 @@ export default function RentalOptions() {
           Вариантов пока нет. Нажмите «+ Добавить вариант»
         </div>
       )}
+
+      {/* Вопросы по помещению */}
+      <div style={{
+        marginTop: 32,
+        background: "#faf9f6",
+        border: "1.5px solid #EBE2D3",
+        borderRadius: 14,
+        padding: "20px 18px",
+      }}>
+        <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", marginBottom: 4, fontFamily: "'Georgia', serif" }}>
+          🏡 Вопросы по помещению
+        </div>
+        <div style={{ fontSize: 12, color: "#aaa", marginBottom: 16 }}>
+          Список вопросов для переговоров с арендодателем
+        </div>
+        {QUESTIONS.map((q, idx) => {
+          const a = qAnswers[idx] || {};
+          return (
+            <div key={idx} style={{
+              display: "flex", flexDirection: "column", gap: 6,
+              padding: "10px 0",
+              borderBottom: idx < QUESTIONS.length - 1 ? "1px solid #EBE2D3" : "none",
+            }}>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={!!a.done}
+                  onChange={e => setQField(idx, "done", e.target.checked)}
+                  style={{ marginTop: 2, accentColor: "#5C3D1E", flexShrink: 0 }}
+                />
+                <span style={{
+                  fontSize: 13, color: a.done ? "#aaa" : "#1a1a1a",
+                  textDecoration: a.done ? "line-through" : "none",
+                  lineHeight: 1.5, fontFamily: "'Georgia', serif",
+                }}>
+                  {q}
+                </span>
+              </label>
+              <input
+                type="text"
+                value={a.answer || ""}
+                onChange={e => setQField(idx, "answer", e.target.value)}
+                placeholder="Ответ арендодателя..."
+                style={{
+                  marginLeft: 24,
+                  fontFamily: "'Georgia', serif", fontSize: 12,
+                  border: "1px solid #EBE2D3", borderRadius: 8,
+                  padding: "5px 10px", background: "#fff", color: "#1a1a1a",
+                  outline: "none", width: "calc(100% - 24px)", boxSizing: "border-box",
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

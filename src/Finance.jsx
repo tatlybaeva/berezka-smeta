@@ -464,19 +464,20 @@ function SectionInputs({ inputs, setInput, model }) {
       <div style={S.subGroup}>
         <div style={S.subTitle}>Сезонность и раскрутка</div>
         {[
-          ['season', 'Сезонность'],
-          ['ramp',   'Раскрутка'],
-        ].map(([key, label]) => (
-          <div key={key} style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>{label}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 6, minWidth: 0, overflowX: 'auto' }}>
+          ['season', 'Сезонность', '1.4 = +40% (высокий сезон), 0.7 = −30% (низкий), 1.0 = база'],
+          ['ramp',   'Раскрутка',  'Доля выхода на плановый трафик. 0.6 = 60% в первый месяц, 1.0 = вышли на план'],
+        ].map(([key, label, hint]) => (
+          <div key={key} style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 11, color: '#aaa', marginBottom: 8, fontStyle: 'italic' }}>«{hint}»</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
               {MONTHS.map((mo, i) => (
-                <div key={i} style={{ minWidth: 44 }}>
-                  <div style={{ fontSize: 10, color: '#999', marginBottom: 2 }}>{mo}</div>
+                <div key={i}>
+                  <div style={{ fontSize: 10, color: '#999', marginBottom: 2, textAlign: 'center' }}>{mo}</div>
                   <NumInput
                     value={inputs[key][i]}
                     onChange={v => setSeasonField(key, i, v)}
-                    style={{ width: '100%', minWidth: 40 }}
+                    style={{ width: '100%' }}
                   />
                 </div>
               ))}

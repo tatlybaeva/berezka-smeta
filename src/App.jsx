@@ -12,7 +12,7 @@ const TABS = [
   { id: 'bizplan', label: '📋 Бизнес-план' },
   { id: 'resp',    label: '👥 Ответственность' },
   { id: 'rental',  label: '🏠 Аренда' },
-  { id: 'smeta',   label: '📊 Смета' },
+  { id: 'smeta',   label: '📊 Бюджет' },
   { id: 'finance', label: '💰 Финансы' },
   { id: 'menu',    label: '🍽️ Меню' },
   { id: 'brand',   label: '🎨 Дизайн-код' },

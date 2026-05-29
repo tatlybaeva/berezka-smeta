@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, Fragment } from "react";
 import { supabase } from "./supabase";
 
-const RATE = 5.03;
+const RATE = 5.7;
 const fmt$ = (brl) => `$${Math.round(brl / RATE).toLocaleString()}`;
 const fmtR = (brl) => `R$${brl.toLocaleString()}`;
 
@@ -31,9 +31,11 @@ const ZONES = [
       { name: "Ворота на въезд", brl: 2000 },
       { name: "Забор / ограждение", brl: 3000 },
       { name: "Сигнализация (установка)", brl: 1500 },
-      { name: "Камеры IP × 4 + DVR", brl: 1400 },
-      { name: "Брусчатка / дорожки к входу", brl: 3000 },
-      { name: "Фонари вдоль дорожки × 6", brl: 1200 },
+      { name: "Камеры IP (8 шт.) × R$280/шт.", brl: 2240 },
+      { name: "NVR-регистратор + HDD 2TB", brl: 1200 },
+      { name: "Монтаж системы видеонаблюдения", brl: 800 },
+      { name: "Брусчатка/дорожки — 20 м² × R$100/м²", brl: 2000 },
+      { name: "Фонари садовые — 8 шт. × R$200/шт.", brl: 1600 },
       { name: "Озеленение (гортензии, горшки)", brl: 1500 },
       { name: "Вывеска БЕРЁЗКА (деревянная)", brl: 1500 },
     ]
@@ -70,6 +72,8 @@ const ZONES = [
       { name: "Водный жёлоб из бамбука", brl: 0 },
       { name: "Песок + контейнер", brl: 500 },
       { name: "Детские инструменты (лопата, грабли, лейка)", brl: 250 },
+      { name: "Ограждение игровой зоны — 20 пог. м × R$120/пог.м", brl: 2400 },
+      { name: "Ограждение огорода — 15 пог. м × R$120/пог.м", brl: 1800 },
     ]
   },
   {
@@ -354,7 +358,7 @@ export default function InvestmentCalc() {
       <div style={{ marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "#999", textTransform: "uppercase", marginBottom: 4 }}>Конструктор инвестиций</div>
-          <div style={{ fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>БЕРЁЗКА — Смета по зонам</div>
+          <div style={{ fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>БЕРЁЗКА — Инвестиционный бюджет по зонам</div>
         </div>
         <div style={{ fontSize: 11, marginTop: 6, color: syncStatus === "saved" ? "#16a34a" : syncStatus === "saving" ? "#aaa" : syncStatus === "error" ? "#dc2626" : "transparent" }}>
           {syncStatus === "saving" && "сохранение…"}
@@ -510,7 +514,7 @@ export default function InvestmentCalc() {
       <div style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", marginBottom: 16, border: "1px solid #ebebeb" }}>
         <div style={{ fontSize: 12, fontWeight: 500, color: "#555", marginBottom: 12 }}>⚙️ Параметры аренды и капитала</div>
         {[
-          { label: "Аренда/мес", val: rent, set: setRent, min: 5000, max: 20000, step: 500 },
+          { label: "Аренда/мес", val: rent, set: setRent, min: 5000, max: 30000, step: 500 },
           { label: "Залог (мес)", val: depositMonths, set: setDepositMonths, min: 1, max: 6, step: 1, suffix: " мес" },
           { label: "Оборотный кап. (мес)", val: workingCapMonths, set: setWorkingCapMonths, min: 2, max: 12, step: 1, suffix: " мес" },
         ].map(({ label, val, set, min, max, step, suffix }) => (
@@ -526,7 +530,7 @@ export default function InvestmentCalc() {
         ))}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ fontSize: 12, color: "#666", minWidth: 150 }}>Резерв (R$)</div>
-          <input type="range" min={0} max={50000} step={1000} value={reserve}
+          <input type="range" min={0} max={30000} step={1000} value={reserve}
             onChange={e => setReserve(Number(e.target.value))}
             style={{ flex: 1, accentColor: "#1a1a1a" }} />
           <div style={{ fontSize: 13, fontWeight: 500, minWidth: 80, textAlign: "right" }}>R${reserve.toLocaleString()}</div>
@@ -720,6 +724,20 @@ export default function InvestmentCalc() {
                     Итого: {fmtR(total)} / {fmt$(total)}
                   </div>
                 </div>
+                {zone.id === "territory" && (
+                  <div style={{ background: "#FFFBF0", border: "1px solid #F0E4B0", borderRadius: 8, padding: "12px 14px", marginTop: 8, fontSize: 11, color: "#6B5B1E", lineHeight: 1.6 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 6 }}>📋 Политика видеонаблюдения (LGPD)</div>
+                    <ul style={{ margin: 0, paddingLeft: 16 }}>
+                      <li><b>Таблички</b> «Ambiente monitorado por câmeras» — обязательны на входе и в зонах съёмки</li>
+                      <li><b>Хранение записей</b> — 30–90 дней, затем безопасное удаление</li>
+                      <li><b>Доступ</b> — только владелец/ответственный. Передача третьим лицам — только по официальному запросу (полиция, суд)</li>
+                      <li><b>Без аудио</b> — только видео (аудио повышает юридический риск)</li>
+                      <li><b>Туалеты/раздевалки</b> — камеры запрещены</li>
+                      <li><b>Детская зона</b> — общий обзор допустим; информировать родителей (табличка + правила зоны). Публикация кадров с детьми — только с согласия</li>
+                      <li><b>Штраф ANPD</b> до 2% оборота — риск реальный, но закрывается табличками и политикой</li>
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
           </div>
