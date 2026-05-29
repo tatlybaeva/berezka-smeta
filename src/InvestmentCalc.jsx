@@ -24,179 +24,182 @@ const CONSTRUCTION_ZONE = {
   ]
 };
 
+const ML = (q) => `https://lista.mercadolivre.com.br/${encodeURIComponent(q)}`;
+const OLX = (q) => `https://sc.olx.com.br/todos-os-estados-e-cidades?q=${encodeURIComponent(q)}`;
+
 const ZONES = [
   {
     id: "territory", emoji: "🏠", name: "Территория",
     items: [
-      { name: "Ворота на въезд", brl: 2000 },
-      { name: "Забор / ограждение", brl: 3000 },
-      { name: "Сигнализация (установка)", brl: 1500 },
-      { name: "Камеры IP (8 шт.) × R$280/шт.", brl: 2240 },
-      { name: "NVR-регистратор + HDD 2TB", brl: 1200 },
-      { name: "Монтаж системы видеонаблюдения", brl: 800 },
-      { name: "Брусчатка/дорожки — 20 м² × R$100/м²", brl: 2000 },
-      { name: "Фонари садовые — 8 шт. × R$200/шт.", brl: 1600 },
-      { name: "Озеленение (гортензии, горшки)", brl: 1500 },
-      { name: "Вывеска БЕРЁЗКА (деревянная)", brl: 1500 },
+      { name: "Ворота на въезд", brl: 2000, url: ML("portão de entrada residencial") },
+      { name: "Забор / ограждение", brl: 3000, url: ML("cerca tela alambrado") },
+      { name: "Сигнализация (установка)", brl: 1500, url: ML("alarme residencial kit instalação") },
+      { name: "Камеры IP (8 шт.) × R$280/шт.", brl: 2240, url: ML("câmera ip externa 4mp kit 8") },
+      { name: "NVR-регистратор + HDD 2TB", brl: 1200, url: ML("nvr gravador câmera ip hd 2tb") },
+      { name: "Монтаж системы видеонаблюдения", brl: 800, url: "" },
+      { name: "Брусчатка/дорожки — 20 м² × R$100/м²", brl: 2000, url: ML("piso intertravado pedra portuguesa") },
+      { name: "Фонари садовые — 8 шт. × R$200/шт.", brl: 1600, url: ML("luminária jardim solar poste") },
+      { name: "Озеленение (гортензии, горшки)", brl: 1500, url: ML("hortênsia vaso grande planta") },
+      { name: "Вывеска БЕРЁЗКА (деревянная)", brl: 1500, url: ML("placa madeira personalizada letreiro") },
     ]
   },
   {
     id: "entry", emoji: "🚪", name: "Вход / первое впечатление",
     items: [
-      { name: "Деревянная арка или перголa у входа", brl: 1200 },
-      { name: "Меловая доска с меню у входа", brl: 300 },
-      { name: "Скамейка у входа (б/у)", brl: 400 },
-      { name: "Таблички (часы работы, Wi-Fi и т.д.)", brl: 200 },
+      { name: "Деревянная арка или перголa у входа", brl: 1200, url: ML("pérgola madeira jardim") },
+      { name: "Меловая доска с меню у входа", brl: 300, url: ML("quadro negro lousa menu restaurante") },
+      { name: "Скамейка у входа (б/у)", brl: 400, url: OLX("banco madeira jardim") },
+      { name: "Таблички (часы работы, Wi-Fi и т.д.)", brl: 200, url: ML("placa informativa acrílico restaurante") },
     ]
   },
   {
     id: "terrace", emoji: "🌿", name: "Уличная веранда",
     items: [
-      { name: "Деревянный дек (материалы)", brl: 4000 },
-      { name: "6 столиков + стулья б/у", brl: 3600 },
-      { name: "Гирлянды Edison × 3 нити", brl: 900 },
-      { name: "Гамак × 2", brl: 600 },
-      { name: "Горшки с растениями × 6", brl: 900 },
-      { name: "Навес / тент (от дождя)", brl: 2000 },
+      { name: "Деревянный дек (материалы)", brl: 4000, url: ML("deck madeira eucalipto tratado") },
+      { name: "6 столиков + стулья б/у", brl: 3600, url: OLX("mesa cadeira bar restaurante usado") },
+      { name: "Гирлянды Edison × 3 нити", brl: 900, url: ML("cordão luzes festão Edison vintage") },
+      { name: "Гамак × 2", brl: 600, url: ML("rede descanso algodão") },
+      { name: "Горшки с растениями × 6", brl: 900, url: ML("vaso grande plantas externo") },
+      { name: "Навес / тент (от дождя)", brl: 2000, url: ML("tenda gazebo impermeável") },
     ]
   },
   {
     id: "playground", emoji: "👶", name: "Игровая зона (улица)",
     items: [
-      { name: "Типи (бамбук + ткань + фонарики) — фото-зона", brl: 400 },
-      { name: "Меловая стена + ростомер с подсолнухом", brl: 550 },
-      { name: "Грязевая кухня (поддоны)", brl: 500 },
-      { name: "Пни-ступеньки разной высоты", brl: 600 },
-      { name: "Слэклайн между деревьями", brl: 150 },
-      { name: "Качели на дерево (верёвка + доска)", brl: 170 },
-      { name: "Водный жёлоб из бамбука", brl: 0 },
-      { name: "Песок + контейнер", brl: 500 },
-      { name: "Детские инструменты (лопата, грабли, лейка)", brl: 250 },
-      { name: "Ограждение игровой зоны — 20 пог. м × R$120/пог.м", brl: 2400 },
-      { name: "Ограждение огорода — 15 пог. м × R$120/пог.м", brl: 1800 },
+      { name: "Типи (бамбук + ткань + фонарики) — фото-зона", brl: 400, url: ML("cabana bambu tecido infantil") },
+      { name: "Меловая стена + ростомер с подсолнухом", brl: 550, url: ML("régua crescimento infantil parede") },
+      { name: "Грязевая кухня (поддоны)", brl: 500, url: ML("cozinha de lama brinquedo madeira") },
+      { name: "Пни-ступеньки разной высоты", brl: 600, url: ML("toco madeira pinus decoração jardim") },
+      { name: "Слэклайн между деревьями", brl: 150, url: ML("slackline iniciante 15m") },
+      { name: "Качели на дерево (верёвка + доска)", brl: 170, url: ML("balanço madeira corda árvore") },
+      { name: "Водный жёлоб из бамбука", brl: 0, url: ML("bambu calha artesanal") },
+      { name: "Песок + контейнер", brl: 500, url: ML("caixa de areia infantil madeira") },
+      { name: "Детские инструменты (лопата, грабли, лейка)", brl: 250, url: ML("kit jardinagem infantil brinquedo") },
+      { name: "Ограждение игровой зоны — 20 пог. м × R$120/пог.м", brl: 2400, url: ML("cerca madeira jardim rustica") },
+      { name: "Ограждение огорода — 15 пог. м × R$120/пог.м", brl: 1800, url: ML("cerca bambu rustica horta") },
     ]
   },
   {
     id: "garden", emoji: "🐔", name: "Детский огород + куры",
     items: [
-      { name: "Курятник + 4 куры + ограждение", brl: 1800 },
-      { name: "Вертикальный огород (поддоны)", brl: 300 },
-      { name: "Грядки + семена + земля", brl: 600 },
-      { name: "Компостер из поддонов", brl: 200 },
-      { name: "Таблички с названиями растений", brl: 150 },
+      { name: "Курятник + 4 куры + ограждение", brl: 1800, url: ML("galinheiro madeira kit") },
+      { name: "Вертикальный огород (поддоны)", brl: 300, url: ML("horta vertical palete madeira") },
+      { name: "Грядки + семена + земля", brl: 600, url: ML("terra adubada horta sementes kit") },
+      { name: "Компостер из поддонов", brl: 200, url: ML("composteira caseira madeira") },
+      { name: "Таблички с названиями растений", brl: 150, url: ML("placa identificação plantas horta madeira") },
     ]
   },
   {
     id: "indoor_play", emoji: "🎨", name: "Игровая под крышей",
     items: [
-      { name: "Покраска стен (белый + меловая стена)", brl: 600 },
-      { name: "Деревянные полки монтессори", brl: 800 },
-      { name: "Низкий стол + стулья детские", brl: 600 },
-      { name: "Плетёный круглый ковёр", brl: 400 },
-      { name: "Мини дачная кухня-игрушка", brl: 500 },
-      { name: "Подушки + книги + пуфики", brl: 400 },
-      { name: "Деревянные игрушки монтессори", brl: 800 },
+      { name: "Покраска стен (белый + меловая стена)", brl: 600, url: ML("tinta lousa parede quadro negro") },
+      { name: "Деревянные полки монтессори", brl: 800, url: ML("prateleira montessori madeira criança") },
+      { name: "Низкий стол + стулья детские", brl: 600, url: ML("mesa cadeira infantil madeira") },
+      { name: "Плетёный круглый ковёр", brl: 400, url: ML("tapete redondo trançado juta") },
+      { name: "Мини дачная кухня-игрушка", brl: 500, url: ML("cozinha brinquedo madeira infantil") },
+      { name: "Подушки + книги + пуфики", brl: 400, url: ML("puff infantil almofada leitura") },
+      { name: "Деревянные игрушки монтессори", brl: 800, url: ML("brinquedo educativo madeira montessori") },
     ]
   },
   {
     id: "hall", emoji: "🍽️", name: "Зал",
     items: [
-      { name: "Покраска стен (белый)", brl: 800 },
-      { name: "Мебель б/у — 6 столов + разные стулья", brl: 4320 },
-      { name: "Персидские ковры б/у × 4", brl: 600 },
-      { name: "Льняные скатерти × 12", brl: 480 },
-      { name: "Светильники чёрные × 6", brl: 720 },
-      { name: "Открытые полки с посудой", brl: 300 },
-      { name: "Печь-муляж (гипсокартон)", brl: 2500 },
-      { name: "Декор (горшки, вазы, картины, тюль)", brl: 800 },
-      { name: "Кресло-качалка б/у", brl: 400 },
+      { name: "Покраска стен (белый)", brl: 800, url: ML("tinta látex branco fosco galão") },
+      { name: "Мебель б/у — 6 столов + разные стулья", brl: 4320, url: OLX("mesa cadeira restaurante madeira usado") },
+      { name: "Персидские ковры б/у × 4", brl: 600, url: OLX("tapete persa vintage") },
+      { name: "Льняные скатерти × 12", brl: 480, url: ML("toalha mesa linho rústica") },
+      { name: "Светильники чёрные × 6", brl: 720, url: ML("luminária pendente industrial preta") },
+      { name: "Открытые полки с посудой", brl: 300, url: ML("prateleira madeira rústica parede") },
+      { name: "Печь-муляж (гипсокартон)", brl: 2500, url: ML("lareira decorativa gesso drywall") },
+      { name: "Декор (горшки, вазы, картины, тюль)", brl: 800, url: ML("decoração rústica vaso artesanato") },
+      { name: "Кресло-качалка б/у", brl: 400, url: OLX("cadeira balanço madeira usado") },
     ]
   },
   {
     id: "bar", emoji: "☕", name: "Стойка бариста",
     items: [
-      { name: "Кофемашина Этап 1 б/у (De'Longhi/Saeco)", brl: 1200 },
-      { name: "Кофемашина Этап 2 б/у (Gaggia/Rancilio)", brl: 4500 },
-      { name: "Фильтр-кофейник + капучинатор", brl: 750 },
-      { name: "Холодильник витринный б/у", brl: 1500 },
-      { name: "Термосы для подачи × 2", brl: 300 },
-      { name: "Стойка/прилавок б/у", brl: 1000 },
+      { name: "Кофемашина Этап 1 б/у (De'Longhi/Saeco)", brl: 1200, url: OLX("máquina café espresso usado DeLonghi Saeco") },
+      { name: "Кофемашина Этап 2 б/у (Gaggia/Rancilio)", brl: 4500, url: OLX("máquina café profissional Gaggia Rancilio usado") },
+      { name: "Фильтр-кофейник + капучинатор", brl: 750, url: ML("cafeteira filtro coado espumador leite") },
+      { name: "Холодильник витринный б/у", brl: 1500, url: OLX("geladeira expositor bebidas usado") },
+      { name: "Термосы для подачи × 2", brl: 300, url: ML("garrafa térmica café inox 1 litro") },
+      { name: "Стойка/прилавок б/у", brl: 1000, url: OLX("balcão atendimento madeira usado") },
     ]
   },
   {
     id: "kitchen", emoji: "🍳", name: "Кухня",
     items: [
-      { name: "Fogão industrial 4 bocas + forno б/у", brl: 2200 },
-      { name: "Geladeira comercial б/у", brl: 2000 },
-      { name: "Freezer б/у", brl: 1000 },
-      { name: "Mesa inox + Pia inox dupla б/у", brl: 1700 },
-      { name: "Exaustor (вытяжка)", brl: 1200 },
-      { name: "Forno de convecção б/у", brl: 1500 },
-      { name: "Batedeira + panelas inox набор", brl: 1200 },
-      { name: "Мясорубка профессиональная б/у", brl: 650 },
-      { name: "Fritadeira (фритюрница) б/у", brl: 500 },
-      { name: "Блинные сковороды × 3", brl: 150 },
-      { name: "Кастрюли большие × 3 + средние × 3", brl: 500 },
-      { name: "Посудомоечная машина б/у", brl: 2000 },
-      { name: "Ремонт кухни (плитка, стены, под VISA)", brl: 2000 },
+      { name: "Fogão industrial 4 bocas + forno б/у", brl: 2200, url: OLX("fogão industrial 4 bocas usado") },
+      { name: "Geladeira comercial б/у", brl: 2000, url: OLX("geladeira comercial 4 portas usado") },
+      { name: "Freezer б/у", brl: 1000, url: OLX("freezer horizontal comercial usado") },
+      { name: "Mesa inox + Pia inox dupla б/у", brl: 1700, url: OLX("mesa pia inox dupla cozinha comercial") },
+      { name: "Exaustor (вытяжка)", brl: 1200, url: ML("exaustor coifa industrial cozinha") },
+      { name: "Forno de convecção б/у", brl: 1500, url: OLX("forno convecção eletrico usado comercial") },
+      { name: "Batedeira + panelas inox набор", brl: 1200, url: ML("batedeira industrial panela inox kit") },
+      { name: "Мясорубка профессиональная б/у", brl: 650, url: OLX("moedor de carne elétrico profissional usado") },
+      { name: "Fritadeira (фритюрница) б/у", brl: 500, url: OLX("fritadeira elétrica comercial usado") },
+      { name: "Блинные сковороды × 3", brl: 150, url: ML("frigideira crepe bliny antiaderente") },
+      { name: "Кастрюли большие × 3 + средние × 3", brl: 500, url: ML("panela inox caldeirão grande conjunto") },
+      { name: "Посудомоечная машина б/у", brl: 2000, url: OLX("lava louça industrial comercial usado") },
+      { name: "Ремонт кухни (плитка, стены, под VISA)", brl: 2000, url: "" },
     ]
   },
   {
     id: "store", emoji: "🛍️", name: "Магазин эко-игрушек",
     items: [
-      { name: "Стеллаж деревянный у выхода", brl: 800 },
-      { name: "Деревянные игрушки и фигурки (стартовый запас)", brl: 1500 },
-      { name: "Семена в крафт-пакетах с лого БЕРЁЗКА", brl: 300 },
-      { name: "Тканевые куклы и монтессори-наборы", brl: 800 },
+      { name: "Стеллаж деревянный у выхода", brl: 800, url: ML("estante madeira rústica expositor loja") },
+      { name: "Деревянные игрушки и фигурки (стартовый запас)", brl: 1500, url: ML("brinquedo madeira artesanal educativo") },
+      { name: "Семена в крафт-пакетах с лого БЕРЁЗКА", brl: 300, url: ML("semente orgânica envelope kraft personalizado") },
+      { name: "Тканевые куклы и монтессори-наборы", brl: 800, url: ML("boneca pano artesanal montessori kit") },
     ]
   },
   {
     id: "tech_indoor", emoji: "🔧", name: "Тех. помещение (внутри)",
     items: [
-      { name: "Стеллажи для продуктов и инвентаря", brl: 900 },
-      { name: "Уборочный инвентарь + расходники", brl: 400 },
-      { name: "Сейф / ящик для документов", brl: 300 },
-      { name: "Шкафчики для персонала × 3", brl: 600 },
+      { name: "Стеллажи для продуктов и инвентаря", brl: 900, url: ML("estante aço industrial prateleira") },
+      { name: "Уборочный инвентарь + расходники", brl: 400, url: ML("kit limpeza comercial balde vassoura") },
+      { name: "Сейф / ящик для документов", brl: 300, url: ML("cofre documentos pequeno") },
+      { name: "Шкафчики для персонала × 3", brl: 600, url: ML("armário vestiário funcionários aço") },
     ]
   },
   {
     id: "tech_outdoor", emoji: "🏚️", name: "Тех. помещение (улица)",
     items: [
-      { name: "Хозблок / сарай (материалы или б/у)", brl: 2000 },
-      { name: "Стеллажи уличные влагостойкие", brl: 600 },
-      { name: "Замок + защита", brl: 300 },
+      { name: "Хозблок / сарай (материалы или б/у)", brl: 2000, url: OLX("galpão depósito madeira usado") },
+      { name: "Стеллажи уличные влагостойкие", brl: 600, url: ML("estante externa aço galvanizado") },
+      { name: "Замок + защита", brl: 300, url: ML("cadeado reforçado segurança") },
     ]
   },
   {
     id: "toilets", emoji: "🚽", name: "Туалеты",
     items: [
-      { name: "Ремонт (плитка, покраска)", brl: 2000 },
-      { name: "Сантехника б/у (раковина, унитаз)", brl: 1500 },
-      { name: "Зеркало + полка + свет", brl: 400 },
-      { name: "Диспенсер мыло + бумага × 2", brl: 200 },
-      { name: "Декор (растение, рисунок)", brl: 200 },
+      { name: "Ремонт (плитка, покраска)", brl: 2000, url: ML("revestimento piso azulejo banheiro") },
+      { name: "Сантехника б/у (раковина, унитаз)", brl: 1500, url: OLX("pia banheiro vaso sanitário usado") },
+      { name: "Зеркало + полка + свет", brl: 400, url: ML("espelho banheiro iluminado") },
+      { name: "Диспенсер мыло + бумага × 2", brl: 200, url: ML("dispenser papel sabonete banheiro comercial") },
+      { name: "Декор (растение, рисунок)", brl: 200, url: ML("planta suculenta banheiro decoração") },
     ]
   },
   {
     id: "staff", emoji: "👔", name: "Комната персонала",
     items: [
-      { name: "Покраска + небольшой ремонт", brl: 500 },
-      { name: "Шкафчики × 4", brl: 600 },
-      { name: "Стол + стулья для перерыва", brl: 400 },
-      { name: "Мини-холодильник б/у", brl: 400 },
+      { name: "Покраска + небольшой ремонт", brl: 500, url: "" },
+      { name: "Шкафчики × 4", brl: 600, url: ML("armário vestiário funcionários metal") },
+      { name: "Стол + стулья для перерыва", brl: 400, url: OLX("mesa cadeira copa usado") },
+      { name: "Мини-холодильник б/у", brl: 400, url: OLX("frigobar mini geladeira usado") },
     ]
   },
   {
     id: "marketing", emoji: "📣", name: "Маркетинг запуска",
     items: [
-      { name: "Трафарет с лого + баллончики (граффити-декор)", brl: 200 },
-      { name: "Подарки за сторис с отметкой (первый месяц)", brl: 350 },
-      { name: "Брендированные футболки персонала × 8", brl: 1000 },
-      { name: "Pre-launch контент (фотосессия, реквизит)", brl: 600 },
-      { name: "Флаеры / визитки (крафт-бумага)", brl: 250 },
-      { name: "Google Maps + iFood профиль (фотограф)", brl: 400 },
-      { name: "Реклама Instagram (первые 2 нед)", brl: 500 },
-      { name: "Подарочные карты на открытие × 20", brl: 400 },
+      { name: "Трафарет с лого + баллончики (граффити-декор)", brl: 200, url: ML("stencil personalizado spray tinta") },
+      { name: "Подарки за сторис с отметкой (первый месяц)", brl: 350, url: "" },
+      { name: "Брендированные футболки персонала × 8", brl: 1000, url: ML("camiseta personalizada uniforme bordado") },
+      { name: "Pre-launch контент (фотосессия, реквизит)", brl: 600, url: "" },
+      { name: "Флаеры / визитки (крафт-бумага)", brl: 250, url: ML("flyer panfleto kraft personalizado") },
+      { name: "Google Maps + iFood профиль (фотограф)", brl: 400, url: "" },
+      { name: "Реклама Instagram (первые 2 нед)", brl: 500, url: "" },
+      { name: "Подарочные карты на открытие × 20", brl: 400, url: ML("vale presente cartão gift card personalizado") },
     ]
   },
 ];
@@ -243,10 +246,11 @@ export default function InvestmentCalc() {
   const [editingName, setEditingName] = useState(null); // { zoneId, idx, extra? }
   const [nameDraft, setNameDraft] = useState("");
   const [newRowDraft, setNewRowDraft] = useState({}); // { zoneId: {name, brl} }
+  const [itemUrls, setItemUrls] = useState({});      // { key: "https://..." } overrides
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
-  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras });
+  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls });
 
   const applyState = (s) => {
     if (!s) return;
@@ -264,6 +268,7 @@ export default function InvestmentCalc() {
     if (s.currentChecksDay !== undefined) setCurrentChecksDay(s.currentChecksDay);
     if (s.itemNames) setItemNames(s.itemNames);
     if (s.extraItems) setExtraItems(s.extraItems);
+    if (s.itemUrls) setItemUrls(s.itemUrls);
     setTimeout(() => { isRemoteUpdate.current = false; }, 0);
   };
 
@@ -330,8 +335,11 @@ export default function InvestmentCalc() {
   };
 
   useEffect(() => {
-    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems));
-  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems]);
+    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls));
+  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls]);
+
+  const getUrl = (key, item) => itemUrls[key] !== undefined ? itemUrls[key] : (item?.url || "");
+  const setUrl = (key, val) => setItemUrls(p => ({ ...p, [key]: val }));
 
   const zoneTotal = (zone) => {
     const base = zone.items.reduce((sum, item, i) => {
@@ -595,9 +603,10 @@ export default function InvestmentCalc() {
                   const lineTotal = price * qty;
                   const displayName = itemNames[key] ?? item.name;
                   const isEditingThisName = editingName?.zoneId === zone.id && editingName?.idx === i && !editingName?.extra;
+                  const itemUrl = getUrl(key, item);
                   return (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0",
-                      borderBottom: "1px solid #f5f5f5", opacity: on ? 1 : 0.35 }}>
+                    <div key={i} style={{ borderBottom: "1px solid #f5f5f5", opacity: on ? 1 : 0.35 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0" }}>
                       <input type="checkbox" checked={on} onChange={() => toggleItem(zone.id, i)}
                         style={{ width: 14, height: 14, accentColor: "#1a1a1a", cursor: "pointer", flexShrink: 0 }} />
                       {isEdit && isEditingThisName ? (
@@ -607,7 +616,13 @@ export default function InvestmentCalc() {
                           style={{ flex: 1, border: "1px solid #ddd", borderRadius: 5, padding: "2px 6px", fontFamily: "Georgia,serif", fontSize: 12, outline: "none" }} />
                       ) : (
                         <span onClick={() => isEdit && (setEditingName({ zoneId: zone.id, idx: i }), setNameDraft(displayName))}
-                          style={{ flex: 1, fontSize: 12, color: "#444", lineHeight: 1.3, cursor: isEdit ? "text" : "default" }}>{displayName}</span>
+                          style={{ flex: 1, fontSize: 12, color: "#444", lineHeight: 1.3, cursor: isEdit ? "text" : "default" }}>
+                          {displayName}
+                          {!isEdit && itemUrl && (
+                            <a href={itemUrl} target="_blank" rel="noopener noreferrer"
+                              style={{ marginLeft: 5, fontSize: 11, color: "#3b82f6", textDecoration: "none" }}>🔗</a>
+                          )}
+                        </span>
                       )}
 
                       {isEdit ? (
@@ -639,6 +654,18 @@ export default function InvestmentCalc() {
                         </div>
                       )}
                     </div>
+                    {isEdit && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, paddingLeft: 20, paddingBottom: 5 }}>
+                        <span style={{ fontSize: 10, color: "#bbb" }}>🔗</span>
+                        <input
+                          value={itemUrls[key] !== undefined ? itemUrls[key] : (item.url || "")}
+                          onChange={e => setUrl(key, e.target.value)}
+                          placeholder="ссылка на покупку (MercadoLivre, OLX…)"
+                          style={{ flex: 1, border: "1px solid #ebebeb", borderRadius: 4, padding: "2px 6px", fontFamily: "Georgia,serif", fontSize: 10, color: "#666", outline: "none", background: "#fafafa" }}
+                        />
+                      </div>
+                    )}
+                    </div>
                   );
                 })}
 
@@ -649,8 +676,10 @@ export default function InvestmentCalc() {
                   const xQty = quantities[xKey] || 1;
                   const xPrice = prices[xKey] ?? ex.brl;
                   const isEditingExtra = editingName?.zoneId === zone.id && editingName?.idx === j && editingName?.extra;
+                  const xUrl = itemUrls[xKey] || "";
                   return (
-                    <div key={`x${j}`} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid #f5f5f5", opacity: xOn ? 1 : 0.35 }}>
+                    <div key={`x${j}`} style={{ borderBottom: "1px solid #f5f5f5", opacity: xOn ? 1 : 0.35 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0" }}>
                       <input type="checkbox" checked={xOn} onChange={() => setEnabledItems(p => ({ ...p, [xKey]: !xOn }))}
                         style={{ width: 14, height: 14, accentColor: "#1a1a1a", cursor: "pointer", flexShrink: 0 }} />
                       {isEdit && isEditingExtra ? (
@@ -660,7 +689,13 @@ export default function InvestmentCalc() {
                           style={{ flex: 1, border: "1px solid #ddd", borderRadius: 5, padding: "2px 6px", fontFamily: "Georgia,serif", fontSize: 12, outline: "none" }} />
                       ) : (
                         <span onClick={() => isEdit && (setEditingName({ zoneId: zone.id, idx: j, extra: true }), setNameDraft(ex.name))}
-                          style={{ flex: 1, fontSize: 12, color: "#444", cursor: isEdit ? "text" : "default" }}>{ex.name}</span>
+                          style={{ flex: 1, fontSize: 12, color: "#444", cursor: isEdit ? "text" : "default" }}>
+                          {ex.name}
+                          {!isEdit && xUrl && (
+                            <a href={xUrl} target="_blank" rel="noopener noreferrer"
+                              style={{ marginLeft: 5, fontSize: 11, color: "#3b82f6", textDecoration: "none" }}>🔗</a>
+                          )}
+                        </span>
                       )}
                       {isEdit ? (
                         <>
@@ -686,6 +721,18 @@ export default function InvestmentCalc() {
                             : <div style={{ fontSize: 12, fontWeight: 500 }}>{fmtR(xPrice * xQty)}</div>}
                         </div>
                       )}
+                    </div>
+                    {isEdit && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, paddingLeft: 20, paddingBottom: 5 }}>
+                        <span style={{ fontSize: 10, color: "#bbb" }}>🔗</span>
+                        <input
+                          value={xUrl}
+                          onChange={e => setUrl(xKey, e.target.value)}
+                          placeholder="ссылка на покупку…"
+                          style={{ flex: 1, border: "1px solid #ebebeb", borderRadius: 4, padding: "2px 6px", fontFamily: "Georgia,serif", fontSize: 10, color: "#666", outline: "none", background: "#fafafa" }}
+                        />
+                      </div>
+                    )}
                     </div>
                   );
                 })}
