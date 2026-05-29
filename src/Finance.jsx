@@ -286,7 +286,7 @@ export default function Finance() {
       </Section>
 
       {/* ── 5. Финансы на пальцах ── */}
-      <Section id="edu" label="📚 Финансы на пальцах" open={open} toggle={toggleSection}>
+      <Section id="edu" label="📚 База знаний" open={open} toggle={toggleSection}>
         <EduSection />
       </Section>
     </div>
@@ -469,14 +469,14 @@ function SectionInputs({ inputs, setInput, model }) {
         ].map(([key, label]) => (
           <div key={key} style={{ marginBottom: 12 }}>
             <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>{label}</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 6, minWidth: 0, overflowX: 'auto' }}>
               {MONTHS.map((mo, i) => (
-                <div key={i}>
+                <div key={i} style={{ minWidth: 44 }}>
                   <div style={{ fontSize: 10, color: '#999', marginBottom: 2 }}>{mo}</div>
                   <NumInput
                     value={inputs[key][i]}
                     onChange={v => setSeasonField(key, i, v)}
-                    style={{ width: 48 }}
+                    style={{ width: '100%', minWidth: 40 }}
                   />
                 </div>
               ))}
