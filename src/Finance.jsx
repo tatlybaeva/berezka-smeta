@@ -354,6 +354,14 @@ function SectionInputs({ inputs, setInput, model }) {
     const next = inputs.staff.map((r, i) => i === idx ? { ...r, [field]: val } : r)
     setInput('staff', next)
   }
+  const addStaffRow = () => {
+    const next = [...inputs.staff, { role: 'Новая роль', count: 1, salary: 2000, encargos: 1.7, stage: 1 }]
+    setInput('staff', next)
+  }
+  const removeStaffRow = (idx) => {
+    const next = inputs.staff.filter((_, i) => i !== idx)
+    setInput('staff', next)
+  }
   const setSeasonField = (key, idx, val) => {
     const next = [...inputs[key]]
     next[idx] = val
@@ -464,7 +472,7 @@ function SectionInputs({ inputs, setInput, model }) {
           <table style={S.table}>
             <thead>
               <tr>
-                {['Роль', 'Кол-во', 'ЗП брутто R$', 'Энкаргос ×', 'С этапа', 'Итого R$/мес'].map(h => (
+                {['Роль', 'Кол-во', 'ЗП брутто R$', 'Энкаргос ×', 'С этапа', 'Итого R$/мес', ''].map(h => (
                   <th key={h} style={S.th}>{h}</th>
                 ))}
               </tr>
@@ -502,13 +510,34 @@ function SectionInputs({ inputs, setInput, model }) {
                       </select>
                     </td>
                     <td style={S.tdMono}>{fmt(total)}</td>
+                    <td style={{ ...S.td, textAlign: 'center', padding: '4px 6px' }}>
+                      <button
+                        onClick={() => removeStaffRow(i)}
+                        title="Удалить"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 16, lineHeight: 1, padding: '0 2px' }}
+                        onMouseEnter={e => e.target.style.color = '#A32D2D'}
+                        onMouseLeave={e => e.target.style.color = '#ccc'}
+                      >×</button>
+                    </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
         </div>
-        <div style={{ fontSize: 13, color: '#444', marginTop: 6 }}>
+        <button
+          onClick={addStaffRow}
+          style={{
+            marginTop: 6, display: 'flex', alignItems: 'center', gap: 6,
+            padding: '6px 14px', borderRadius: 7,
+            border: '1.5px dashed #D4C4A8', background: 'transparent',
+            fontSize: 12, color: '#888', cursor: 'pointer',
+            fontFamily: "'Georgia', serif",
+          }}
+        >
+          + добавить сотрудника
+        </button>
+        <div style={{ fontSize: 13, color: '#444', marginTop: 10 }}>
           <span style={{ marginRight: 24 }}>ФОТ Этап 1: <b style={S.negNum}>{fmt(fot1)}</b></span>
           <span style={{ marginRight: 24 }}>ФОТ Этап 2: <b style={S.negNum}>{fmt(fot2)}</b></span>
           <span>ФОТ Этап 3: <b style={S.negNum}>{fmt(fot3)}</b></span>
