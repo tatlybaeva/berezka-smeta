@@ -33,6 +33,14 @@ export default function App() {
   }, [tab])
 
   useEffect(() => {
+    const handler = (e) => {
+      if (TABS.find(t => t.id === e.detail)) setTab(e.detail)
+    }
+    document.addEventListener('navigate-tab', handler)
+    return () => document.removeEventListener('navigate-tab', handler)
+  }, [])
+
+  useEffect(() => {
     if (tab === 'kb' && pendingAnchor) {
       setTimeout(() => {
         const el = document.getElementById(pendingAnchor)

@@ -31,167 +31,29 @@ const initialIdeas = [
 ];
 
 const initialKidsZone = [
-  { name: "Меловая стена (краска + мелки)", who: "сама", brl: 400, done: false },
-  { name: "Ростомер (краска + кисти)", who: "сама", brl: 150, done: false },
-  { name: "Типи (бамбук + ткань + фонарики) — ФОТО-ЗОНА ДЛЯ МАМ 📸", who: "сама", brl: 400, done: false },
-  { name: "Фонарики outdoor IP44 × 2 набора", who: "купить", brl: 400, done: false },
-  { name: "Удлинитель уличный влагозащищённый", who: "купить", brl: 150, done: false },
-  { name: "Грязевая кухня (поддоны)", who: "сама", brl: 500, done: false },
-  { name: "Посуда для кухни (металл б/у)", who: "купить", brl: 200, done: false },
-  { name: "Детские инструменты (лопата, грабли, лейка)", who: "купить", brl: 250, done: false },
-  { name: "Ящики с природными материалами", who: "сама", brl: 200, done: false },
-  { name: "Детский огород + семена", who: "сама", brl: 300, done: false },
-  { name: "Пни-ступеньки", who: "купить (OLX)", brl: 600, done: false },
-  { name: "Водный жёлоб из бамбука", who: "сама (бесплатно)", brl: 0, done: false },
-  { name: "Песок", who: "купить", brl: 300, done: false },
-  { name: "Пропитка для дерева", who: "купить", brl: 150, done: false },
-  { name: "Контейнер для хранения", who: "купить", brl: 200, done: false },
-  { name: "Крестики-нолики (камни + пень)", who: "сама", brl: 0, done: false },
-  { name: "Забор детской зоны", who: "сама", brl: 0, done: false },
-  { name: "Слэклайн между деревьями", who: "купить (MercadoLivre)", brl: 150, done: false },
-  { name: "Качели на дерево (доска + верёвка + ленты)", who: "сама (если ветка позволяет)", brl: 170, done: false },
-  { name: "Куры (3–4 штуки)", who: "купить (feira/OLX)", brl: 400, done: false },
-  { name: "Кормушка + поилка", who: "купить", brl: 150, done: false },
-  { name: "Вертикальный огород из поддонов", who: "сама", brl: 300, done: false },
-  { name: "Горшки + земля + семена трав", who: "купить", brl: 300, done: false },
-];
-
-const initialStaff = [
-  { role: "Повар на смене", status: "2 человека — сменный график", visa: "Местный найм", notes: "5 дней через 2, или через день. Разогревает супы, жарит блины/сырники, собирает тарелки. Не нужен русский шеф — заготовки сделаны заранее. Зарплата R$2 800 × 1.7 = R$4 760 каждый → R$9 520/мес", urgent: false },
-  { role: "Бариста + официант", status: "2 человека — сменный график", visa: "Местный найм", notes: "Кофе, подача, касса, общение с гостями. Желательно базовый английский или русский. Зарплата R$2 200 × 1.7 = R$3 740 каждый → R$7 480/мес", urgent: false },
-  { role: "Заготовщик", status: "1 человек — 3 дня/нед", visa: "Местный найм", notes: "Лепит пельмени/вареники, варит супы, делает котлеты, готовит выпечку. Приходит 3 дня в неделю на 4–5 часов. Зарплата R$2 000 × 1.7 = R$3 400/мес. Может быть Регина на старте.", urgent: false },
-  { role: "Auxiliar geral (посуда + уборка)", status: "1 человек", visa: "Местный найм", notes: "Моет посуду во время сервиса + убирает зал и кухню после закрытия + помогает на заготовках. С промышленной посудомоечной машиной справляется один. Зарплата R$1 800 × 1.7 = R$3 060/мес", urgent: false },
-  { role: "Бухгалтер онлайн (contabilidade)", status: "Аутсорс", visa: "—", notes: "Считает налоги, подаёт декларации, рассчитывает зарплаты с encargos. ~R$700/мес. Найти в Кампеше или онлайн.", urgent: true },
-];
-
-const initialTodos = [
-  { text: "Записаться на осмотр помещения — Santa Ilha (48) 3206-4700", tag: "🏠 Помещение", done: true },
-  { text: "На просмотре: проверить газ, вытяжку, зонирование, IPTU, разрешение на реформы и кур", tag: "🏠 Помещение", done: false },
-  { text: "После выбора: подписать договор через юриста (залог + R$1 500 юрист)", tag: "🏠 Помещение", done: false },
-  { text: "Установить камеры × 4 + DVR до открытия", tag: "🏠 Помещение", done: false },
-  { text: "Спросить арендодателя: разрешено ли держать кур на участке?", tag: "🐔 Деревня", done: false },
-  { text: "Выбрать правовую форму — ME (Microempresa): доход до R$360 000/год, можно сотрудников, Simples Nacional. Обсудить с contabilidade.", tag: "📋 Документы", done: false },
-  { text: "Найти contabilidade в Кампеше — приоритет сразу после помещения", tag: "📋 Документы", done: false },
-  { text: "День 1: открыть CNPJ онлайн через Receita Federal (1–3 дня)", tag: "📋 Документы", done: false },
-  { text: "Мес 1: подать на Alvará de Funcionamento в Prefeitura (срок 1–3 мес)", tag: "📋 Документы", done: false },
-  { text: "Мес 1–4: подать на VISA (Vigilância Sanitária) — параллельно с ремонтом (срок 3–6 мес, критический путь!)", tag: "📋 Документы", done: false },
-  { text: "Мес 2: подать на Alvará Bombeiros после получения Alvará de Funcionamento (срок 1–2 мес)", tag: "📋 Документы", done: false },
-  { text: "Перед открытием: оформить COMCAP (вывоз мусора, 5–10 дней)", tag: "📋 Документы", done: false },
-  { text: "Перед открытием: зарегистрироваться в ECAD (лицензия музыка, ~R$200/мес)", tag: "📋 Документы", done: false },
-  { text: "Купить Seguro Empresarial с включённой responsabilidade civil — покрывает имущество + клиентов + детскую зону. Porto Seguro / Bradesco / Tokio Marine. ~R$300–500/мес", tag: "⚠️ Риски", done: false },
-  { text: "Нанять бариста/официанта × 2 (сменный график) — за 2 нед до открытия", tag: "👤 Сотрудники", done: false },
-  { text: "Нанять auxiliar geral (посуда + уборка) — за 1 нед до открытия", tag: "👤 Сотрудники", done: false },
-  { text: "Нанять заготовщика (3 дня/нед) — к Этапу 2", tag: "👤 Сотрудники", done: false },
-  { text: "Нанять поваров × 2 (сменный) — к открытию кухни (Этап 2)", tag: "👤 Сотрудники", done: false },
-  { text: "Составить рецептурные карты: точная себестоимость каждого блюда", tag: "🍳 Кухня", done: false },
-  { text: "Протестировать все блюда меню дома — зафиксировать время готовки и себестоимость", tag: "🍳 Кухня", done: false },
-  { text: "Написать Kaska Playgrounds (12) 98149-6772 — запрос 3D проекта детской зоны", tag: "👶 Детская зона", done: false },
-  { text: "Найти бамбук бесплатно — группы WhatsApp Campeche / OLX", tag: "👶 Детская зона", done: false },
-  { text: "Найти курятник (OLX или мастер) + 4 курицы", tag: "🐔 Деревня", done: false },
-  { text: "Составить расписание мастер-классов и форму записи через Instagram", tag: "👶 Детская зона", done: false },
-  { text: "Выбрать название: Dacha / Berezka / Avul / Ert", tag: "💡 Концепция", done: false },
-  { text: "Изучить конкурентов: Sehat (Campeche) и другие кафе с детской зоной — цены, трафик", tag: "💡 Концепция", done: false },
-  { text: "Создать Instagram @[название].floripa — публиковать контент до открытия", tag: "📸 Instagram", done: false },
-  { text: "Написать в русскоязычные чаты Флорипы о скором открытии", tag: "📸 Instagram", done: false },
-];
-
-const initialAdmin = [
-  {
-    id: "finance", emoji: "💰", title: "Финансы",
-    items: [
-      { text: "Открыть Conta PJ — Nubank / Inter / Sicoob (нужен CNPJ)", done: false, urgent: true },
-      { text: "Настроить SumUp/InfinitePay — регистрация + интеграция с NF-e", done: false, urgent: true },
-      { text: "Настроить NF-e (nota fiscal) через contabilidade", done: false, urgent: true },
-      { text: "Создать таблицу ежедневного учёта выручки и расходов", done: false, urgent: false },
-      { text: "Настроить раздельный учёт по зонам (кафе / детская зона / мастер-классы)", done: false, urgent: false },
-      { text: "Открыть резервный фонд R$15 000 — не трогать без форс-мажора", done: false, urgent: false },
-    ]
-  },
-  {
-    id: "hr", emoji: "👤", title: "Персонал",
-    items: [
-      { text: "Все сотрудники кто касается еды — курс Manipulador de Alimentos (онлайн, R$50–80)", done: false, urgent: true },
-      { text: "Выбрать форму договора: CLT vs PJ для каждой позиции — обсудить с contabilidade", done: false, urgent: true },
-      { text: "Составить описание обязанностей для каждой роли", done: false, urgent: false },
-      { text: "Написать SOP — стандарты открытия и закрытия кафе", done: false, urgent: false },
-      { text: "Написать SOP — кухня: заготовки, хранение, разморозка, списание", done: false, urgent: false },
-      { text: "Написать SOP — детская зона: уборка, безопасность, инциденты", done: false, urgent: false },
-      { text: "Составить расписание смен на первый месяц", done: false, urgent: false },
-    ]
-  },
-  {
-    id: "safety", emoji: "🔒", title: "Безопасность",
-    items: [
-      { text: "Огнетушители — купить и разместить по плану Bombeiros (мин. 2 шт)", done: false, urgent: true },
-      { text: "Аптечка первой помощи — укомплектовать по ANVISA", done: false, urgent: true },
-      { text: "Доступность для инвалидов (acessibilidade) — пандус, туалет, проходы", done: false, urgent: true },
-      { text: "Placas de saída de emergência (таблички аварийного выхода)", done: false, urgent: true },
-      { text: "Составить план эвакуации и разместить на стенах", done: false, urgent: false },
-      { text: "Процедура при несчастном случае с ребёнком — кто звонит, куда везут", done: false, urgent: false },
-    ]
-  },
-  {
-    id: "brand", emoji: "🎨", title: "Бренд",
-    items: [
-      { text: "Выбрать название: Dacha / Berezka / Avul / Ert", done: false, urgent: true },
-      { text: "Создать логотип — шрифт Cormorant/Playfair + минимальный символ (лист, колосок)", done: false, urgent: true },
-      { text: "Определить цветовую палитру (кремовый / тёмно-коричневый / зелёный / терракот)", done: false, urgent: false },
-      { text: "Дизайн физического меню — двуязычное PT/RU, формат A4 или доска", done: false, urgent: false },
-      { text: "Дизайн семян в крафт-пакетах с лого Берёзки", done: false, urgent: false },
-      { text: "Брендированные футболки персонала × 8 шт", done: false, urgent: false },
-      { text: "Шаблоны Stories для Instagram (5–7 форматов)", done: false, urgent: false },
-    ]
-  },
-  {
-    id: "ops", emoji: "⚙️", title: "Операции",
-    items: [
-      { text: "Настроить Wi-Fi — отдельная сеть для гостей и для работы", done: false, urgent: true },
-      { text: "Составить рецептурные карты — граммовки + себестоимость каждого блюда", done: false, urgent: true },
-      { text: "Система учёта продуктов — таблица: приход / расход / остаток", done: false, urgent: false },
-      { text: "Система бронирований столиков — WhatsApp + Google Calendar", done: false, urgent: false },
-      { text: "Система аренды под мероприятия — договор + чеклист", done: false, urgent: false },
-      { text: "Ежедневный чеклист кафе — открытие / закрытие / уборка", done: false, urgent: false },
-      { text: "Политика детской зоны — возраст, правила, ответственность родителей", done: false, urgent: false },
-      { text: "График мастер-классов — расписание, запись, оплата", done: false, urgent: false },
-    ]
-  },
-  {
-    id: "marketing", emoji: "📱", title: "Маркетинг",
-    items: [
-      { text: "Создать Instagram @[название].floripa — начать постить за 4–6 нед до открытия", done: false, urgent: true },
-      { text: "Зарегистрировать кафе в Google Maps (Google Meu Negócio)", done: false, urgent: true },
-      { text: "Написать в русскоязычные чаты Флорипы — анонс открытия", done: false, urgent: false },
-      { text: "Pre-launch контент — 9 постов: стройка, концепция, меню, команда, дети", done: false, urgent: false },
-      { text: "Программа лояльности — карточка '6 кофе = 1 бесплатно'", done: false, urgent: false },
-      { text: "Сайт — простая landing page (joinmoms.app / berezka.com.br)", done: false, urgent: false },
-      { text: "Партнёрство с Moms App — кафе как точка сбора аудитории", done: false, urgent: false },
-      { text: "Блогеры за депозит на еду — пригласить на закрытый предпросмотр", done: false, urgent: false },
-      { text: "Решить: будет ли доставка iFood / Rappi?", done: false, urgent: false },
-    ]
-  },
-  {
-    id: "accounting", emoji: "📊", title: "Бухгалтерия",
-    items: [
-      { text: "Выбрать и нанять contabilidade — встреча, проверка цены (~R$700/мес)", done: false, urgent: true },
-      { text: "Зарегистрироваться в Simples Nacional через contabilidade", done: false, urgent: true },
-      { text: "Настроить ежемесячную отчётность: выручка / расходы / налог DAS", done: false, urgent: false },
-      { text: "Понять: как правильно платить зарплаты и encargos (FGTS, INSS, férias)", done: false, urgent: false },
-      { text: "Настроить хранение документов — договоры, накладные, NF-e", done: false, urgent: false },
-    ]
-  },
-  {
-    id: "legal", emoji: "⚖️", title: "Юридические вопросы",
-    items: [
-      { text: "Выбрать правовую форму: ME — проверить лимиты и ответственность", done: false, urgent: true },
-      { text: "Проверить договор аренды с юристом перед подписанием", done: false, urgent: true },
-      { text: "Зарегистрировать CNPJ онлайн через gov.br", done: false, urgent: true },
-      { text: "Политика детской зоны — правила использования, возраст, ответственность", done: false, urgent: false },
-      { text: "Политика аренды под мероприятия — договор + депозит + условия отмены", done: false, urgent: false },
-      { text: "Политика возврата — оплата, отмена брони, жалобы", done: false, urgent: false },
-      { text: "LGPD (защита данных) — если собираешь контакты в Instagram/WhatsApp", done: false, urgent: false },
-      { text: "Seguro Empresarial (страховка) — Porto Seguro / Bradesco ~R$400/мес", done: false, urgent: false },
-    ]
-  },
+  { name: "Меловая стена (краска + мелки)", who: "сама", brl: 400, done: false, zone: "indoor" },
+  { name: "Ростомер с подсолнухом", who: "сама", brl: 150, done: false, zone: "outdoor" },
+  { name: "Типи (бамбук + ткань + фонарики) — ФОТО-ЗОНА 📸", who: "сама", brl: 400, done: false, zone: "outdoor" },
+  { name: "Фонарики outdoor IP44 × 2 набора", who: "купить", brl: 400, done: false, zone: "outdoor" },
+  { name: "Удлинитель уличный влагозащищённый", who: "купить", brl: 150, done: false, zone: "outdoor" },
+  { name: "Грязевая кухня (поддоны)", who: "сама", brl: 500, done: false, zone: "outdoor" },
+  { name: "Посуда для кухни (металл б/у)", who: "купить", brl: 200, done: false, zone: "outdoor" },
+  { name: "Детские инструменты (лопата, грабли, лейка)", who: "купить", brl: 250, done: false, zone: "outdoor" },
+  { name: "Пни-ступеньки", who: "купить (OLX)", brl: 600, done: false, zone: "outdoor" },
+  { name: "Водный жёлоб из бамбука", who: "сама (бесплатно)", brl: 0, done: false, zone: "outdoor" },
+  { name: "Песок", who: "купить", brl: 300, done: false, zone: "outdoor" },
+  { name: "Пропитка для дерева", who: "купить", brl: 150, done: false, zone: "outdoor" },
+  { name: "Контейнер для хранения", who: "купить", brl: 200, done: false, zone: "indoor" },
+  { name: "Крестики-нолики (камни + пень)", who: "сама", brl: 0, done: false, zone: "outdoor" },
+  { name: "Забор детской зоны", who: "сама", brl: 0, done: false, zone: "outdoor" },
+  { name: "Слэклайн между деревьями", who: "купить (MercadoLivre)", brl: 150, done: false, zone: "outdoor" },
+  { name: "Качели на дерево (доска + верёвка + ленты)", who: "сама", brl: 170, done: false, zone: "outdoor" },
+  { name: "Куры (3–4 штуки)", who: "купить (feira/OLX)", brl: 400, done: false, zone: "garden" },
+  { name: "Кормушка + поилка", who: "купить", brl: 150, done: false, zone: "garden" },
+  { name: "Вертикальный огород из поддонов", who: "сама", brl: 300, done: false, zone: "garden" },
+  { name: "Горшки + земля + семена трав", who: "купить", brl: 300, done: false, zone: "garden" },
+  { name: "Детский огород + семена", who: "сама", brl: 300, done: false, zone: "garden" },
+  { name: "Ящики с природными материалами", who: "сама", brl: 200, done: false, zone: "outdoor" },
 ];
 
 const pillars = [
@@ -304,7 +166,6 @@ function KeyMetrics({ metrics, setMetrics, finRent }) {
         </div>
       </div>
       {children}
-      {/* Progress bar */}
       <div style={{ height: 4, background: '#e5e7eb', borderRadius: 99, marginTop: 6 }}>
         <div style={{ height: '100%', borderRadius: 99, background: st.color, width: `${Math.min(100, (parseFloat(value) / range[1]) * 100)}%`, transition: 'width 0.3s' }} />
       </div>
@@ -313,14 +174,12 @@ function KeyMetrics({ metrics, setMetrics, finRent }) {
 
   return (
     <div style={{ marginTop: 16 }}>
-      {/* Divider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
         <div style={{ flex: 1, height: 1, background: '#e8e0d4' }} />
         <span style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#aaa' }}>Ключевые метрики</span>
         <div style={{ flex: 1, height: 1, background: '#e8e0d4' }} />
       </div>
 
-      {/* Revenue input */}
       <div style={{ background: '#f7f7f5', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
         <div style={{ fontSize: 11, color: '#888', marginBottom: 8 }}>Введи текущую выручку/мес для расчёта метрик</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -331,7 +190,6 @@ function KeyMetrics({ metrics, setMetrics, finRent }) {
         </div>
       </div>
 
-      {/* Метрики */}
       <MetricRow label="Food cost" value={metrics.foodCost} unit="%" range={[28,32]} st={foodSt}>
         <input type="range" min={10} max={60} step={0.5} value={metrics.foodCost}
           onChange={e => upd('foodCost', Number(e.target.value))}
@@ -346,10 +204,9 @@ function KeyMetrics({ metrics, setMetrics, finRent }) {
         <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>= R${Math.round(rev * laborPct).toLocaleString()}/мес</div>
       </MetricRow>
 
-      <MetricRow label="Аренда / выручка" value={rentPct} unit="%" range={[0,12]} st={rentSt}>
+      <MetricRow label={`Аренда / выручка${finRent !== undefined ? " (из Финансов)" : ""}`} value={rentPct} unit="%" range={[0,12]} st={rentSt}>
         <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
-          R${rent.toLocaleString()}/мес аренда ÷ R${rev.toLocaleString()} выручка
-          {finRent !== undefined && <span style={{ color: '#aaa', marginLeft: 6 }}>(из Финансов)</span>}
+          R${rent.toLocaleString()}/мес ÷ R${rev.toLocaleString()} выручка
         </div>
       </MetricRow>
 
@@ -359,7 +216,6 @@ function KeyMetrics({ metrics, setMetrics, finRent }) {
         </div>
       </MetricRow>
 
-      {/* Формула максимальной выручки дня */}
       <div style={{ background: '#1a1a1a', borderRadius: 10, padding: '14px 16px', marginTop: 4 }}>
         <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#666', marginBottom: 10 }}>Макс. выручка дня</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto 1fr auto 1fr', gap: 4, alignItems: 'center', marginBottom: 12 }}>
@@ -472,14 +328,12 @@ function BDRTable({ active, setActive }) {
 
   return (
     <div style={{ marginTop: 20 }}>
-      {/* Divider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <div style={{ flex: 1, height: 1, background: '#e8e0d4' }} />
         <span style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#aaa' }}>БДР · 5 лет</span>
         <div style={{ flex: 1, height: 1, background: '#e8e0d4' }} />
       </div>
 
-      {/* Scenario tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
         {BDR_SCENARIOS.map(s => (
           <button key={s.id} onClick={() => setActive(s.id)} style={{
@@ -495,12 +349,10 @@ function BDRTable({ active, setActive }) {
         ))}
       </div>
 
-      {/* Scenario note */}
       <div style={{ fontSize: 11, color: '#888', background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 8, padding: '8px 12px', marginBottom: 14, lineHeight: 1.5 }}>
         {sc.note}
       </div>
 
-      {/* Table */}
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
@@ -536,7 +388,6 @@ function BDRTable({ active, setActive }) {
                 })}
               </tr>
             ))}
-            {/* Cumulative profit row */}
             <tr style={{ background: '#1a1a1a' }}>
               <td style={{ padding: '8px 8px', fontSize: 11, color: '#aaa', fontWeight: 500 }}>📈 Накоплен. итог</td>
               {cumProfit.map((c, y) => (
@@ -549,7 +400,6 @@ function BDRTable({ active, setActive }) {
         </table>
       </div>
 
-      {/* Okupaemost */}
       {(() => {
         const breakIdx = cumProfit.findIndex(c => c >= 0);
         return (
@@ -566,7 +416,6 @@ function BDRTable({ active, setActive }) {
         );
       })()}
 
-      {/* Monthly breakdown hint */}
       <div style={{ marginTop: 10, padding: '8px 12px', background: '#f7f7f5', borderRadius: 8, fontSize: 10, color: '#aaa', lineHeight: 1.6 }}>
         Допущения: выручка = средняя по месяцам с учётом сезонности · налог Simples Nacional ~8% · food cost {Math.round(sc.foodPct*100)}% · расходы растут по мере найма персонала
       </div>
@@ -656,6 +505,7 @@ const TAG_COLORS = {
   "🐔 Деревня": "#FFF8E1",
   "⚠️ Риски": "#FFF0E0",
   "🍳 Кухня": "#FFF8F0",
+  "📱 Moms App": "#E6FAF5",
 };
 
 const TAG_TEXT = {
@@ -670,8 +520,6 @@ const TAG_TEXT = {
   "🍳 Кухня": "#7A4F0E",
   "📱 Moms App": "#0F6E56",
 };
-
-const staffMonthly = 9520 + 7480 + 3400 + 3060 + 700;
 
 function Section({ title, open, onToggle, children }) {
   return (
@@ -696,10 +544,11 @@ export default function BusinessPlan() {
   const [openSections, setOpenSections] = useState({});
   const [ideas, setIdeas] = useState(initialIdeas);
   const [newIdea, setNewIdea] = useState("");
+  const [newIdeaTag, setNewIdeaTag] = useState("💡 Концепция");
   const [kidsZone, setKidsZone] = useState(initialKidsZone);
-  const [staff, setStaff] = useState(initialStaff);
-  const [todos, setTodos] = useState(initialTodos);
-  const [admin, setAdmin] = useState(initialAdmin);
+  const [kidsTab, setKidsTab] = useState("outdoor");
+  const [newKidsItem, setNewKidsItem] = useState({ name: '', who: 'купить', brl: 0, zone: 'outdoor' });
+  const [showNewKids, setShowNewKids] = useState(false);
   const [bdrScenario, setBdrScenario] = useState('realistic');
   const [metrics, setMetrics] = useState({
     monthlyRevenue: 35000,
@@ -710,25 +559,26 @@ export default function BusinessPlan() {
     tableTurns: 2.5,
     seats: 40,
   });
-  const [projectInfo, setProjectInfo] = useState({ city: 'Флорианополис', area: 200, rent: 8000 });
-  const [editingProjectInfo, setEditingProjectInfo] = useState(false);
-  const [projectInfoDraft, setProjectInfoDraft] = useState(null);
-  const [syncStatus, setSyncStatus] = useState("idle");
-
-  // New state vars
-  const [finInputs, setFinInputs] = useState(null);
-  const [staffNotes, setStaffNotes] = useState({});
   const [phasesState, setPhasesState] = useState(phases);
   const [styleState, setStyleState] = useState(visualData);
-  const [newKidsItem, setNewKidsItem] = useState({ name: '', who: 'купить', brl: 0 });
-  const [showNewKids, setShowNewKids] = useState(false);
-
+  const [finInputs, setFinInputs] = useState(null);
+  const [syncStatus, setSyncStatus] = useState("idle");
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
+  // Inline editing state
+  const [editingIdeaIdx, setEditingIdeaIdx] = useState(null);
+  const [ideaDraft, setIdeaDraft] = useState("");
+  const [editingPhase, setEditingPhase] = useState(null);
+  const [phaseDraft, setPhaseDraft] = useState("");
+  const [editingStyle, setEditingStyle] = useState(null);
+  const [styleDraft, setStyleDraft] = useState("");
+  const [addingStyle, setAddingStyle] = useState(null);
+  const [styleNewItem, setStyleNewItem] = useState({ name: '', cost: 0, diy: false });
+
   const toggleSection = (idx) => setOpenSections(p => ({ ...p, [idx]: !p[idx] }));
 
-  // Supabase load + realtime
+  // Load from DB + realtime
   useEffect(() => {
     supabase.from("business_plan_state").select("state").eq("id", "main").maybeSingle()
       .then(({ data }) => {
@@ -737,21 +587,15 @@ export default function BusinessPlan() {
         const s = data.state;
         if (s.ideas) setIdeas(s.ideas);
         if (s.kidsZone) setKidsZone(s.kidsZone);
-        if (s.staff) setStaff(s.staff);
-        if (s.todos) setTodos(s.todos);
-        if (s.admin) setAdmin(s.admin);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
-        if (s.projectInfo) setProjectInfo(s.projectInfo);
-        if (s.staffNotes) setStaffNotes(s.staffNotes);
         if (s.phasesState) setPhasesState(s.phasesState);
         if (s.styleState) setStyleState(s.styleState);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       });
 
-    // Load finance_state
     supabase.from('finance_state').select('data').eq('id', 'main').single()
-      .then(({ data }) => { if (data?.data?.inputs) setFinInputs(data.data.inputs) });
+      .then(({ data }) => { if (data?.data?.inputs) setFinInputs(data.data.inputs); });
 
     const channel = supabase.channel("biz_plan_realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "business_plan_state" }, (payload) => {
@@ -760,13 +604,8 @@ export default function BusinessPlan() {
         const s = payload.new.state;
         if (s.ideas) setIdeas(s.ideas);
         if (s.kidsZone) setKidsZone(s.kidsZone);
-        if (s.staff) setStaff(s.staff);
-        if (s.todos) setTodos(s.todos);
-        if (s.admin) setAdmin(s.admin);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
-        if (s.projectInfo) setProjectInfo(s.projectInfo);
-        if (s.staffNotes) setStaffNotes(s.staffNotes);
         if (s.phasesState) setPhasesState(s.phasesState);
         if (s.styleState) setStyleState(s.styleState);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
@@ -798,447 +637,355 @@ export default function BusinessPlan() {
   };
 
   const saveAll = (overrides = {}) => {
-    scheduleSave({ ideas, kidsZone, staffNotes, phasesState, styleState, todos, admin, bdrScenario, metrics, projectInfo, ...overrides });
+    scheduleSave({ ideas, kidsZone, bdrScenario, metrics, phasesState, styleState, ...overrides });
   };
 
+  // Ideas
+  const deleteIdea = (i) => { const next = ideas.filter((_,j) => j!==i); setIdeas(next); saveAll({ideas:next}); };
+  const startEditIdea = (i) => { setEditingIdeaIdx(i); setIdeaDraft(ideas[i].text); };
+  const saveIdeaEdit = (i) => {
+    if (!ideaDraft.trim()) return;
+    const next = ideas.map((x,j) => j===i ? {...x, text:ideaDraft.trim()} : x);
+    setIdeas(next); setEditingIdeaIdx(null); saveAll({ideas:next});
+  };
   const addIdea = () => {
     if (!newIdea.trim()) return;
-    const next = [...ideas, { text: newIdea.trim(), tag: "💡 Концепция" }];
-    setIdeas(next);
-    setNewIdea("");
-    saveAll({ ideas: next });
+    const next = [...ideas, { text: newIdea.trim(), tag: newIdeaTag }];
+    setIdeas(next); setNewIdea(""); saveAll({ideas:next});
   };
 
-  const deleteIdea = (i) => {
-    const next = ideas.filter((_, j) => j !== i);
-    setIdeas(next); saveAll({ ideas: next });
-  };
-
-  const toggleKids = (i) => {
-    const next = kidsZone.map((item, j) => j === i ? { ...item, done: !item.done } : item);
-    setKidsZone(next);
-    saveAll({ kidsZone: next });
-  };
-
+  // Kids zone
+  const toggleKids = (i) => { const next = kidsZone.map((x,j) => j===i ? {...x,done:!x.done} : x); setKidsZone(next); saveAll({kidsZone:next}); };
+  const deleteKidsItem = (i) => { const next = kidsZone.filter((_,j) => j!==i); setKidsZone(next); saveAll({kidsZone:next}); };
   const addKidsItem = () => {
     if (!newKidsItem.name.trim()) return;
-    const next = [...kidsZone, { ...newKidsItem, brl: Number(newKidsItem.brl) || 0, done: false }];
-    setKidsZone(next); setNewKidsItem({ name: '', who: 'купить', brl: 0 }); setShowNewKids(false); saveAll({ kidsZone: next });
+    const next = [...kidsZone, {...newKidsItem, brl:Number(newKidsItem.brl)||0, done:false}];
+    setKidsZone(next); setNewKidsItem({name:'',who:'купить',brl:0,zone:kidsTab}); setShowNewKids(false); saveAll({kidsZone:next});
   };
 
-  const deleteKidsItem = (i) => {
-    const next = kidsZone.filter((_, j) => j !== i);
-    setKidsZone(next); saveAll({ kidsZone: next });
-  };
-
+  // Phases
   const deletePhaseItem = (phaseNum, itemIdx) => {
-    const next = phasesState.map(p => p.num !== phaseNum ? p : { ...p, items: p.items.filter((_, j) => j !== itemIdx) });
-    setPhasesState(next); saveAll({ phasesState: next });
+    const next = phasesState.map(p => p.num!==phaseNum ? p : {...p, items:p.items.filter((_,j)=>j!==itemIdx)});
+    setPhasesState(next); saveAll({phasesState:next});
+  };
+  const startPhaseEdit = (phaseNum, idx) => { setEditingPhase({phaseNum,idx}); setPhaseDraft(phasesState.find(p=>p.num===phaseNum).items[idx]); };
+  const savePhaseDraft = () => {
+    if (!phaseDraft.trim() || !editingPhase) return;
+    const {phaseNum,idx} = editingPhase;
+    const next = phasesState.map(p => p.num!==phaseNum ? p : {...p, items:p.items.map((x,j)=>j===idx?phaseDraft.trim():x)});
+    setPhasesState(next); setEditingPhase(null); saveAll({phasesState:next});
+  };
+  const movePhaseItem = (fromNum, itemIdx, toNum) => {
+    if (fromNum === toNum) return;
+    const item = phasesState.find(p=>p.num===fromNum).items[itemIdx];
+    const next = phasesState.map(p => {
+      if (p.num===fromNum) return {...p, items:p.items.filter((_,j)=>j!==itemIdx)};
+      if (p.num===toNum) return {...p, items:[...p.items,item]};
+      return p;
+    });
+    setPhasesState(next); saveAll({phasesState:next});
   };
 
+  // Style
   const deleteStyleItem = (zoneType, zoneIdx, itemIdx) => {
-    const next = { ...styleState };
-    next[zoneType] = next[zoneType].map((zone, zi) => zi !== zoneIdx ? zone : {
-      ...zone, items: zone.items.filter((_, j) => j !== itemIdx)
-    });
-    setStyleState(next); saveAll({ styleState: next });
+    const next = {...styleState, [zoneType]:styleState[zoneType].map((z,zi)=>zi!==zoneIdx?z:{...z,items:z.items.filter((_,j)=>j!==itemIdx)})};
+    setStyleState(next); saveAll({styleState:next});
+  };
+  const startStyleEdit = (zoneType, zoneIdx, itemIdx) => {
+    setEditingStyle({zoneType,zoneIdx,itemIdx}); setStyleDraft(styleState[zoneType][zoneIdx].items[itemIdx].name);
+  };
+  const saveStyleEdit = () => {
+    if (!styleDraft.trim() || !editingStyle) return;
+    const {zoneType,zoneIdx,itemIdx} = editingStyle;
+    const next = {...styleState, [zoneType]:styleState[zoneType].map((z,zi)=>zi!==zoneIdx?z:{...z,items:z.items.map((x,j)=>j!==itemIdx?x:{...x,name:styleDraft.trim()})})};
+    setStyleState(next); setEditingStyle(null); saveAll({styleState:next});
+  };
+  const addStyleItem = () => {
+    if (!styleNewItem.name.trim() || !addingStyle) return;
+    const {zoneType,zoneIdx} = addingStyle;
+    const next = {...styleState, [zoneType]:styleState[zoneType].map((z,zi)=>zi!==zoneIdx?z:{...z,items:[...z.items,{name:styleNewItem.name.trim(),cost:Number(styleNewItem.cost)||0,diy:styleNewItem.diy}]})};
+    setStyleState(next); setAddingStyle(null); setStyleNewItem({name:'',cost:0,diy:false}); saveAll({styleState:next});
   };
 
-  const updateStaffNote = (role, text) => {
-    const next = { ...staffNotes, [role]: text };
-    setStaffNotes(next); saveAll({ staffNotes: next });
-  };
-
-  const toggleTodo = (i) => {
-    const next = todos.map((t, j) => j === i ? { ...t, done: !t.done } : t);
-    setTodos(next);
-    saveAll({ todos: next });
-  };
-
-  const toggleAdminItem = (sectionId, itemIdx) => {
-    const next = admin.map(sec => sec.id !== sectionId ? sec : {
-      ...sec,
-      items: sec.items.map((item, j) => j === itemIdx ? { ...item, done: !item.done } : item)
-    });
-    setAdmin(next);
-    saveAll({ admin: next });
-  };
-
-  const kidsBrl = kidsZone.reduce((a, x) => a + x.brl, 0);
+  // Computed
+  const kidsBrl = kidsZone.reduce((a,x) => a+x.brl, 0);
   const kidsDone = kidsZone.filter(x => x.done).length;
-  const todosDone = todos.filter(t => t.done).length;
-  const realisticTotal = revenueStreams.reduce((a, r) => a + r.scenarios[0].brl, 0);
-
-  const sections = [
-    { title: "💡 1. Концепция" },
-    { title: "🗓️ 2. Этапы" },
-    { title: "🎨 3. Стиль" },
-    { title: "💰 4. Доходы" },
-    { title: "👶 5. Детская зона" },
-    { title: "👔 6. Сотрудники" },
-    { title: "✅ 7. Задачи" },
-  ];
-
-  // Staff display logic
-  const displayStaff = finInputs?.staff ?? staff;
-  const displayMonthly = finInputs
-    ? finInputs.staff.reduce((s, r) => s + Number(r.count) * Number(r.salary) * Number(r.encargos), 0)
-    : staffMonthly;
+  const realisticTotal = revenueStreams.reduce((a,r) => a+r.scenarios[0].brl, 0);
+  const totalStyleItems = ['exterior','interior','kids'].reduce((a,k) => (styleState[k]||[]).reduce((b,z)=>b+z.items.length,a), 0);
 
   return (
-    <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: "1rem 1rem 2rem" }}>
+    <div style={{ fontFamily:"'Georgia',serif", background:"#faf9f6", minHeight:"100vh", padding:"1rem 1rem 2rem" }}>
+
       {/* Header */}
-      <div style={{ marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div style={{ marginBottom: 16, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
         <div>
-          <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "#999", textTransform: "uppercase", marginBottom: 4 }}>Бизнес-план</div>
-          <div style={{ fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>БЕРЁЗКА — Бизнес-план</div>
-          {editingProjectInfo ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-              <input
-                type="text"
-                value={projectInfoDraft.city}
-                onChange={e => setProjectInfoDraft(d => ({ ...d, city: e.target.value }))}
-                style={{ fontFamily: "'Georgia', serif", fontSize: 12, border: "1px solid #ccc", borderRadius: 6, padding: "2px 6px", width: 120 }}
-              />
-              <input
-                type="number"
-                value={projectInfoDraft.area}
-                onChange={e => setProjectInfoDraft(d => ({ ...d, area: Number(e.target.value) }))}
-                style={{ fontFamily: "'Georgia', serif", fontSize: 12, border: "1px solid #ccc", borderRadius: 6, padding: "2px 6px", width: 60 }}
-              />
-              <span style={{ fontSize: 12, color: "#777" }}>м²</span>
-              <span style={{ fontSize: 12, color: "#777" }}>R$</span>
-              <input
-                type="number"
-                value={projectInfoDraft.rent}
-                onChange={e => setProjectInfoDraft(d => ({ ...d, rent: Number(e.target.value) }))}
-                style={{ fontFamily: "'Georgia', serif", fontSize: 12, border: "1px solid #ccc", borderRadius: 6, padding: "2px 6px", width: 80 }}
-              />
-              <span style={{ fontSize: 12, color: "#777" }}>/мес</span>
-              <button
-                onClick={() => {
-                  setProjectInfo(projectInfoDraft);
-                  setEditingProjectInfo(false);
-                  saveAll({ projectInfo: projectInfoDraft });
-                }}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#16a34a" }}
-              >✓</button>
-            </div>
-          ) : (
-            <div
-              style={{ fontSize: 12, color: "#777", marginTop: 4, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}
-              onClick={() => { setProjectInfoDraft({ ...projectInfo }); setEditingProjectInfo(true); }}
-            >
-              <span>{projectInfo.city} · {projectInfo.area} м² · R${projectInfo.rent.toLocaleString()}/мес</span>
-              <span style={{ fontSize: 11 }}>✏️</span>
-            </div>
-          )}
+          <div style={{ fontSize:10, letterSpacing:"0.12em", color:"#999", textTransform:"uppercase", marginBottom:4 }}>Бизнес-план</div>
+          <div style={{ fontSize:20, fontWeight:600, color:"#1a1a1a" }}>БЕРЁЗКА — Бизнес-план</div>
         </div>
-        <div style={{ fontSize: 11, marginTop: 6, color: syncStatus === "saved" ? "#16a34a" : syncStatus === "saving" ? "#aaa" : syncStatus === "error" ? "#dc2626" : "transparent" }}>
-          {syncStatus === "saving" && "сохранение…"}
-          {syncStatus === "saved" && "✓ сохранено"}
-          {syncStatus === "error" && "⚠ ошибка сохранения"}
+        <div style={{ fontSize:11, color: syncStatus==="saved"?"#16a34a":syncStatus==="saving"?"#aaa":syncStatus==="error"?"#dc2626":"transparent" }}>
+          {syncStatus==="saving"&&"сохранение…"}{syncStatus==="saved"&&"✓ сохранено"}{syncStatus==="error"&&"⚠ ошибка"}
         </div>
       </div>
 
-      {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
+      {/* Mini dashboard */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:20 }}>
         {[
-          { label: "Реалистичный доход/мес", value: `R$${realisticTotal.toLocaleString()}` },
-          { label: "Задач выполнено", value: `${todosDone}/${todos.length}` },
-          { label: "Детская зона", value: `R$${kidsBrl.toLocaleString()}` },
-        ].map(s => (
-          <div key={s.label} style={{ background: "#fff", border: "1px solid #ebebeb", borderRadius: 10, padding: "10px 12px" }}>
-            <div style={{ fontSize: 10, color: "#999", marginBottom: 3 }}>{s.label}</div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>{s.value}</div>
+          { emoji:"💡", label:"Идеи", value:`${ideas.length}` },
+          { emoji:"🎨", label:"Стиль", value:`${totalStyleItems} элем.` },
+          { emoji:"👶", label:"Дет. зона", value:`${kidsDone}/${kidsZone.length} · R$${kidsBrl.toLocaleString()}` },
+          { emoji:"💰", label:"Доходы/мес", value:`R$${realisticTotal.toLocaleString()}` },
+        ].map(s=>(
+          <div key={s.label} style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"10px 12px" }}>
+            <div style={{ fontSize:10, color:"#999", marginBottom:3 }}>{s.emoji} {s.label}</div>
+            <div style={{ fontSize:13, fontWeight:600, color:"#1a1a1a" }}>{s.value}</div>
           </div>
         ))}
       </div>
 
-      {/* ── SECTION 1: КОНЦЕПЦИЯ ── */}
-      <Section title={sections[0].title} open={openSections[0]} onToggle={() => toggleSection(0)}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
-          {pillars.map((p, i) => (
-            <div key={i} style={{ background: "#faf9f6", border: "1px solid #ebebeb", borderRadius: 10, padding: "10px 12px" }}>
-              <div style={{ fontSize: 18, marginBottom: 4 }}>{p.icon}</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 3 }}>{p.title}</div>
-              <div style={{ fontSize: 11, color: "#666", lineHeight: 1.4 }}>{p.desc}</div>
+      {/* SECTION 1: КОНЦЕПЦИЯ */}
+      <Section title="💡 1. Концепция" open={openSections[0]} onToggle={()=>toggleSection(0)}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:16 }}>
+          {pillars.map((p,i)=>(
+            <div key={i} style={{ background:"#faf9f6", border:"1px solid #ebebeb", borderRadius:10, padding:"8px 10px" }}>
+              <div style={{ fontSize:16, marginBottom:3 }}>{p.icon}</div>
+              <div style={{ fontSize:11, fontWeight:600, color:"#1a1a1a", marginBottom:2 }}>{p.title}</div>
+              <div style={{ fontSize:10, color:"#666", lineHeight:1.4 }}>{p.desc}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ marginTop: 8 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 10 }}>Идеи</div>
-          {ideas.map((idea, i) => (
-            <div key={i} style={{ background: "#fff", border: "1px solid #ebebeb", borderRadius: 8, padding: "10px 12px", marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 5 }}>
-                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 99, background: TAG_COLORS[idea.tag] || "#f0f0f0", color: TAG_TEXT[idea.tag] || "#333" }}>
-                  {idea.tag}
-                </span>
-                <button onClick={() => deleteIdea(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
-              </div>
-              <div style={{ fontSize: 13, color: "#1a1a1a", lineHeight: 1.5 }}>{idea.text}</div>
-            </div>
-          ))}
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <input
-              value={newIdea}
-              onChange={e => setNewIdea(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && addIdea()}
-              placeholder="Новая идея..."
-              style={{ flex: 1, border: "1px solid #ddd", borderRadius: 8, padding: "8px 10px", fontFamily: "'Georgia', serif", fontSize: 13, outline: "none" }}
-            />
-            <button
-              onClick={addIdea}
-              style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#1a1a1a", color: "#fff", fontSize: 13, cursor: "pointer", fontFamily: "'Georgia', serif" }}
-            >
-              Добавить идею
-            </button>
+        <div style={{ fontSize:13, fontWeight:600, marginBottom:8 }}>Идеи</div>
+        {ideas.map((idea,i)=>(
+          <div key={i} style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 0", borderBottom:"0.5px solid #f0f0f0" }}>
+            <span style={{ fontSize:9, padding:"1px 6px", borderRadius:99, background:TAG_COLORS[idea.tag]||"#f0f0f0", color:TAG_TEXT[idea.tag]||"#333", flexShrink:0, whiteSpace:"nowrap" }}>
+              {idea.tag}
+            </span>
+            {editingIdeaIdx===i ? (
+              <input
+                autoFocus value={ideaDraft} onChange={e=>setIdeaDraft(e.target.value)}
+                onKeyDown={e=>{ if(e.key==="Enter") saveIdeaEdit(i); if(e.key==="Escape") setEditingIdeaIdx(null); }}
+                onBlur={()=>saveIdeaEdit(i)}
+                style={{ flex:1, border:"1px solid #ddd", borderRadius:6, padding:"3px 8px", fontFamily:"Georgia,serif", fontSize:12, outline:"none" }}
+              />
+            ) : (
+              <span style={{ flex:1, fontSize:12, color:"#1a1a1a", lineHeight:1.4 }}>{idea.text}</span>
+            )}
+            <button onClick={()=>startEditIdea(i)} style={{ background:"none", border:"none", cursor:"pointer", color:"#bbb", fontSize:12, padding:"0 2px" }}>✏️</button>
+            <button onClick={()=>deleteIdea(i)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ccc", fontSize:15, padding:"0 2px", lineHeight:1 }}>×</button>
           </div>
+        ))}
+
+        <div style={{ display:"flex", gap:6, marginTop:10, flexWrap:"wrap" }}>
+          <select value={newIdeaTag} onChange={e=>setNewIdeaTag(e.target.value)}
+            style={{ border:"1px solid #ddd", borderRadius:8, padding:"6px 8px", fontFamily:"Georgia,serif", fontSize:12, background:"#faf9f6" }}>
+            {Object.keys(TAG_COLORS).map(t=><option key={t}>{t}</option>)}
+          </select>
+          <input value={newIdea} onChange={e=>setNewIdea(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addIdea()}
+            placeholder="Новая идея..." style={{ flex:1, minWidth:120, border:"1px solid #ddd", borderRadius:8, padding:"6px 10px", fontFamily:"Georgia,serif", fontSize:12, outline:"none" }} />
+          <button onClick={addIdea} style={{ padding:"6px 14px", borderRadius:8, border:"none", background:"#1a1a1a", color:"#fff", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>+</button>
         </div>
       </Section>
 
-      {/* ── SECTION 2: ЭТАПЫ ── */}
-      <Section title={sections[1].title} open={openSections[1]} onToggle={() => toggleSection(1)}>
-        {phasesState.map((p) => (
-          <div key={p.num} style={{ border: `2px solid ${p.border}`, borderRadius: 12, padding: "12px 14px", marginBottom: 12, background: "#fff" }}>
-            <div style={{ fontSize: 11, background: p.color, color: p.text, padding: "2px 8px", borderRadius: 99, display: "inline-block", marginBottom: 6 }}>
-              {p.title}
-            </div>
-            <div style={{ fontSize: 13, color: "#555", marginBottom: 10, background: "#f7f7f5", borderRadius: 8, padding: "8px 10px" }}>{p.desc}</div>
-            {p.items.map((item, i) => (
-              <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "4px 0", borderBottom: i < p.items.length - 1 ? "0.5px solid #ebebeb" : "none" }}>
-                <span style={{ color: p.border, fontSize: 12, flexShrink: 0 }}>→</span>
-                <span style={{ flex: 1, fontSize: 12, color: "#333", lineHeight: 1.4 }}>{item}</span>
-                <button onClick={() => deletePhaseItem(p.num, i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ddd', fontSize: 13, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
-              </div>
+      {/* SECTION 2: ЭТАПЫ */}
+      <Section title="🗓️ 2. Этапы" open={openSections[1]} onToggle={()=>toggleSection(1)}>
+        {phasesState.map(p=>(
+          <div key={p.num} style={{ border:`2px solid ${p.border}`, borderRadius:12, padding:"12px 14px", marginBottom:12, background:"#fff" }}>
+            <div style={{ fontSize:11, background:p.color, color:p.text, padding:"2px 8px", borderRadius:99, display:"inline-block", marginBottom:6 }}>{p.title}</div>
+            <div style={{ fontSize:13, color:"#555", marginBottom:10, background:"#f7f7f5", borderRadius:8, padding:"8px 10px" }}>{p.desc}</div>
+            {p.items.map((item,ii)=>(
+              editingPhase?.phaseNum===p.num && editingPhase?.idx===ii ? (
+                <div key={ii} style={{ display:"flex", gap:6, padding:"4px 0", alignItems:"center" }}>
+                  <input autoFocus value={phaseDraft} onChange={e=>setPhaseDraft(e.target.value)}
+                    onKeyDown={e=>{ if(e.key==="Enter") savePhaseDraft(); if(e.key==="Escape") setEditingPhase(null); }}
+                    style={{ flex:1, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
+                  <button onClick={savePhaseDraft} style={{ background:"none", border:"none", cursor:"pointer", color:"#16a34a", fontSize:14 }}>✓</button>
+                  <button onClick={()=>setEditingPhase(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"#aaa", fontSize:14 }}>✗</button>
+                </div>
+              ) : (
+                <div key={ii} style={{ display:"flex", gap:6, alignItems:"center", padding:"3px 0", borderBottom: ii<p.items.length-1?"0.5px solid #f0f0f0":"none" }}>
+                  <span style={{ color:p.border, fontSize:12, flexShrink:0 }}>→</span>
+                  <span style={{ flex:1, fontSize:12, color:"#333", lineHeight:1.4 }}>{item}</span>
+                  <button onClick={()=>startPhaseEdit(p.num,ii)} style={{ background:"none", border:"none", cursor:"pointer", color:"#bbb", fontSize:11, padding:"0 2px" }}>✏️</button>
+                  <select
+                    value={p.num}
+                    onChange={e=>movePhaseItem(p.num,ii,Number(e.target.value))}
+                    style={{ border:"1px solid #e5e7eb", borderRadius:4, fontSize:10, padding:"1px 2px", color:"#888", cursor:"pointer", background:"#faf9f6" }}>
+                    <option value={1}>Этап 1</option>
+                    <option value={2}>Этап 2</option>
+                    <option value={3}>Этап 3</option>
+                  </select>
+                  <button onClick={()=>deletePhaseItem(p.num,ii)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ddd", fontSize:15, padding:"0 2px", lineHeight:1 }}>×</button>
+                </div>
+              )
             ))}
           </div>
         ))}
       </Section>
 
-      {/* ── SECTION 3: СТИЛЬ ── */}
-      <Section title={sections[2].title} open={openSections[2]} onToggle={() => toggleSection(2)}>
-        <div style={{ background: "#f7f7f5", borderRadius: 10, padding: "10px 12px", marginBottom: 14, borderLeft: "3px solid #533AB7" }}>
-          <div style={{ fontSize: 12, color: "#555", lineHeight: 1.6 }}>{styleState.vibe}</div>
+      {/* SECTION 3: СТИЛЬ */}
+      <Section title="🎨 3. Стиль" open={openSections[2]} onToggle={()=>toggleSection(2)}>
+        <div style={{ background:"#f7f7f5", borderRadius:10, padding:"10px 12px", marginBottom:14, borderLeft:"3px solid #533AB7" }}>
+          <div style={{ fontSize:12, color:"#555", lineHeight:1.6 }}>{styleState.vibe}</div>
         </div>
-
-        {['exterior', 'interior', 'kids'].map(zoneType =>
-          (styleState[zoneType] || []).map((section, si) => (
-            <div key={`${zoneType}-${si}`} style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>{section.zone}</div>
-              {section.items.map((item, ii) => (
-                <div key={ii} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid #ebebeb" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
-                    {item.diy && <span style={{ fontSize: 9, background: "#EAF3DE", color: "#3B6D11", padding: "1px 5px", borderRadius: 99 }}>сама</span>}
-                    <span style={{ fontSize: 12, color: "#1a1a1a" }}>{item.name}</span>
+        {['exterior','interior','kids'].map(zoneType=>
+          (styleState[zoneType]||[]).map((section,si)=>(
+            <div key={`${zoneType}-${si}`} style={{ marginBottom:14 }}>
+              <div style={{ fontSize:13, fontWeight:600, color:"#1a1a1a", marginBottom:8 }}>{section.zone}</div>
+              {section.items.map((item,ii)=>(
+                editingStyle?.zoneType===zoneType && editingStyle?.zoneIdx===si && editingStyle?.itemIdx===ii ? (
+                  <div key={ii} style={{ display:"flex", gap:6, padding:"4px 0", alignItems:"center" }}>
+                    <input autoFocus value={styleDraft} onChange={e=>setStyleDraft(e.target.value)}
+                      onKeyDown={e=>{ if(e.key==="Enter") saveStyleEdit(); if(e.key==="Escape") setEditingStyle(null); }}
+                      style={{ flex:1, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
+                    <button onClick={saveStyleEdit} style={{ background:"none", border:"none", cursor:"pointer", color:"#16a34a", fontSize:14 }}>✓</button>
+                    <button onClick={()=>setEditingStyle(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"#aaa", fontSize:14 }}>✗</button>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 500 }}>
-                      {item.cost === 0 ? "✅ есть/бесплатно" : `R$${item.cost.toLocaleString()}`}
-                    </span>
-                    <button onClick={() => deleteStyleItem(zoneType, si, ii)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ddd', fontSize: 13, padding: 0, lineHeight: 1 }}>×</button>
+                ) : (
+                  <div key={ii} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:"0.5px solid #ebebeb" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, flex:1 }}>
+                      {item.diy && <span style={{ fontSize:9, background:"#EAF3DE", color:"#3B6D11", padding:"1px 5px", borderRadius:99 }}>сама</span>}
+                      <span style={{ fontSize:12, color:"#1a1a1a" }}>{item.name}</span>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                      <span style={{ fontSize:12, fontWeight:500, whiteSpace:"nowrap" }}>
+                        {item.cost===0?"✅ бесплатно":`R$${item.cost.toLocaleString()}`}
+                      </span>
+                      <button onClick={()=>startStyleEdit(zoneType,si,ii)} style={{ background:"none", border:"none", cursor:"pointer", color:"#bbb", fontSize:11, padding:"0 2px" }}>✏️</button>
+                      <button onClick={()=>deleteStyleItem(zoneType,si,ii)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ddd", fontSize:15, padding:"0 2px", lineHeight:1 }}>×</button>
+                    </div>
                   </div>
-                </div>
+                )
               ))}
+              {addingStyle?.zoneType===zoneType && addingStyle?.zoneIdx===si ? (
+                <div style={{ display:"flex", gap:6, marginTop:6, flexWrap:"wrap", alignItems:"center" }}>
+                  <input placeholder="Название..." value={styleNewItem.name} onChange={e=>setStyleNewItem(x=>({...x,name:e.target.value}))}
+                    style={{ flex:1, minWidth:140, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
+                  <input placeholder="R$" type="number" value={styleNewItem.cost} onChange={e=>setStyleNewItem(x=>({...x,cost:e.target.value}))}
+                    style={{ width:70, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
+                  <label style={{ display:"flex", alignItems:"center", gap:4, fontSize:12, cursor:"pointer" }}>
+                    <input type="checkbox" checked={styleNewItem.diy} onChange={e=>setStyleNewItem(x=>({...x,diy:e.target.checked}))} />
+                    сама
+                  </label>
+                  <button onClick={addStyleItem} style={{ padding:"4px 10px", borderRadius:6, border:"none", background:"#1a1a1a", color:"#fff", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Добавить</button>
+                  <button onClick={()=>setAddingStyle(null)} style={{ padding:"4px 8px", borderRadius:6, border:"1px solid #ccc", background:"#fff", color:"#555", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Отмена</button>
+                </div>
+              ) : (
+                <button onClick={()=>{ setAddingStyle({zoneType,zoneIdx:si}); setStyleNewItem({name:'',cost:0,diy:false}); }}
+                  style={{ marginTop:6, background:"none", border:"1px dashed #ddd", borderRadius:6, padding:"3px 10px", fontSize:11, color:"#aaa", cursor:"pointer", fontFamily:"Georgia,serif" }}>
+                  + Добавить
+                </button>
+              )}
             </div>
           ))
         )}
       </Section>
 
-      {/* ── SECTION 4: ДОХОДЫ ── */}
-      <Section title={sections[3].title} open={openSections[3]} onToggle={() => toggleSection(3)}>
-        {revenueStreams.map((r, i) => (
-          <div key={i} style={{ background: "#fff", border: "1px solid #ebebeb", borderRadius: 10, padding: "12px 14px", marginBottom: 10 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{r.stream}</div>
-            <div style={{ fontSize: 11, color: "#666", marginBottom: 10, lineHeight: 1.4 }}>{r.desc}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {r.scenarios.map((s, j) => (
-                <div key={j} style={{ background: j === 0 ? "#f7f7f5" : "#EAF3DE", borderRadius: 8, padding: "8px 10px" }}>
-                  <div style={{ fontSize: 10, color: j === 0 ? "#999" : "#3B6D11", marginBottom: 2, lineHeight: 1.3 }}>{s.label}</div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: j === 0 ? "#555" : "#27500A" }}>R${s.brl.toLocaleString()}</div>
-                  <div style={{ fontSize: 10, color: j === 0 ? "#aaa" : "#3B6D11" }}>~${Math.round(s.brl / RATE).toLocaleString()}</div>
+      {/* SECTION 4: ДОХОДЫ */}
+      <Section title="💰 4. Доходы" open={openSections[3]} onToggle={()=>toggleSection(3)}>
+        {revenueStreams.map((r,i)=>(
+          <div key={i} style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px", marginBottom:10 }}>
+            <div style={{ fontSize:14, fontWeight:600, marginBottom:4 }}>{r.stream}</div>
+            <div style={{ fontSize:11, color:"#666", marginBottom:10, lineHeight:1.4 }}>{r.desc}</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+              {r.scenarios.map((s,j)=>(
+                <div key={j} style={{ background:j===0?"#f7f7f5":"#EAF3DE", borderRadius:8, padding:"8px 10px" }}>
+                  <div style={{ fontSize:10, color:j===0?"#999":"#3B6D11", marginBottom:2, lineHeight:1.3 }}>{s.label}</div>
+                  <div style={{ fontSize:15, fontWeight:600, color:j===0?"#555":"#27500A" }}>R${s.brl.toLocaleString()}</div>
                 </div>
               ))}
             </div>
           </div>
         ))}
-        <div style={{ background: "#1a1a1a", borderRadius: 10, padding: "12px 14px", color: "#fff" }}>
-          <div style={{ fontSize: 11, color: "#aaa", marginBottom: 2 }}>Реалистичный итого/мес</div>
-          <div style={{ fontSize: 22, fontWeight: 600 }}>R${realisticTotal.toLocaleString()}</div>
-          <div style={{ fontSize: 11, color: "#888" }}>~${Math.round(realisticTotal / RATE).toLocaleString()}/мес</div>
+        <div style={{ background:"#1a1a1a", borderRadius:10, padding:"12px 14px", color:"#fff", marginBottom:16 }}>
+          <div style={{ fontSize:11, color:"#aaa", marginBottom:2 }}>Реалистичный итого/мес</div>
+          <div style={{ fontSize:22, fontWeight:600 }}>R${realisticTotal.toLocaleString()}</div>
         </div>
-        <KeyMetrics metrics={metrics} setMetrics={(m) => { setMetrics(m); saveAll({ metrics: m }); }} finRent={finInputs?.rent} />
-        <BDRTable active={bdrScenario} setActive={(v) => { setBdrScenario(v); saveAll({ bdrScenario: v }); }} />
+
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+          <div style={{ fontSize:10, color:"#aaa" }}>
+            {finInputs ? "✓ Аренда подтянута из раздела Финансы" : "Аренда задаётся в разделе Финансы"}
+          </div>
+          <button
+            onClick={()=>{ document.dispatchEvent(new CustomEvent('navigate-tab', {detail:'finance'})); }}
+            style={{ padding:"4px 12px", borderRadius:6, border:"1px solid #e5e7eb", background:"#fff", color:"#555", fontSize:11, cursor:"pointer", fontFamily:"Georgia,serif" }}>
+            → в Финансы
+          </button>
+        </div>
+        <KeyMetrics metrics={metrics} setMetrics={m=>{ setMetrics(m); saveAll({metrics:m}); }} finRent={finInputs?.rent} />
+        <BDRTable active={bdrScenario} setActive={v=>{ setBdrScenario(v); saveAll({bdrScenario:v}); }} />
       </Section>
 
-      {/* ── SECTION 5: ДЕТСКАЯ ЗОНА ── */}
-      <Section title={sections[4].title} open={openSections[4]} onToggle={() => toggleSection(4)}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontSize: 12, color: "#666" }}>Выполнено {kidsDone}/{kidsZone.length}</div>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>R${kidsBrl.toLocaleString()} <span style={{ fontSize: 11, color: "#999" }}>/ ~${Math.round(kidsBrl / RATE)}</span></div>
+      {/* SECTION 5: ДЕТСКАЯ ЗОНА */}
+      <Section title="👶 5. Детская зона" open={openSections[4]} onToggle={()=>toggleSection(4)}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+          <div style={{ fontSize:12, color:"#666" }}>Выполнено {kidsDone}/{kidsZone.length}</div>
+          <div style={{ fontSize:14, fontWeight:600 }}>R${kidsBrl.toLocaleString()}</div>
         </div>
-        {kidsZone.map((item, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0", borderBottom: "0.5px solid #ebebeb" }}>
-            <div onClick={() => toggleKids(i)} style={{ width: 17, height: 17, borderRadius: 4, border: item.done ? "none" : "1.5px solid #ccc", background: item.done ? "#185FA5" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, cursor: "pointer" }}>
-              {item.done && <span style={{ color: "white", fontSize: 11 }}>✓</span>}
-            </div>
-            <div style={{ flex: 1, cursor: "pointer" }} onClick={() => toggleKids(i)}>
-              <div style={{ fontSize: 13, color: item.done ? "#999" : "#1a1a1a", textDecoration: item.done ? "line-through" : "none" }}>{item.name}</div>
-              <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>{item.who} · {item.brl === 0 ? "бесплатно" : `R$${item.brl}`}</div>
-            </div>
-            <button onClick={() => deleteKidsItem(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ddd', fontSize: 14, padding: 0, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>×</button>
-          </div>
-        ))}
 
-        {/* Add new item */}
-        <div style={{ marginTop: 12 }}>
-          {!showNewKids ? (
-            <button onClick={() => setShowNewKids(true)} style={{ fontSize: 12, color: '#185FA5', background: 'none', border: '1px solid #c0d8f0', borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Georgia', serif" }}>
-              + Добавить
+        <div style={{ marginBottom:12 }}>
+          {[
+            { key:"outdoor", label:"🌳 Уличная", color:"#3B6D11", bg:"#EAF3DE" },
+            { key:"indoor",  label:"🏠 В помещении", color:"#0C447C", bg:"#E6F1FB" },
+            { key:"garden",  label:"🌱 Огород", color:"#7B5800", bg:"#FFF8E1" },
+          ].map(tab=>(
+            <button key={tab.key} onClick={()=>setKidsTab(tab.key)}
+              style={{ marginRight:6, padding:"5px 12px", borderRadius:20, border:`1.5px solid ${kidsTab===tab.key?tab.color:"#e5e7eb"}`,
+                background:kidsTab===tab.key?tab.bg:"#faf9f6", color:kidsTab===tab.key?tab.color:"#999",
+                fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif", fontWeight:kidsTab===tab.key?600:400 }}>
+              {tab.label}
             </button>
-          ) : (
-            <div style={{ background: '#f7f7f5', borderRadius: 10, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <input
-                value={newKidsItem.name}
-                onChange={e => setNewKidsItem(p => ({ ...p, name: e.target.value }))}
-                placeholder="Название..."
-                style={{ border: '1px solid #ddd', borderRadius: 8, padding: '6px 10px', fontFamily: "'Georgia', serif", fontSize: 13, outline: 'none' }}
-              />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <select
-                  value={newKidsItem.who}
-                  onChange={e => setNewKidsItem(p => ({ ...p, who: e.target.value }))}
-                  style={{ flex: 1, border: '1px solid #ddd', borderRadius: 8, padding: '6px 10px', fontFamily: "'Georgia', serif", fontSize: 12 }}
-                >
-                  <option value="купить">купить</option>
-                  <option value="сама">сама</option>
-                  <option value="сама (бесплатно)">сама (бесплатно)</option>
-                </select>
-                <input
-                  type="number"
-                  value={newKidsItem.brl}
-                  onChange={e => setNewKidsItem(p => ({ ...p, brl: e.target.value }))}
-                  placeholder="R$"
-                  style={{ width: 80, border: '1px solid #ddd', borderRadius: 8, padding: '6px 10px', fontFamily: "'Georgia', serif", fontSize: 12, textAlign: 'right' }}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={addKidsItem} style={{ flex: 1, background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, padding: '7px', cursor: 'pointer', fontFamily: "'Georgia', serif", fontSize: 12 }}>Добавить</button>
-                <button onClick={() => { setShowNewKids(false); setNewKidsItem({ name: '', who: 'купить', brl: 0 }); }} style={{ flex: 1, background: 'none', color: '#888', border: '1px solid #ddd', borderRadius: 8, padding: '7px', cursor: 'pointer', fontFamily: "'Georgia', serif", fontSize: 12 }}>Отмена</button>
-              </div>
-            </div>
-          )}
-        </div>
-      </Section>
-
-      {/* ── SECTION 6: СОТРУДНИКИ ── */}
-      <Section title={sections[5].title} open={openSections[5]} onToggle={() => toggleSection(5)}>
-        <div style={{ background: "#f7f7f5", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 12, color: "#666" }}>Ежемесячно (с encargos × 1.7)</span>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>R${displayMonthly.toLocaleString()}/мес</span>
+          ))}
         </div>
 
-        {finInputs ? (
-          <div style={{ overflowX: 'auto', marginBottom: 12 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-              <thead>
-                <tr>
-                  {['Роль', 'Кол-во', 'ЗП брутто', 'Encargos', 'Этап', 'Итого/мес'].map(h => (
-                    <th key={h} style={{ background: '#f5f0e8', padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: h === 'Роль' ? 'left' : 'right', fontSize: 11 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {finInputs.staff.map((s, i) => {
-                  const total = Number(s.count) * Number(s.salary) * Number(s.encargos);
-                  return (
-                    <tr key={i}>
-                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', fontSize: 12 }}>{s.role}</td>
-                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'right', fontSize: 12 }}>{s.count}</td>
-                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'right', fontSize: 12 }}>R${Number(s.salary).toLocaleString()}</td>
-                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'right', fontSize: 12 }}>×{s.encargos}</td>
-                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'center', fontSize: 12 }}>{s.stage}</td>
-                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'right', fontSize: 12, fontWeight: 600 }}>R${Math.round(total).toLocaleString()}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <div style={{ fontSize: 10, color: '#aaa', marginTop: 4 }}>Данные из вкладки Финансы · редактировать там</div>
-          </div>
-        ) : (
-          staff.map((s, i) => (
-            <div key={i} style={{ background: "#fff", border: s.urgent ? "2px solid #185FA5" : "1px solid #ebebeb", borderRadius: 10, padding: "12px 14px", marginBottom: 10 }}>
-              {s.urgent && <div style={{ fontSize: 10, background: "#E6F1FB", color: "#0C447C", padding: "2px 7px", borderRadius: 99, display: "inline-block", marginBottom: 6 }}>Приоритет</div>}
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.role}</div>
-              <div style={{ fontSize: 12, color: "#666", marginBottom: 3 }}>Статус: {s.status}</div>
-              <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>Найм: {s.visa}</div>
-              <div style={{ fontSize: 12, color: "#444", lineHeight: 1.5 }}>{s.notes}</div>
-            </div>
-          ))
-        )}
-
-        {/* Notes per role */}
-        {displayStaff.map((s, i) => (
-          <div key={i} style={{ marginBottom: 8 }}>
-            <div style={{ fontSize: 11, color: '#888', marginBottom: 3 }}>{s.role} — заметки</div>
-            <textarea
-              value={staffNotes[s.role] || ''}
-              onChange={e => updateStaffNote(s.role, e.target.value)}
-              rows={2}
-              style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 8, padding: "6px 10px", fontFamily: "'Georgia', serif", fontSize: 12, color: "#444", resize: "vertical", background: "#faf9f6", boxSizing: "border-box" }}
-              placeholder="Заметки..."
-            />
-          </div>
-        ))}
-      </Section>
-
-      {/* ── SECTION 7: ЗАДАЧИ ── */}
-      <Section title={sections[6].title} open={openSections[6]} onToggle={() => toggleSection(6)}>
-        <div style={{ fontSize: 12, color: "#666", marginBottom: 10 }}>
-          {todosDone}/{todos.length} выполнено
-        </div>
-        {todos.map((t, i) => (
-          <div key={i} onClick={() => toggleTodo(i)} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "7px 0", borderBottom: "0.5px solid #ebebeb", cursor: "pointer" }}>
-            <div style={{ width: 16, height: 16, borderRadius: 3, border: t.done ? "none" : "1.5px solid #ccc", background: t.done ? "#185FA5" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-              {t.done && <span style={{ color: "white", fontSize: 10 }}>✓</span>}
-            </div>
-            <span style={{ flex: 1, fontSize: 12, color: t.done ? "#aaa" : "#333", textDecoration: t.done ? "line-through" : "none", lineHeight: 1.4 }}>{t.text}</span>
-          </div>
-        ))}
-
-        <div style={{ height: 1, background: "#e0e0e0", margin: "18px 0 14px" }} />
-
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 10 }}>Административные задачи</div>
-        {admin.map((section) => {
-          const done = section.items.filter(item => item.done).length;
-          const urgentCount = section.items.filter(item => item.urgent && !item.done).length;
+        {kidsZone.filter(item=>item.zone===kidsTab).map((item)=>{
+          const globalIdx = kidsZone.indexOf(item);
           return (
-            <div key={section.id} style={{ background: "#fff", border: "1px solid #ebebeb", borderRadius: 10, marginBottom: 10, overflow: "hidden" }}>
-              <div style={{ padding: "10px 14px", borderBottom: "1px solid #f5f5f5", display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 16 }}>{section.emoji}</span>
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{section.title}</span>
-                {urgentCount > 0 && (
-                  <span style={{ background: "#FCEBEB", color: "#A32D2D", fontSize: 10, padding: "2px 6px", borderRadius: 99 }}>{urgentCount} срочно</span>
-                )}
-                <span style={{ fontSize: 11, color: "#aaa" }}>{done}/{section.items.length}</span>
+            <div key={globalIdx} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"7px 0", borderBottom:"0.5px solid #ebebeb" }}>
+              <div onClick={()=>toggleKids(globalIdx)}
+                style={{ width:17, height:17, borderRadius:4, border:item.done?"none":"1.5px solid #ccc",
+                  background:item.done?"#185FA5":"transparent", display:"flex", alignItems:"center", justifyContent:"center",
+                  flexShrink:0, marginTop:1, cursor:"pointer" }}>
+                {item.done && <span style={{ color:"white", fontSize:11 }}>✓</span>}
               </div>
-              {section.items.map((item, i) => (
-                <div key={i} onClick={() => toggleAdminItem(section.id, i)} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "7px 14px", borderBottom: i < section.items.length - 1 ? "1px solid #f7f7f5" : "none", background: item.done ? "#fafafa" : "#fff", cursor: "pointer" }}>
-                  <div style={{ marginTop: 1, width: 14, height: 14, border: "1.5px solid #ccc", borderRadius: 3, background: item.done ? "#1a1a1a" : "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {item.done && <span style={{ color: "#fff", fontSize: 10, lineHeight: 1 }}>✓</span>}
-                  </div>
-                  <span style={{ flex: 1, fontSize: 12, color: item.done ? "#aaa" : "#333", textDecoration: item.done ? "line-through" : "none", lineHeight: 1.4 }}>{item.text}</span>
-                  {item.urgent && !item.done && (
-                    <span style={{ fontSize: 9, background: "#FCEBEB", color: "#A32D2D", padding: "2px 5px", borderRadius: 99, flexShrink: 0, marginTop: 2 }}>срочно</span>
-                  )}
-                </div>
-              ))}
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, color:item.done?"#999":"#1a1a1a", textDecoration:item.done?"line-through":"none" }}>{item.name}</div>
+                <div style={{ fontSize:11, color:"#aaa", marginTop:1 }}>{item.who} · {item.brl===0?"бесплатно":`R$${item.brl}`}</div>
+              </div>
+              <button onClick={()=>deleteKidsItem(globalIdx)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ddd", fontSize:15, padding:"0 2px", lineHeight:1, marginTop:1 }}>×</button>
             </div>
           );
         })}
+        {kidsZone.filter(item=>item.zone===kidsTab).length===0 && (
+          <div style={{ fontSize:12, color:"#aaa", padding:"12px 0" }}>Пусто — добавьте первый элемент</div>
+        )}
+
+        {showNewKids ? (
+          <div style={{ background:"#f7f7f5", borderRadius:10, padding:"12px", marginTop:10 }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+              <div style={{ gridColumn:"span 2" }}>
+                <input placeholder="Название..." value={newKidsItem.name} onChange={e=>setNewKidsItem(x=>({...x,name:e.target.value}))}
+                  style={{ width:"100%", boxSizing:"border-box", border:"1px solid #ddd", borderRadius:6, padding:"6px 10px", fontFamily:"Georgia,serif", fontSize:12 }} />
+              </div>
+              <input placeholder="Кто делает..." value={newKidsItem.who} onChange={e=>setNewKidsItem(x=>({...x,who:e.target.value}))}
+                style={{ border:"1px solid #ddd", borderRadius:6, padding:"6px 10px", fontFamily:"Georgia,serif", fontSize:12 }} />
+              <input placeholder="R$" type="number" value={newKidsItem.brl} onChange={e=>setNewKidsItem(x=>({...x,brl:e.target.value}))}
+                style={{ border:"1px solid #ddd", borderRadius:6, padding:"6px 10px", fontFamily:"Georgia,serif", fontSize:12 }} />
+            </div>
+            <div style={{ display:"flex", gap:6 }}>
+              <button onClick={()=>{ setNewKidsItem(x=>({...x,zone:kidsTab})); addKidsItem(); }}
+                style={{ padding:"6px 14px", borderRadius:6, border:"none", background:"#1a1a1a", color:"#fff", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Добавить</button>
+              <button onClick={()=>setShowNewKids(false)}
+                style={{ padding:"6px 12px", borderRadius:6, border:"1px solid #ccc", background:"#fff", color:"#555", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Отмена</button>
+            </div>
+          </div>
+        ) : (
+          <button onClick={()=>{ setShowNewKids(true); setNewKidsItem({name:'',who:'купить',brl:0,zone:kidsTab}); }}
+            style={{ marginTop:10, background:"none", border:"1px dashed #ddd", borderRadius:8, padding:"6px 14px", fontSize:12, color:"#aaa", cursor:"pointer", fontFamily:"Georgia,serif" }}>
+            + Добавить в {kidsTab==='outdoor'?'Уличную':kidsTab==='indoor'?'В помещении':'Огород'}
+          </button>
+        )}
       </Section>
+
     </div>
   );
 }
