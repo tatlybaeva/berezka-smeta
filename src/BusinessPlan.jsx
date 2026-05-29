@@ -713,6 +713,76 @@ export default function BusinessPlan() {
   const realisticTotal = revenueStreams.reduce((a,r) => a+r.scenarios[0].brl, 0);
   const totalStyleItems = ['exterior','interior','kids'].reduce((a,k) => (styleState[k]||[]).reduce((b,z)=>b+z.items.length,a), 0);
 
+  // Finance key metrics (computed from finInputs)
+  const finMetrics = finInputs ? (() => {
+    const { workDays=26, capex=300000, capital=350000, launchMonth2=7,
+            s1Guests=45, s1Entry=25, s1Drinks=28, s1FoodCost=28,
+            s2Guests=75, s2Check=65, s2FoodCost=33,
+            acquiring=3, tax=6, rent=8000, utilities=2500,
+            marketing=2000, accountant=1200, other=1500,
+            staff=[], season=[1,1,1,1,1,1,1,1,1,1,1,1], ramp=[1,1,1,1,1,1,1,1,1,1,1,1] } = finInputs;
+
+    const fot1 = staff.filter(s=>s.stage<=1).reduce((a,s)=>a+Number(s.count)*Number(s.salary)*Number(s.encargos),0);
+    const fot2 = staff.filter(s=>s.stage<=2).reduce((a,s)=>a+Number(s.count)*Number(s.salary)*Number(s.encargos),0);
+    const fixedNoFot = rent + utilities + marketing + accountant + other;
+
+    const bep = (stage) => {
+      const foodPct = stage===1 ? s1FoodCost : s2FoodCost;
+      const varPct = foodPct + acquiring + tax;
+      const marginPct = 100 - varPct;
+      const fot = stage===1 ? fot1 : fot2;
+      const totalFixed = fot + fixedNoFot;
+      const checkVal = stage===1 ? (s1Entry + s1Drinks) : s2Check;
+      const bepGuests = marginPct>0 && checkVal>0 ? totalFixed / (marginPct/100) / checkVal / workDays : null;
+      return { bepGuests, marginPct };
+    };
+
+    const b1 = bep(1), b2 = bep(2);
+
+    // Min cash (кассовый разрыв)
+    let cum = capital;
+    let minCash = capital;
+    for (let i=0; i<12; i++) {
+      const stage = (i+1) < launchMonth2 ? 1 : 2;
+      const seas = season[i]||1, rm = ramp[i]||1;
+      const baseGuests = stage===1 ? s1Guests : s2Guests;
+      const guestsDay = baseGuests*seas*rm;
+      const checkVal = stage===1 ? (s1Entry+s1Drinks) : s2Check;
+      const revenue = guestsDay*checkVal*workDays;
+      const varPct = (stage===1?s1FoodCost:s2FoodCost) + acquiring + tax;
+      const margin = revenue*(1-varPct/100);
+      const fot = stage===1 ? fot1 : fot2;
+      const opProfit = margin - fot - fixedNoFot;
+      const capexCost = i===0 ? -capex : 0;
+      cum += opProfit + capexCost;
+      if (cum < minCash) minCash = cum;
+    }
+
+    // Payback — months until cumulative opProfit >= capex
+    cum = 0;
+    let paybackMonths = null;
+    for (let i=0; i<60; i++) {
+      const mo = i % 12;
+      const stage = (i+1) < launchMonth2 ? 1 : 2;
+      const guestsDay = (stage===1?s1Guests:s2Guests) * (season[mo]||1) * Math.min(ramp[mo]||1, 1);
+      const checkVal = stage===1 ? (s1Entry+s1Drinks) : s2Check;
+      const revenue = guestsDay*checkVal*workDays;
+      const varPct = (stage===1?s1FoodCost:s2FoodCost) + acquiring + tax;
+      const margin = revenue*(1-varPct/100);
+      const fot = stage===1 ? fot1 : fot2;
+      const opProfit = margin - fot - fixedNoFot;
+      cum += opProfit;
+      if (cum >= capex && paybackMonths===null) { paybackMonths = i+1; break; }
+    }
+
+    return {
+      bep1: b1.bepGuests, bep2: b2.bepGuests,
+      marginPct2: b2.marginPct,
+      minCash,
+      paybackYears: paybackMonths ? paybackMonths/12 : null,
+    };
+  })() : null;
+
   return (
     <div style={{ fontFamily:"'Georgia',serif", background:"#faf9f6", minHeight:"100vh", padding:"1rem 1rem 2rem" }}>
 
@@ -727,19 +797,53 @@ export default function BusinessPlan() {
         </div>
       </div>
 
-      {/* Mini dashboard */}
+      {/* Mini dashboard — 4 ключевых метрики */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:8, marginBottom:20 }}>
-        {[
-          { emoji:"💡", label:"Идеи", value:`${ideas.length}` },
-          { emoji:"🎨", label:"Стиль", value:`${totalStyleItems} элем.` },
-          { emoji:"👶", label:"Дет. зона", value:`${kidsDone}/${kidsZone.length} · R$${kidsBrl.toLocaleString()}` },
-          { emoji:"💰", label:"Доходы/мес", value:`R$${realisticTotal.toLocaleString()}` },
-        ].map(s=>(
-          <div key={s.label} style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px" }}>
-            <div style={{ fontSize:11, color:"#999", marginBottom:4 }}>{s.emoji} {s.label}</div>
-            <div style={{ fontSize:15, fontWeight:600, color:"#1a1a1a" }}>{s.value}</div>
-          </div>
-        ))}
+
+        {/* 1. Точка безубыточности */}
+        <div style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px" }}>
+          <div style={{ fontSize:11, color:"#999", marginBottom:4 }}>⚖️ Точка безубыточности</div>
+          {finMetrics ? (
+            <div style={{ fontSize:15, fontWeight:600, color:"#1a1a1a" }}>
+              {Math.ceil(finMetrics.bep1)} / {Math.ceil(finMetrics.bep2)} гостей
+            </div>
+          ) : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
+          <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Этап 1 / Этап 2 в день</div>
+        </div>
+
+        {/* 2. Юнит-экономика */}
+        <div style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px" }}>
+          <div style={{ fontSize:11, color:"#999", marginBottom:4 }}>📐 Юнит-экономика</div>
+          {finMetrics ? (
+            <div style={{ fontSize:15, fontWeight:600, color: finMetrics.marginPct2>50?"#16a34a":finMetrics.marginPct2>35?"#ca8a04":"#dc2626" }}>
+              {finMetrics.marginPct2.toFixed(1)}%
+            </div>
+          ) : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
+          <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Маржинальность с чека (Этап 2)</div>
+        </div>
+
+        {/* 3. Кассовый разрыв */}
+        <div style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px" }}>
+          <div style={{ fontSize:11, color:"#999", marginBottom:4 }}>💸 Мин. остаток на счёте</div>
+          {finMetrics ? (
+            <div style={{ fontSize:15, fontWeight:600, color: finMetrics.minCash>=0?"#16a34a":"#dc2626" }}>
+              {finMetrics.minCash>=0?"+":""}{Math.round(finMetrics.minCash).toLocaleString()} R$
+            </div>
+          ) : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
+          <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Низшая точка за первый год</div>
+        </div>
+
+        {/* 4. Окупаемость */}
+        <div style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px" }}>
+          <div style={{ fontSize:11, color:"#999", marginBottom:4 }}>⏱ Окупаемость</div>
+          {finMetrics ? (
+            <div style={{ fontSize:15, fontWeight:600, color: (finMetrics.paybackYears||99)<3?"#16a34a":(finMetrics.paybackYears||99)<5?"#ca8a04":"#dc2626" }}>
+              {finMetrics.paybackYears ? `${finMetrics.paybackYears.toFixed(1)} лет` : ">5 лет"}
+            </div>
+          ) : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
+          <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Ориентир Зарькова — 3 года</div>
+        </div>
+
       </div>
 
       {/* SECTION 1: КОНЦЕПЦИЯ */}
