@@ -839,6 +839,10 @@ export default function BusinessPlan() {
             </div>
           ) : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
           <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Этап 1 / Этап 2 в день</div>
+          <div style={{ fontSize:9, color:"#bbb", marginTop:5, lineHeight:1.45 }}>
+            Постоянные расходы ÷ маржинальность с чека ÷ средний чек ÷ рабочих дней.<br/>
+            Маржинальность = 100% − food cost − эквайринг − налог. Данные из раздела Финансы.
+          </div>
         </div>
 
         {/* 2. Юнит-экономика */}
@@ -850,6 +854,10 @@ export default function BusinessPlan() {
             </div>
           ) : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
           <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Маржинальность с чека (Этап 2)</div>
+          <div style={{ fontSize:9, color:"#bbb", marginTop:5, lineHeight:1.45 }}>
+            Сколько остаётся с каждого реала выручки после food cost, эквайринга и налога — до аренды и зарплат.<br/>
+            Если здесь минус, масштаб только увеличивает убыток.
+          </div>
         </div>
 
         {/* 3. Кассовый разрыв */}
@@ -861,6 +869,10 @@ export default function BusinessPlan() {
             </div>
           ) : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
           <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Низшая точка за первый год</div>
+          <div style={{ fontSize:9, color:"#bbb", marginTop:5, lineHeight:1.45 }}>
+            Стартовый капитал + все операционные денежные потоки и CAPEX за 12 месяцев нарастающим итогом. Минимум этого ряда.<br/>
+            Прибыльное на бумаге кафе закрывается именно здесь.
+          </div>
         </div>
 
         {/* 4. Окупаемость */}
@@ -872,6 +884,10 @@ export default function BusinessPlan() {
             </div>
           ) : <div style={{ fontSize:13, color:"#bbb" }}>—</div>}
           <div style={{ fontSize:10, color:"#aaa", marginTop:3 }}>Ориентир Зарькова — 3 года</div>
+          <div style={{ fontSize:9, color:"#bbb", marginTop:5, lineHeight:1.45 }}>
+            Количество месяцев, пока накопленная операционная прибыль не покроет CAPEX. Сезонность учтена.<br/>
+            &lt; 3 лет — хорошо, &lt; 2 лет — отлично.
+          </div>
         </div>
 
       </div>
