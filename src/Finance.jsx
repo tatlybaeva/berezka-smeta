@@ -153,7 +153,22 @@ export default function Finance() {
       .then(({ data, error }) => {
         if (error || !data) return
         isRemoteUpdate.current = true
-        if (data.data.inputs) setInputs(prev => ({ ...DEFAULT_INPUTS, ...data.data.inputs }))
+        const loadedInputs = data.data.inputs ? { ...DEFAULT_INPUTS, ...data.data.inputs } : null
+        if (loadedInputs) {
+          // If finance_state doesn't have rent, try to pull from smeta_state
+          if (loadedInputs.rent === DEFAULT_INPUTS.rent) {
+            supabase.from('smeta_state').select('state').eq('id', 'main').single()
+              .then(({ data: sData }) => {
+                if (sData?.state?.rent !== undefined) {
+                  setInputs({ ...loadedInputs, rent: sData.state.rent })
+                } else {
+                  setInputs(loadedInputs)
+                }
+              })
+          } else {
+            setInputs(loadedInputs)
+          }
+        }
         if (data.data.checklist) setChecklist(data.data.checklist)
         setTimeout(() => { isRemoteUpdate.current = false }, 0)
       })
@@ -171,6 +186,20 @@ export default function Finance() {
         if (d.inputs) setInputs(prev => ({ ...DEFAULT_INPUTS, ...d.inputs }))
         if (d.checklist) setChecklist(d.checklist)
         setTimeout(() => { isRemoteUpdate.current = false }, 0)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [])
+
+  // ── Smeta state rent sync ───────────────────────────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel('smeta_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'smeta_state' }, (payload) => {
+        const s = payload.new?.state
+        if (s?.rent !== undefined) {
+          setInputs(prev => ({ ...prev, rent: s.rent }))
+        }
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
@@ -210,31 +239,35 @@ export default function Finance() {
 
   // ── Computed Model ──────────────────────────────────────────────────────────
   const model = useMemo(() => {
-    const { workDays, capex, capital, launchMonth2, s1Guests, s1Entry, s1Drinks, s1FoodCost,
-            s2Guests, s2Check, s2FoodCost, acquiring, tax, rent, utilities,
+    const { workDays, capex, capital, launchMonth2, launchMonth3,
+            s1Guests, s1Entry, s1Drinks, s1FoodCost,
+            s2Guests, s2Check, s2FoodCost,
+            s3Guests, s3Check, s3FoodCost,
+            acquiring, tax, rent, utilities,
             marketing, accountant, other, staff, season, ramp } = inputs
 
     const fot1 = staffFOT(staff, 1)
     const fot2 = staffFOT(staff, 2)
+    const fot3 = staffFOT(staff, 3) || fot2
     const fixedNoFot = rent + utilities + marketing + accountant + other
 
     const months = Array.from({ length: 12 }, (_, i) => {
       const mo = i + 1
-      const stage = mo < launchMonth2 ? 1 : 2
+      const stage = mo < launchMonth2 ? 1 : mo < launchMonth3 ? 2 : 3
       const seas = season[i] || 1
       const rm = ramp[i] || 1
-      const baseGuests = stage === 1 ? s1Guests : s2Guests
+      const baseGuests = stage === 1 ? s1Guests : stage === 2 ? s2Guests : s3Guests
       const guestsDay = parseFloat((baseGuests * seas * rm).toFixed(1))
-      const checkVal = stage === 1 ? (s1Entry + s1Drinks) : s2Check
+      const checkVal = stage === 1 ? (s1Entry + s1Drinks) : stage === 2 ? s2Check : s3Check
       const revenue = guestsDay * checkVal * workDays
-      const foodCostPct = stage === 1 ? s1FoodCost : s2FoodCost
+      const foodCostPct = stage === 1 ? s1FoodCost : stage === 2 ? s2FoodCost : s3FoodCost
       const foodCost = -revenue * foodCostPct / 100
       const acqCost = -revenue * acquiring / 100
       const taxCost = -revenue * tax / 100
       const totalVar = foodCost + acqCost + taxCost
       const margin = revenue + totalVar
       const marginPct = revenue ? margin / revenue * 100 : 0
-      const fot = stage === 1 ? fot1 : fot2
+      const fot = stage === 1 ? fot1 : stage === 2 ? fot2 : fot3
       const totalFixed = -(fot + fixedNoFot)
       const opProfit = margin + totalFixed
       const opPct = revenue ? opProfit / revenue * 100 : 0
@@ -256,7 +289,7 @@ export default function Finance() {
       return cum
     })
 
-    return { months, cumCash, fot1, fot2, fixedNoFot }
+    return { months, cumCash, fot1, fot2, fot3, fixedNoFot }
   }, [inputs])
 
   // ─── Render ─────────────────────────────────────────────────────────────────
@@ -315,7 +348,7 @@ function Section({ id, label, open, toggle, children }) {
 // ─── 1. Вводные ──────────────────────────────────────────────────────────────
 
 function SectionInputs({ inputs, setInput, model }) {
-  const { fot1, fot2 } = model
+  const { fot1, fot2, fot3 } = model
 
   const setStaffField = (idx, field, val) => {
     const next = inputs.staff.map((r, i) => i === idx ? { ...r, [field]: val } : r)
@@ -337,6 +370,7 @@ function SectionInputs({ inputs, setInput, model }) {
           ['capex',       'Стартовые инвестиции CAPEX, R$'],
           ['capital',     'Привлечённый капитал, R$'],
           ['launchMonth2','Месяц запуска Этапа 2 (1–12)'],
+          ['launchMonth3','Месяц старта Этапа 3 (1–12)'],
           ['usdRate',     'Курс USD→BRL'],
         ].map(([key, label]) => (
           <div key={key} style={S.inputRow}>
@@ -364,11 +398,26 @@ function SectionInputs({ inputs, setInput, model }) {
 
       {/* Этап 2 */}
       <div style={S.subGroup}>
-        <div style={S.subTitle}>Этап 2 — полное кафе</div>
+        <div style={S.subTitle}>Этап 2 — Кухня (мес 5–8)</div>
         {[
-          ['s2Guests',   'Гостей в день (база)'],
-          ['s2Check',    'Средний чек, R$'],
+          ['s2Guests',   'Гостей/день базово'],
+          ['s2Check',    'Средний чек R$'],
           ['s2FoodCost', 'Food cost %'],
+        ].map(([key, label]) => (
+          <div key={key} style={S.inputRow}>
+            <span style={S.label}>{label}</span>
+            <NumInput value={inputs[key]} onChange={v => setInput(key, v)} />
+          </div>
+        ))}
+      </div>
+
+      {/* Этап 3 */}
+      <div style={S.subGroup}>
+        <div style={S.subTitle}>Этап 3 — Полный формат (мес 9+)</div>
+        {[
+          ['s3Guests',   'Гостей/день базово'],
+          ['s3Check',    'Средний чек R$'],
+          ['s3FoodCost', 'Food cost %'],
         ].map(([key, label]) => (
           <div key={key} style={S.inputRow}>
             <span style={S.label}>{label}</span>
@@ -449,6 +498,7 @@ function SectionInputs({ inputs, setInput, model }) {
                       >
                         <option value={1}>1</option>
                         <option value={2}>2</option>
+                        <option value={3}>3</option>
                       </select>
                     </td>
                     <td style={S.tdMono}>{fmt(total)}</td>
@@ -460,7 +510,8 @@ function SectionInputs({ inputs, setInput, model }) {
         </div>
         <div style={{ fontSize: 13, color: '#444', marginTop: 6 }}>
           <span style={{ marginRight: 24 }}>ФОТ Этап 1: <b style={S.negNum}>{fmt(fot1)}</b></span>
-          <span>ФОТ Этап 2: <b style={S.negNum}>{fmt(fot2)}</b></span>
+          <span style={{ marginRight: 24 }}>ФОТ Этап 2: <b style={S.negNum}>{fmt(fot2)}</b></span>
+          <span>ФОТ Этап 3: <b style={S.negNum}>{fmt(fot3)}</b></span>
         </div>
       </div>
 
@@ -503,7 +554,7 @@ function ModelTable({ inputs, model }) {
   const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length
 
   const rows = [
-    { label: 'Этап (1/2)',                key: 'stage',      fmt: (v) => v,              isAvg: false, highlight: false, isNum: false },
+    { label: 'Этап (1/2/3)',              key: 'stage',      fmt: (v) => v,              isAvg: false, highlight: false, isNum: false },
     { label: 'Сезонность',                key: 'seas',       fmt: (v) => fmtN(v),         isAvg: true,  highlight: false, isNum: false },
     { label: 'Раскрутка',                 key: 'rm',         fmt: (v) => fmtN(v),         isAvg: true,  highlight: false, isNum: false },
     { label: 'Гостей в день (с коэф)',    key: 'guestsDay',  fmt: (v) => fmtN(v),         isAvg: true,  highlight: false, isNum: true },
@@ -613,65 +664,72 @@ function ModelTable({ inputs, model }) {
 // ─── 3. Точка безубыточности ──────────────────────────────────────────────────
 
 function BEPSection({ inputs, model }) {
-  const { workDays, s1Entry, s1Drinks, s2Check, s1FoodCost, s2FoodCost,
-          acquiring, tax, rent, utilities, marketing, accountant, other } = inputs
-  const { fot1, fot2, fixedNoFot } = model
+  const { workDays, s1Entry, s1Drinks, s1FoodCost,
+          s2Check, s2FoodCost, s2Guests,
+          s3Check, s3FoodCost, s3Guests,
+          acquiring, tax } = inputs
+  const { fot1, fot2, fot3, fixedNoFot } = model
 
   const calc = (stage) => {
-    const foodPct = stage === 1 ? s1FoodCost : s2FoodCost
+    const foodPct = stage === 1 ? s1FoodCost : stage === 2 ? s2FoodCost : s3FoodCost
     const totalVarPct = foodPct + acquiring + tax
     const marginPct = 100 - totalVarPct
-    const fot = stage === 1 ? fot1 : fot2
+    const fot = stage === 1 ? fot1 : stage === 2 ? fot2 : fot3
     const totalFixed = fot + fixedNoFot
     const bepRevenue = marginPct > 0 ? totalFixed / (marginPct / 100) : Infinity
-    const checkVal = stage === 1 ? (s1Entry + s1Drinks) : s2Check
+    const checkVal = stage === 1 ? (s1Entry + s1Drinks) : stage === 2 ? s2Check : s3Check
     const bepGuests = checkVal > 0 ? bepRevenue / checkVal / workDays : Infinity
-    const planGuests = stage === 1 ? inputs.s1Guests : inputs.s2Guests
+    const planGuests = stage === 1 ? inputs.s1Guests : stage === 2 ? s2Guests : s3Guests
     const safety = planGuests > 0 ? (planGuests - bepGuests) / bepGuests * 100 : 0
     return { foodPct, totalVarPct, marginPct, fot, totalFixed, bepRevenue, checkVal, bepGuests, planGuests, safety }
   }
 
   const s1 = calc(1)
   const s2 = calc(2)
+  const s3 = calc(3)
 
-  const Row = ({ label, v1, v2 }) => (
+  const Row = ({ label, v1, v2, v3 }) => (
     <tr>
       <td style={S.tdLeft}>{label}</td>
       <td style={S.tdMono}>{v1}</td>
       <td style={S.tdMono}>{v2}</td>
+      <td style={S.tdMono}>{v3}</td>
     </tr>
   )
 
   return (
     <div>
-      <table style={{ ...S.table, maxWidth: 600 }}>
+      <table style={{ ...S.table, maxWidth: 700 }}>
         <thead>
           <tr>
             <th style={{ ...S.th, textAlign: 'left', width: 260 }}>Показатель</th>
             <th style={S.th}>Этап 1</th>
             <th style={S.th}>Этап 2</th>
+            <th style={S.th}>Этап 3</th>
           </tr>
         </thead>
         <tbody>
-          <Row label="Food cost %" v1={pct(s1.foodPct)} v2={pct(s2.foodPct)} />
-          <Row label="Эквайринг %" v1={pct(inputs.acquiring)} v2={pct(inputs.acquiring)} />
-          <Row label="Налог %" v1={pct(inputs.tax)} v2={pct(inputs.tax)} />
-          <Row label="Переменные итого %" v1={pct(s1.totalVarPct)} v2={pct(s2.totalVarPct)} />
-          <Row label="Маржинальность %" v1={pct(s1.marginPct)} v2={pct(s2.marginPct)} />
-          <Row label="ФОТ R$/мес" v1={fmt(s1.fot)} v2={fmt(s2.fot)} />
-          <Row label="Прочие постоянные R$/мес" v1={fmt(s1.totalFixed - s1.fot)} v2={fmt(s2.totalFixed - s2.fot)} />
-          <Row label="Постоянные итого R$/мес" v1={fmt(s1.totalFixed)} v2={fmt(s2.totalFixed)} />
+          <Row label="Food cost %" v1={pct(s1.foodPct)} v2={pct(s2.foodPct)} v3={pct(s3.foodPct)} />
+          <Row label="Эквайринг %" v1={pct(inputs.acquiring)} v2={pct(inputs.acquiring)} v3={pct(inputs.acquiring)} />
+          <Row label="Налог %" v1={pct(inputs.tax)} v2={pct(inputs.tax)} v3={pct(inputs.tax)} />
+          <Row label="Переменные итого %" v1={pct(s1.totalVarPct)} v2={pct(s2.totalVarPct)} v3={pct(s3.totalVarPct)} />
+          <Row label="Маржинальность %" v1={pct(s1.marginPct)} v2={pct(s2.marginPct)} v3={pct(s3.marginPct)} />
+          <Row label="ФОТ R$/мес" v1={fmt(s1.fot)} v2={fmt(s2.fot)} v3={fmt(s3.fot)} />
+          <Row label="Прочие постоянные R$/мес" v1={fmt(s1.totalFixed - s1.fot)} v2={fmt(s2.totalFixed - s2.fot)} v3={fmt(s3.totalFixed - s3.fot)} />
+          <Row label="Постоянные итого R$/мес" v1={fmt(s1.totalFixed)} v2={fmt(s2.totalFixed)} v3={fmt(s3.totalFixed)} />
           <tr style={S.hlRow}>
             <td style={{ ...S.tdLeft, fontWeight: 700 }}>Точка безубыточности — выручка R$/мес</td>
             <td style={{ ...S.tdMono, fontWeight: 700 }}>{fmt(s1.bepRevenue)}</td>
             <td style={{ ...S.tdMono, fontWeight: 700 }}>{fmt(s2.bepRevenue)}</td>
+            <td style={{ ...S.tdMono, fontWeight: 700 }}>{fmt(s3.bepRevenue)}</td>
           </tr>
-          <Row label="Выручка на гостя R$" v1={fmtN(s1.checkVal, 0)} v2={fmtN(s2.checkVal, 0)} />
-          <Row label="Рабочих дней" v1={workDays} v2={workDays} />
+          <Row label="Выручка на гостя R$" v1={fmtN(s1.checkVal, 0)} v2={fmtN(s2.checkVal, 0)} v3={fmtN(s3.checkVal, 0)} />
+          <Row label="Рабочих дней" v1={workDays} v2={workDays} v3={workDays} />
           <tr style={S.hlRow}>
             <td style={{ ...S.tdLeft, fontWeight: 700 }}>Точка безубыточности — гостей в день</td>
             <td style={{ ...S.tdMono, fontWeight: 700, color: '#8B2020' }}>{fmtN(s1.bepGuests, 1)}</td>
             <td style={{ ...S.tdMono, fontWeight: 700, color: '#8B2020' }}>{fmtN(s2.bepGuests, 1)}</td>
+            <td style={{ ...S.tdMono, fontWeight: 700, color: '#8B2020' }}>{fmtN(s3.bepGuests, 1)}</td>
           </tr>
         </tbody>
       </table>
@@ -685,6 +743,11 @@ function BEPSection({ inputs, model }) {
           <b>Этап 2:</b> нужно <span style={{ color: '#8B2020', fontFamily: 'monospace' }}>{fmtN(s2.bepGuests, 1)}</span> гостей в день.
           Ваш план: <span style={{ fontFamily: 'monospace' }}>{s2.planGuests}</span> гостей →{' '}
           запас <span style={s2.safety > 0 ? S.posNum : S.negNum}>{fmtN(s2.safety, 0)}%</span>
+        </div>
+        <div>
+          <b>Этап 3:</b> нужно <span style={{ color: '#8B2020', fontFamily: 'monospace' }}>{fmtN(s3.bepGuests, 1)}</span> гостей в день.
+          Ваш план: <span style={{ fontFamily: 'monospace' }}>{s3.planGuests}</span> гостей →{' '}
+          запас <span style={s3.safety > 0 ? S.posNum : S.negNum}>{fmtN(s3.safety, 0)}%</span>
         </div>
       </div>
     </div>
