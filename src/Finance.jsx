@@ -26,7 +26,7 @@ const DEFAULT_INPUTS = {
   workDays: 26,
   capex: 300000,
   capital: 350000,
-  launchMonth2: 7,
+  launchMonth2: 5,
   usdRate: 5.4,
   s1Guests: 45,
   s1Entry: 25,
