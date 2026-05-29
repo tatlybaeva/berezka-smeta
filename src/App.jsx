@@ -8,18 +8,18 @@ import MenuPricing from './MenuPricing'
 import RentalOptions from './RentalOptions'
 
 const TABS = [
-  { id: 'smeta',   label: '📊 Смета' },
   { id: 'bizplan', label: '📋 Бизнес-план' },
+  { id: 'resp',    label: '👥 Ответственность' },
   { id: 'rental',  label: '🏠 Аренда' },
+  { id: 'smeta',   label: '📊 Смета' },
   { id: 'menu',    label: '🍽️ Меню' },
   { id: 'brand',   label: '🎨 Дизайн-код' },
-  { id: 'resp',    label: '👥 Ответственность' },
   { id: 'kb',      label: '📚 База знаний' },
 ]
 
 function getInitTab() {
   const hash = window.location.hash.replace('#', '')
-  return TABS.find(t => t.id === hash) ? hash : 'smeta'
+  return TABS.find(t => t.id === hash) ? hash : 'bizplan'
 }
 
 export default function App() {
