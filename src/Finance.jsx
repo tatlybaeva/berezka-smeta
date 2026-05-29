@@ -324,6 +324,11 @@ export default function Finance() {
         <ChecklistSection checklist={checklist} setChecked={setChecked} />
       </Section>
 
+      {/* ── новый: Потоки доходов ── */}
+      <Section id="revenue" label="💰 Потоки доходов" open={open} toggle={toggleSection}>
+        <RevenueSection />
+      </Section>
+
       {/* ── 5. Финансы на пальцах ── */}
       <Section id="edu" label="📚 База знаний" open={open} toggle={toggleSection}>
         <EduSection />
@@ -1124,6 +1129,93 @@ const EDU_ITEMS = [
     ),
   },
 ]
+
+// ─── Потоки доходов ──────────────────────────────────────────────────────────
+
+const REVENUE_STREAMS = [
+  {
+    stream: "☕ Кафе — еда и напитки",
+    desc: "Работает каждый день. Средний чек R$55. ⚠️ Учти сезонность: дек–март +40%, апр–ноябрь −30%",
+    scenarios: [
+      { label: "Реалистичный старт (10 чеков/день × 29 дней)", brl: 15950 },
+      { label: "Рабочий режим (25 чеков/день × 26 дней)", brl: 35750 },
+    ],
+  },
+  {
+    stream: "👶 Детская зона — платный вход",
+    desc: "Платный ТОЛЬКО на Этапе 1. После открытия кухни — бесплатно",
+    scenarios: [
+      { label: "Реалистичный старт: 5–8 детей/день × R$18 × 30", brl: 3240 },
+      { label: "При хорошей загрузке: 20 детей/день × R$18", brl: 10800 },
+    ],
+  },
+  {
+    stream: "🎨 Мастер-классы",
+    desc: "R$20/ребёнок · 2 класса по выходным · 10–15 детей каждый",
+    scenarios: [
+      { label: "8 классов/мес × 12 детей × R$20", brl: 1920 },
+      { label: "При полной записи (15 детей)", brl: 2400 },
+    ],
+  },
+  {
+    stream: "🪵 Магазин эко-игрушек",
+    desc: "Монтессори-игрушки, деревянные фигурки, семена с лого Берёзки",
+    scenarios: [
+      { label: "Минимум (10 продаж/мес)", brl: 600 },
+      { label: "Активный (30 продаж/мес)", brl: 1800 },
+    ],
+  },
+  {
+    stream: "🧘 Йога/фитнес для мам",
+    desc: "Утренние классы на деревянном деке · пока дети на площадке",
+    scenarios: [
+      { label: "3 класса/нед × 8 чел × R$35", brl: 3360 },
+      { label: "5 классов/нед × 12 чел × R$45", brl: 8640 },
+    ],
+  },
+  {
+    stream: "🎸 Живая музыка (вечера)",
+    desc: "Пятница-суббота вечером · музыкант на деке · гости задерживаются дольше",
+    scenarios: [
+      { label: "8 вечеров/мес · +R$25 к чеку · 20 чел", brl: 2000 },
+      { label: "При полной посадке 30 чел", brl: 4500 },
+    ],
+  },
+  {
+    stream: "🎉 Аренда кафе под мероприятия",
+    desc: "Закрываем кафе целиком · DR, корпоратив, детский праздник",
+    scenarios: [
+      { label: "Минимум: 1 день/мес × R$2 750", brl: 2750 },
+      { label: "Максимум: 4 дня/мес × R$2 750", brl: 11000 },
+    ],
+  },
+]
+
+function RevenueSection() {
+  const realisticTotal = REVENUE_STREAMS.reduce((a, r) => a + r.scenarios[0].brl, 0)
+  return (
+    <div>
+      {REVENUE_STREAMS.map((r, i) => (
+        <div key={i} style={{ background: '#fff', border: '1px solid #ebebeb', borderRadius: 10, padding: '12px 14px', marginBottom: 10 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{r.stream}</div>
+          <div style={{ fontSize: 11, color: '#666', marginBottom: 10, lineHeight: 1.4 }}>{r.desc}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {r.scenarios.map((s, j) => (
+              <div key={j} style={{ background: j === 0 ? '#f7f7f5' : '#EAF3DE', borderRadius: 8, padding: '8px 10px' }}>
+                <div style={{ fontSize: 10, color: j === 0 ? '#999' : '#3B6D11', marginBottom: 2, lineHeight: 1.3 }}>{s.label}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: j === 0 ? '#555' : '#27500A' }}>R${s.brl.toLocaleString()}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      <div style={{ background: '#1a1a1a', borderRadius: 10, padding: '12px 14px', color: '#fff' }}>
+        <div style={{ fontSize: 11, color: '#aaa', marginBottom: 2 }}>Реалистичный итого/мес</div>
+        <div style={{ fontSize: 22, fontWeight: 600 }}>R${realisticTotal.toLocaleString()}</div>
+      </div>
+    </div>
+  )
+}
 
 function EduSection() {
   const [open, setOpen] = useState({})

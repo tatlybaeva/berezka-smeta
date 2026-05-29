@@ -30,31 +30,6 @@ const initialIdeas = [
   { text: "Ростомер с подсолнухом — надпись на РУ+PT: 'Как ты вырос? / Quanto você cresceu?'", tag: "📸 Instagram" },
 ];
 
-const initialKidsZone = [
-  { name: "Меловая стена (краска + мелки)", who: "сама", brl: 400, done: false, zone: "indoor" },
-  { name: "Ростомер с подсолнухом", who: "сама", brl: 150, done: false, zone: "outdoor" },
-  { name: "Типи (бамбук + ткань + фонарики) — ФОТО-ЗОНА 📸", who: "сама", brl: 400, done: false, zone: "outdoor" },
-  { name: "Фонарики outdoor IP44 × 2 набора", who: "купить", brl: 400, done: false, zone: "outdoor" },
-  { name: "Удлинитель уличный влагозащищённый", who: "купить", brl: 150, done: false, zone: "outdoor" },
-  { name: "Грязевая кухня (поддоны)", who: "сама", brl: 500, done: false, zone: "outdoor" },
-  { name: "Посуда для кухни (металл б/у)", who: "купить", brl: 200, done: false, zone: "outdoor" },
-  { name: "Детские инструменты (лопата, грабли, лейка)", who: "купить", brl: 250, done: false, zone: "outdoor" },
-  { name: "Пни-ступеньки", who: "купить (OLX)", brl: 600, done: false, zone: "outdoor" },
-  { name: "Водный жёлоб из бамбука", who: "сама (бесплатно)", brl: 0, done: false, zone: "outdoor" },
-  { name: "Песок", who: "купить", brl: 300, done: false, zone: "outdoor" },
-  { name: "Пропитка для дерева", who: "купить", brl: 150, done: false, zone: "outdoor" },
-  { name: "Контейнер для хранения", who: "купить", brl: 200, done: false, zone: "indoor" },
-  { name: "Крестики-нолики (камни + пень)", who: "сама", brl: 0, done: false, zone: "outdoor" },
-  { name: "Забор детской зоны", who: "сама", brl: 0, done: false, zone: "outdoor" },
-  { name: "Слэклайн между деревьями", who: "купить (MercadoLivre)", brl: 150, done: false, zone: "outdoor" },
-  { name: "Качели на дерево (доска + верёвка + ленты)", who: "сама", brl: 170, done: false, zone: "outdoor" },
-  { name: "Куры (3–4 штуки)", who: "купить (feira/OLX)", brl: 400, done: false, zone: "garden" },
-  { name: "Кормушка + поилка", who: "купить", brl: 150, done: false, zone: "garden" },
-  { name: "Вертикальный огород из поддонов", who: "сама", brl: 300, done: false, zone: "garden" },
-  { name: "Горшки + земля + семена трав", who: "купить", brl: 300, done: false, zone: "garden" },
-  { name: "Детский огород + семена", who: "сама", brl: 300, done: false, zone: "garden" },
-  { name: "Ящики с природными материалами", who: "сама", brl: 200, done: false, zone: "outdoor" },
-];
 
 const initialPillars = [
   { icon: "☕", title: "Specialty кофе и напитки", desc: "Фильтр-кофе, капучино, матча латте, травяные чаи — с первого дня на Этапе 1" },
@@ -573,10 +548,6 @@ export default function BusinessPlan() {
   const [ideas, setIdeas] = useState(initialIdeas);
   const [newIdea, setNewIdea] = useState("");
   const [newIdeaTag, setNewIdeaTag] = useState("💡 Концепция");
-  const [kidsZone, setKidsZone] = useState(initialKidsZone);
-  const [kidsTab, setKidsTab] = useState("outdoor");
-  const [newKidsItem, setNewKidsItem] = useState({ name: '', who: 'купить', brl: 0, zone: 'outdoor' });
-  const [showNewKids, setShowNewKids] = useState(false);
   const [bdrScenario, setBdrScenario] = useState('realistic');
   const [metrics, setMetrics] = useState({
     monthlyRevenue: 35000,
@@ -616,7 +587,6 @@ export default function BusinessPlan() {
         const s = data.state;
         if (s.ideas) setIdeas(s.ideas);
         if (s.pillars) setPillars(s.pillars);
-        if (s.kidsZone) setKidsZone(s.kidsZone);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
         if (s.phasesState) setPhasesState(s.phasesState);
@@ -634,7 +604,6 @@ export default function BusinessPlan() {
         const s = payload.new.state;
         if (s.ideas) setIdeas(s.ideas);
         if (s.pillars) setPillars(s.pillars);
-        if (s.kidsZone) setKidsZone(s.kidsZone);
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
         if (s.phasesState) setPhasesState(s.phasesState);
@@ -668,7 +637,7 @@ export default function BusinessPlan() {
   };
 
   const saveAll = (overrides = {}) => {
-    scheduleSave({ ideas, pillars, kidsZone, bdrScenario, metrics, phasesState, styleState, ...overrides });
+    scheduleSave({ ideas, pillars, bdrScenario, metrics, phasesState, styleState, ...overrides });
   };
 
   // Ideas
@@ -685,14 +654,6 @@ export default function BusinessPlan() {
     setIdeas(next); setNewIdea(""); saveAll({ideas:next});
   };
 
-  // Kids zone
-  const toggleKids = (i) => { const next = kidsZone.map((x,j) => j===i ? {...x,done:!x.done} : x); setKidsZone(next); saveAll({kidsZone:next}); };
-  const deleteKidsItem = (i) => { const next = kidsZone.filter((_,j) => j!==i); setKidsZone(next); saveAll({kidsZone:next}); };
-  const addKidsItem = () => {
-    if (!newKidsItem.name.trim()) return;
-    const next = [...kidsZone, {...newKidsItem, brl:Number(newKidsItem.brl)||0, done:false}];
-    setKidsZone(next); setNewKidsItem({name:'',who:'купить',brl:0,zone:kidsTab}); setShowNewKids(false); saveAll({kidsZone:next});
-  };
 
   // Phases
   const deletePhaseItem = (phaseNum, itemIdx) => {
@@ -740,9 +701,6 @@ export default function BusinessPlan() {
   };
 
   // Computed
-  const kidsBrl = kidsZone.reduce((a,x) => a+x.brl, 0);
-  const kidsDone = kidsZone.filter(x => x.done).length;
-  const realisticTotal = revenueStreams.reduce((a,r) => a+r.scenarios[0].brl, 0);
   // style items moved to Бюджет tab
 
   // Finance key metrics (computed from finInputs)
@@ -1026,108 +984,15 @@ export default function BusinessPlan() {
 
       {/* SECTION 4: ДОХОДЫ */}
       <Section title="💰 4. Доходы" open={openSections[3]} onToggle={()=>toggleSection(3)}>
-        {revenueStreams.map((r,i)=>(
-          <div key={i} style={{ background:"#fff", border:"1px solid #ebebeb", borderRadius:10, padding:"12px 14px", marginBottom:10 }}>
-            <div style={{ fontSize:14, fontWeight:600, marginBottom:4 }}>{r.stream}</div>
-            <div style={{ fontSize:11, color:"#666", marginBottom:10, lineHeight:1.4 }}>{r.desc}</div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-              {r.scenarios.map((s,j)=>(
-                <div key={j} style={{ background:j===0?"#f7f7f5":"#EAF3DE", borderRadius:8, padding:"8px 10px" }}>
-                  <div style={{ fontSize:10, color:j===0?"#999":"#3B6D11", marginBottom:2, lineHeight:1.3 }}>{s.label}</div>
-                  <div style={{ fontSize:15, fontWeight:600, color:j===0?"#555":"#27500A" }}>R${s.brl.toLocaleString()}</div>
-                </div>
-              ))}
+        <div style={{ background:"#EAF3DE", borderRadius:10, padding:"12px 16px", display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ fontSize:18 }}>💰</span>
+          <div>
+            <div style={{ fontSize:13, fontWeight:600, color:"#3B6D11", marginBottom:2 }}>Потоки доходов перенесены в раздел «Финансы»</div>
+            <div style={{ fontSize:11, color:"#555", lineHeight:1.5 }}>
+              7 потоков: кафе, детская зона, мастер-классы, магазин, йога, живая музыка, аренда под мероприятия.
             </div>
           </div>
-        ))}
-        <div style={{ background:"#1a1a1a", borderRadius:10, padding:"12px 14px", color:"#fff", marginBottom:16 }}>
-          <div style={{ fontSize:11, color:"#aaa", marginBottom:2 }}>Реалистичный итого/мес</div>
-          <div style={{ fontSize:22, fontWeight:600 }}>R${realisticTotal.toLocaleString()}</div>
         </div>
-
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-          <div style={{ fontSize:10, color:"#aaa" }}>
-            {finInputs ? "✓ Аренда подтянута из раздела Финансы" : "Аренда задаётся в разделе Финансы"}
-          </div>
-          <button
-            onClick={()=>{ document.dispatchEvent(new CustomEvent('navigate-tab', {detail:'finance'})); }}
-            style={{ padding:"4px 12px", borderRadius:6, border:"1px solid #e5e7eb", background:"#fff", color:"#555", fontSize:11, cursor:"pointer", fontFamily:"Georgia,serif" }}>
-            → в Финансы
-          </button>
-        </div>
-        <KeyMetrics metrics={metrics} setMetrics={m=>{ setMetrics(m); saveAll({metrics:m}); }} finRent={finInputs?.rent} />
-        <BDRTable active={bdrScenario} setActive={v=>{ setBdrScenario(v); saveAll({bdrScenario:v}); }} />
-      </Section>
-
-      {/* SECTION 5: ДЕТСКАЯ ЗОНА */}
-      <Section title="👶 5. Детская зона" open={openSections[4]} onToggle={()=>toggleSection(4)}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-          <div style={{ fontSize:12, color:"#666" }}>Выполнено {kidsDone}/{kidsZone.length}</div>
-          <div style={{ fontSize:14, fontWeight:600 }}>R${kidsBrl.toLocaleString()}</div>
-        </div>
-
-        <div style={{ marginBottom:12 }}>
-          {[
-            { key:"outdoor", label:"🌳 Уличная", color:"#3B6D11", bg:"#EAF3DE" },
-            { key:"indoor",  label:"🏠 В помещении", color:"#0C447C", bg:"#E6F1FB" },
-            { key:"garden",  label:"🌱 Огород", color:"#7B5800", bg:"#FFF8E1" },
-          ].map(tab=>(
-            <button key={tab.key} onClick={()=>setKidsTab(tab.key)}
-              style={{ marginRight:6, padding:"5px 12px", borderRadius:20, border:`1.5px solid ${kidsTab===tab.key?tab.color:"#e5e7eb"}`,
-                background:kidsTab===tab.key?tab.bg:"#faf9f6", color:kidsTab===tab.key?tab.color:"#999",
-                fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif", fontWeight:kidsTab===tab.key?600:400 }}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {kidsZone.filter(item=>item.zone===kidsTab).map((item)=>{
-          const globalIdx = kidsZone.indexOf(item);
-          return (
-            <div key={globalIdx} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"7px 0", borderBottom:"0.5px solid #ebebeb" }}>
-              <div onClick={()=>toggleKids(globalIdx)}
-                style={{ width:17, height:17, borderRadius:4, border:item.done?"none":"1.5px solid #ccc",
-                  background:item.done?"#185FA5":"transparent", display:"flex", alignItems:"center", justifyContent:"center",
-                  flexShrink:0, marginTop:1, cursor:"pointer" }}>
-                {item.done && <span style={{ color:"white", fontSize:11 }}>✓</span>}
-              </div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:13, color:item.done?"#999":"#1a1a1a", textDecoration:item.done?"line-through":"none" }}>{item.name}</div>
-                <div style={{ fontSize:11, color:"#aaa", marginTop:1 }}>{item.who} · {item.brl===0?"бесплатно":`R$${item.brl}`}</div>
-              </div>
-              <button onClick={()=>deleteKidsItem(globalIdx)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ddd", fontSize:15, padding:"0 2px", lineHeight:1, marginTop:1 }}>×</button>
-            </div>
-          );
-        })}
-        {kidsZone.filter(item=>item.zone===kidsTab).length===0 && (
-          <div style={{ fontSize:12, color:"#aaa", padding:"12px 0" }}>Пусто — добавьте первый элемент</div>
-        )}
-
-        {showNewKids ? (
-          <div style={{ background:"#f7f7f5", borderRadius:10, padding:"12px", marginTop:10 }}>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
-              <div style={{ gridColumn:"span 2" }}>
-                <input placeholder="Название..." value={newKidsItem.name} onChange={e=>setNewKidsItem(x=>({...x,name:e.target.value}))}
-                  style={{ width:"100%", boxSizing:"border-box", border:"1px solid #ddd", borderRadius:6, padding:"6px 10px", fontFamily:"Georgia,serif", fontSize:12 }} />
-              </div>
-              <input placeholder="Кто делает..." value={newKidsItem.who} onChange={e=>setNewKidsItem(x=>({...x,who:e.target.value}))}
-                style={{ border:"1px solid #ddd", borderRadius:6, padding:"6px 10px", fontFamily:"Georgia,serif", fontSize:12 }} />
-              <input placeholder="R$" type="number" value={newKidsItem.brl} onChange={e=>setNewKidsItem(x=>({...x,brl:e.target.value}))}
-                style={{ border:"1px solid #ddd", borderRadius:6, padding:"6px 10px", fontFamily:"Georgia,serif", fontSize:12 }} />
-            </div>
-            <div style={{ display:"flex", gap:6 }}>
-              <button onClick={()=>{ setNewKidsItem(x=>({...x,zone:kidsTab})); addKidsItem(); }}
-                style={{ padding:"6px 14px", borderRadius:6, border:"none", background:"#1a1a1a", color:"#fff", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Добавить</button>
-              <button onClick={()=>setShowNewKids(false)}
-                style={{ padding:"6px 12px", borderRadius:6, border:"1px solid #ccc", background:"#fff", color:"#555", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Отмена</button>
-            </div>
-          </div>
-        ) : (
-          <button onClick={()=>{ setShowNewKids(true); setNewKidsItem({name:'',who:'купить',brl:0,zone:kidsTab}); }}
-            style={{ marginTop:10, background:"none", border:"1px dashed #ddd", borderRadius:8, padding:"6px 14px", fontSize:12, color:"#aaa", cursor:"pointer", fontFamily:"Georgia,serif" }}>
-            + Добавить в {kidsTab==='outdoor'?'Уличную':kidsTab==='indoor'?'В помещении':'Огород'}
-          </button>
-        )}
       </Section>
 
     </div>
