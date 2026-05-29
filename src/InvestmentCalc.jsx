@@ -1,9 +1,28 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { supabase } from "./supabase";
 
 const RATE = 5.03;
 const fmt$ = (brl) => `$${Math.round(brl / RATE).toLocaleString()}`;
 const fmtR = (brl) => `R$${brl.toLocaleString()}`;
+
+// Зона строительства — только для пустого участка
+const CONSTRUCTION_ZONE = {
+  id: "construction", emoji: "🏗️", name: "Строительство дома",
+  items: [
+    { name: "Проект / архитектор (упрощённый)", brl: 5000 },
+    { name: "Фундамент (плита или свайный)", brl: 25000 },
+    { name: "Каркас / стены (деревянный или блок)", brl: 40000 },
+    { name: "Кровля (металлочерепица + работа)", brl: 18000 },
+    { name: "Окна и двери (входные + внутренние)", brl: 12000 },
+    { name: "Электрика (проводка + щиток + подключение)", brl: 8000 },
+    { name: "Сантехника (трубы + разводка)", brl: 6000 },
+    { name: "Внутренняя отделка (штукатурка, пол)", brl: 15000 },
+    { name: "Фасад + внешняя отделка", brl: 8000 },
+    { name: "Веранда / терраса (каркас + настил)", brl: 10000 },
+    { name: "Согласования / Prefeitura / AVCB", brl: 4000 },
+    { name: "Непредвиденные расходы строительства", brl: 10000 },
+  ]
+};
 
 const ZONES = [
   {
@@ -166,16 +185,19 @@ const ZONES = [
 ];
 
 export default function InvestmentCalc() {
+  const [rentType, setRentType] = useState("house"); // "house" | "land"
   const [rent, setRent] = useState(11000);
   const [depositMonths, setDepositMonths] = useState(3);
   const [workingCapMonths, setWorkingCapMonths] = useState(6);
   const [reserve, setReserve] = useState(15000);
+  const ALL_ZONES = [...ZONES, CONSTRUCTION_ZONE];
+
   const [enabledZones, setEnabledZones] = useState(
-    Object.fromEntries(ZONES.map(z => [z.id, true]))
+    Object.fromEntries(ALL_ZONES.map(z => [z.id, true]))
   );
   const [enabledItems, setEnabledItems] = useState(
     Object.fromEntries(
-      ZONES.flatMap(z => z.items.map((item, i) => [`${z.id}_${i}`, true]))
+      ALL_ZONES.flatMap(z => z.items.map((item, i) => [`${z.id}_${i}`, true]))
     )
   );
   const [expanded, setExpanded] = useState({});
@@ -184,11 +206,12 @@ export default function InvestmentCalc() {
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
-  const buildState = (r, d, wc, res, ez, ei, q, p) => ({ rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p });
+  const buildState = (rt, r, d, wc, res, ez, ei, q, p) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p });
 
   const applyState = (s) => {
     if (!s) return;
     isRemoteUpdate.current = true;
+    if (s.rentType) setRentType(s.rentType);
     if (s.rent !== undefined) setRent(s.rent);
     if (s.depositMonths !== undefined) setDepositMonths(s.depositMonths);
     if (s.workingCapMonths !== undefined) setWorkingCapMonths(s.workingCapMonths);
@@ -227,7 +250,7 @@ export default function InvestmentCalc() {
   const toggleZone = (id) => {
     const newVal = !enabledZones[id];
     setEnabledZones(prev => ({ ...prev, [id]: newVal }));
-    const zone = ZONES.find(z => z.id === id);
+    const zone = ALL_ZONES.find(z => z.id === id);
     const updates = {};
     zone.items.forEach((_, i) => { updates[`${id}_${i}`] = newVal; });
     setEnabledItems(prev => ({ ...prev, ...updates }));
@@ -240,13 +263,13 @@ export default function InvestmentCalc() {
 
   const [quantities, setQuantities] = useState(
     Object.fromEntries(
-      ZONES.flatMap(z => z.items.map((_, i) => [`${z.id}_${i}`, 1]))
+      ALL_ZONES.flatMap(z => z.items.map((_, i) => [`${z.id}_${i}`, 1]))
     )
   );
 
   const [prices, setPrices] = useState(
     Object.fromEntries(
-      ZONES.flatMap(z => z.items.map((item, i) => [`${z.id}_${i}`, item.brl]))
+      ALL_ZONES.flatMap(z => z.items.map((item, i) => [`${z.id}_${i}`, item.brl]))
     )
   );
 
@@ -263,8 +286,8 @@ export default function InvestmentCalc() {
   };
 
   useEffect(() => {
-    scheduleSave(buildState(rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices));
-  }, [rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices]);
+    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices));
+  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices]);
 
   const zoneTotal = (zone) =>
     zone.items.reduce((sum, item, i) => {
@@ -272,7 +295,8 @@ export default function InvestmentCalc() {
       return enabledItems[key] ? sum + (prices[key] ?? item.brl) * (quantities[key] || 1) : sum;
     }, 0);
 
-  const equipTotal = ZONES.reduce((sum, z) => sum + (enabledZones[z.id] ? zoneTotal(z) : 0), 0);
+  const constructionTotal = rentType === "land" ? (enabledZones["construction"] ? zoneTotal(CONSTRUCTION_ZONE) : 0) : 0;
+  const equipTotal = ZONES.reduce((sum, z) => sum + (enabledZones[z.id] ? zoneTotal(z) : 0), 0) + constructionTotal;
   const depositTotal = rent * depositMonths;
   const opsMonthly = rent + 21900;
   const workingCap = opsMonthly * workingCapMonths;
@@ -302,9 +326,10 @@ export default function InvestmentCalc() {
         <div style={{ fontSize: 11, color: "#aaa", marginBottom: 4 }}>Итого инвестиций</div>
         <div style={{ fontSize: 32, fontWeight: 600 }}>{fmt$(grandTotal)}</div>
         <div style={{ fontSize: 13, color: "#aaa", marginTop: 2 }}>{fmtR(grandTotal)}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginTop: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: rentType === "land" ? "1fr 1fr 1fr 1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 8, marginTop: 14 }}>
           {[
-            { l: "Оборудование", v: fmt$(equipTotal) },
+            ...(rentType === "land" ? [{ l: "Стройка", v: fmt$(constructionTotal) }] : []),
+            { l: "Оснащение", v: fmt$(equipTotal - constructionTotal) },
             { l: "Залог аренды", v: fmt$(depositTotal) },
             { l: "Оборотный кап.", v: fmt$(workingCap) },
             { l: "Резерв", v: fmt$(reserve) },
@@ -315,6 +340,32 @@ export default function InvestmentCalc() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* RENT TYPE SWITCHER */}
+      <div style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: "1px solid #ebebeb" }}>
+        <div style={{ fontSize: 12, fontWeight: 500, color: "#555", marginBottom: 10 }}>🏡 Тип аренды</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {[
+            { id: "house", label: "🏠 Участок с домом", desc: "Готовое здание, только ремонт и оснащение" },
+            { id: "land",  label: "🌿 Пустой участок",  desc: "Нужно построить дом — добавляется раздел строительства" },
+          ].map(opt => (
+            <button key={opt.id} onClick={() => setRentType(opt.id)} style={{
+              flex: 1, padding: "10px 12px", borderRadius: 10, border: "none", cursor: "pointer",
+              background: rentType === opt.id ? "#1a1a1a" : "#f4f3f0",
+              color: rentType === opt.id ? "#fff" : "#555",
+              textAlign: "left", transition: "all 0.15s",
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{opt.label}</div>
+              <div style={{ fontSize: 10, marginTop: 3, color: rentType === opt.id ? "#aaa" : "#999", lineHeight: 1.4 }}>{opt.desc}</div>
+            </button>
+          ))}
+        </div>
+        {rentType === "land" && (
+          <div style={{ marginTop: 10, padding: "8px 10px", background: "#fef9ed", border: "1px solid #f3d97a", borderRadius: 8, fontSize: 11, color: "#8a6a00" }}>
+            ⚠️ При аренде пустого участка добавляется раздел <b>Строительство дома</b> (~R${CONSTRUCTION_ZONE.items.reduce((s,i)=>s+i.brl,0).toLocaleString()} базово). Включи/выключи нужные позиции ниже.
+          </div>
+        )}
       </div>
 
       <div style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", marginBottom: 16, border: "1px solid #ebebeb" }}>
@@ -347,16 +398,25 @@ export default function InvestmentCalc() {
       </div>
 
       <div style={{ fontSize: 12, fontWeight: 500, color: "#555", marginBottom: 10 }}>🏗️ Зоны — включай / выключай</div>
-      {ZONES.map(zone => {
+      {(rentType === "land" ? [CONSTRUCTION_ZONE, ...ZONES] : ZONES).map((zone, zIdx) => {
         const total = zoneTotal(zone);
         const isOn = enabledZones[zone.id];
         const isExp = expanded[zone.id];
         const isEdit = editing[zone.id];
         return (
-          <div key={zone.id} style={{
+          <Fragment key={zone.id}>
+          {zone.id === "territory" && rentType === "land" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0 8px" }}>
+              <div style={{ flex: 1, height: 1, background: "#e8e0d4" }} />
+              <span style={{ fontSize: 10, color: "#999", letterSpacing: "0.1em", textTransform: "uppercase" }}>Оснащение и ремонт</span>
+              <div style={{ flex: 1, height: 1, background: "#e8e0d4" }} />
+            </div>
+          )}
+          <div style={{
             background: "#fff", borderRadius: 12, marginBottom: 8,
-            border: `1px solid ${isOn ? "#e0e0e0" : "#f0f0f0"}`,
+            border: `1px solid ${zone.id === "construction" ? (isOn ? "#d4c5a9" : "#ede8df") : (isOn ? "#e0e0e0" : "#f0f0f0")}`,
             opacity: isOn ? 1 : 0.55,
+            ...(zone.id === "construction" ? { background: "#fffdf7" } : {}),
           }}>
             <div style={{ display: "flex", alignItems: "center", padding: "12px 14px", gap: 10, cursor: "pointer" }}
               onClick={() => setExpanded(p => ({ ...p, [zone.id]: !p[zone.id] }))}>
@@ -365,6 +425,9 @@ export default function InvestmentCalc() {
                 style={{ width: 16, height: 16, accentColor: "#1a1a1a", cursor: "pointer" }} />
               <span style={{ fontSize: 16 }}>{zone.emoji}</span>
               <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: "#1a1a1a" }}>{zone.name}</span>
+              {zone.id === "construction" && (
+                <span style={{ fontSize: 9, background: "#f3d97a", color: "#7a5a00", borderRadius: 4, padding: "2px 6px", letterSpacing: "0.08em", textTransform: "uppercase", flexShrink: 0 }}>стройка</span>
+              )}
               <button
                 onClick={e => { e.stopPropagation(); setExpanded(p => ({ ...p, [zone.id]: true })); setEditing(p => ({ ...p, [zone.id]: !p[zone.id] })); }}
                 style={{
@@ -446,6 +509,7 @@ export default function InvestmentCalc() {
               </div>
             )}
           </div>
+          </Fragment>
         );
       })}
 
