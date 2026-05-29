@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "./supabase";
 
 const CATS = [
   { name:"Концепция и стратегия", emoji:"🎯", tasks:[
@@ -109,34 +110,112 @@ function fgColor(t, sel) {
 }
 
 const ALL = CATS.flatMap(c => c.tasks);
+const TASK_MAP = Object.fromEntries(ALL.map(t => [t.id, t.task]));
 const INIT_HRS = Object.fromEntries(ALL.map(t => [t.id, t.hrs]));
-const LS_KEY = "berezka-resp-v1";
+
+function diffStates(oldA, oldH, newA, newH) {
+  const changes = [];
+  const ids = new Set([...Object.keys(oldA), ...Object.keys(newA), ...Object.keys(oldH), ...Object.keys(newH)]);
+  ids.forEach(id => {
+    const tid = Number(id);
+    const oldSi = oldA[id]; const newSi = newA[id];
+    const oldHr = oldH[id]; const newHr = newH[id];
+    const taskName = TASK_MAP[tid] || `Задача ${id}`;
+    if (oldSi !== newSi) {
+      const from = oldSi != null ? SPLITS[oldSi].label : "—";
+      const to   = newSi != null ? SPLITS[newSi].label : "—";
+      changes.push({ task: taskName, field: "кому", from, to });
+    }
+    if (oldHr !== newHr && oldHr != null && newHr != null) {
+      changes.push({ task: taskName, field: "часы", from: `${oldHr}ч`, to: `${newHr}ч` });
+    }
+  });
+  return changes;
+}
+
+function fmtDt(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleString("ru-RU", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+}
 
 export default function ResponsibilityCalc() {
-  const [asgn, setAsgn]   = useState({});
-  const [hrs, setHrs]     = useState(INIT_HRS);
-  const [open, setOpen]   = useState({ "Концепция и стратегия": true });
-  const [loaded, setLoaded] = useState(false);
+  const [asgn, setAsgn]         = useState({});
+  const [hrs, setHrs]           = useState(INIT_HRS);
+  const [open, setOpen]         = useState({ "Концепция и стратегия": true });
+  const [loaded, setLoaded]     = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter]     = useState("all");
+  const [syncStatus, setSyncStatus] = useState("idle");
+  const [lastAt, setLastAt]     = useState(null);
+  const [history, setHistory]   = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const saveTimer   = useRef(null);
+  const prevState   = useRef({ asgn: {}, hrs: INIT_HRS });
+  const isRemote    = useRef(false);
 
-  // load from localStorage
+  const applyState = (s) => {
+    if (!s) return;
+    isRemote.current = true;
+    if (s.asgn) setAsgn(s.asgn);
+    if (s.hrs)  setHrs(s.hrs);
+    setTimeout(() => { isRemote.current = false; }, 0);
+  };
+
+  const loadHistory = async () => {
+    const { data } = await supabase.from("resp_history").select("*").order("changed_at", { ascending: false }).limit(30);
+    if (data) setHistory(data);
+  };
+
+  // initial load + realtime
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d.asgn) setAsgn(d.asgn);
-        if (d.hrs)  setHrs(d.hrs);
-      }
-    } catch(e) {}
-    setLoaded(true);
+    supabase.from("resp_state").select("state,updated_at").eq("id","main").maybeSingle()
+      .then(({ data }) => {
+        if (data?.state) {
+          applyState(data.state);
+          prevState.current = data.state;
+          setLastAt(data.updated_at);
+        }
+        setLoaded(true);
+      });
+
+    loadHistory();
+
+    const ch = supabase.channel("resp_realtime")
+      .on("postgres_changes", { event:"*", schema:"public", table:"resp_state" }, (payload) => {
+        if (payload.new?.state) {
+          applyState(payload.new.state);
+          setLastAt(payload.new.updated_at);
+        }
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(ch);
   }, []);
 
-  // save to localStorage
+  // auto-save + diff
   useEffect(() => {
-    if (!loaded) return;
-    try { localStorage.setItem(LS_KEY, JSON.stringify({ asgn, hrs })); } catch(e) {}
+    if (!loaded || isRemote.current) return;
+    setSyncStatus("saving");
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      const state = { asgn, hrs };
+      const changes = diffStates(prevState.current.asgn || {}, prevState.current.hrs || INIT_HRS, asgn, hrs);
+
+      const { error } = await supabase.from("resp_state").upsert({ id:"main", state, updated_at: new Date().toISOString() });
+      if (!error) {
+        if (changes.length > 0) {
+          await supabase.from("resp_history").insert({ changes, changed_at: new Date().toISOString() });
+          loadHistory();
+        }
+        prevState.current = state;
+        setLastAt(new Date().toISOString());
+        setSyncStatus("saved");
+        setTimeout(() => setSyncStatus("idle"), 2000);
+      } else {
+        setSyncStatus("error");
+      }
+    }, 800);
   }, [asgn, hrs, loaded]);
 
   let tR = 0, tE = 0;
@@ -299,6 +378,43 @@ export default function ResponsibilityCalc() {
             </div>
           </div>
         )}
+
+        {/* ИСТОРИЯ ИЗМЕНЕНИЙ */}
+        <div style={{background:"#fff",borderRadius:18,boxShadow:"0 2px 10px rgba(58,46,34,0.07)",overflow:"hidden",border:"1.5px solid #EBE2D3"}}>
+          <button onClick={() => setShowHistory(h => !h)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer",textAlign:"left"}}>
+            <div>
+              <div style={{fontSize:13,fontWeight:700,color:"#2D2820",fontFamily:"'Outfit',sans-serif"}}>
+                {syncStatus === "saving" && <span style={{color:"#aaa"}}>сохранение…</span>}
+                {syncStatus === "saved"  && <span style={{color:"#16a34a"}}>✓ сохранено</span>}
+                {syncStatus === "error"  && <span style={{color:"#dc2626"}}>⚠ ошибка</span>}
+                {syncStatus === "idle"   && <span style={{color:"#888"}}>История изменений</span>}
+              </div>
+              {lastAt && <div style={{fontSize:11,color:"#C5BDB5",marginTop:2}}>последнее: {fmtDt(lastAt)}</div>}
+            </div>
+            <span style={{fontSize:10,color:"#D0C8BC",transform:showHistory?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+
+          {showHistory && (
+            <div style={{borderTop:"1px solid #F4EFE8",padding:"8px 0 4px"}}>
+              {history.length === 0 ? (
+                <div style={{padding:"12px 16px",fontSize:12,color:"#C5BDB5"}}>Изменений пока нет</div>
+              ) : history.map((entry, ei) => (
+                <div key={entry.id} style={{padding:"10px 16px",borderBottom:ei<history.length-1?"1px solid #F4EFE8":"none"}}>
+                  <div style={{fontSize:11,color:"#B0A898",marginBottom:6,fontWeight:600}}>{fmtDt(entry.changed_at)}</div>
+                  {entry.changes.map((ch, ci) => (
+                    <div key={ci} style={{display:"flex",alignItems:"baseline",gap:6,fontSize:12,marginBottom:3,flexWrap:"wrap"}}>
+                      <span style={{color:"#2D2820",fontWeight:600,flex:"1 1 160px",minWidth:0}}>{ch.task}</span>
+                      <span style={{color:"#C5BDB5",flexShrink:0}}>{ch.field}:</span>
+                      <span style={{background:"#FFF0ED",color:"#9A3412",borderRadius:4,padding:"1px 6px",fontSize:11,flexShrink:0}}>{ch.from}</span>
+                      <span style={{color:"#C5BDB5",flexShrink:0}}>→</span>
+                      <span style={{background:"#F0FDF4",color:"#166534",borderRadius:4,padding:"1px 6px",fontSize:11,flexShrink:0}}>{ch.to}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {!confirmReset ? (
           <button onClick={() => setConfirmReset(true)} style={{background:"transparent",border:"1.5px solid #E5DDD4",borderRadius:12,padding:"11px",fontSize:12,color:"#C5BDB5",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>
