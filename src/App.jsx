@@ -6,12 +6,14 @@ import KnowledgeBase from './KnowledgeBase'
 import BusinessPlan from './BusinessPlan'
 import MenuPricing from './MenuPricing'
 import RentalOptions from './RentalOptions'
+import Finance from './Finance'
 
 const TABS = [
   { id: 'bizplan', label: '📋 Бизнес-план' },
   { id: 'resp',    label: '👥 Ответственность' },
   { id: 'rental',  label: '🏠 Аренда' },
   { id: 'smeta',   label: '📊 Смета' },
+  { id: 'finance', label: '💰 Финансы' },
   { id: 'menu',    label: '🍽️ Меню' },
   { id: 'brand',   label: '🎨 Дизайн-код' },
   { id: 'kb',      label: '📚 База знаний' },
@@ -76,6 +78,7 @@ export default function App() {
       {tab === 'menu'    && <MenuPricing />}
       {tab === 'brand'   && <BrandTab />}
       {tab === 'resp'    && <ResponsibilityCalc onNavigate={handleNavigate} />}
+      {tab === 'finance' && <Finance />}
       {tab === 'kb'      && <KnowledgeBase />}
     </div>
   )
