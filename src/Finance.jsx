@@ -26,6 +26,7 @@ const DEFAULT_INPUTS = {
   workDays: 26,
   capex: 300000,
   capital: 350000,
+  startMonth: 1,
   prepMonths: 3,
   launchMonth2: 5,
   launchMonth3: 9,
@@ -389,31 +390,38 @@ function SectionInputs({ inputs, setInput, model }) {
 
       {/* Этапы — сроки */}
       {(() => {
-        const { prepMonths, launchMonth2, launchMonth3 } = inputs
+        const { startMonth, prepMonths, launchMonth2, launchMonth3 } = inputs
+        const MN = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек']
+        const mn = (m) => MN[((m - 1 + startMonth - 1) % 12 + 12) % 12] // operational month m → calendar
+        const openCalMonth = (startMonth - 1 + prepMonths) % 12 + 1 // calendar month of opening
         const dur1 = launchMonth2 - 1
         const dur2 = launchMonth3 - launchMonth2
         const dur3 = 12 - launchMonth3 + 1
+        // calendar month names for stage boundaries
+        const calOpen = MN[(startMonth - 1 + prepMonths) % 12]
+        const calL2   = MN[(startMonth - 1 + prepMonths + launchMonth2 - 1) % 12]
+        const calL3   = MN[(startMonth - 1 + prepMonths + launchMonth3 - 1) % 12]
+        const calEnd  = MN[(startMonth - 1 + prepMonths + 11) % 12]
         const stages = [
           { num: 0, emoji: '🏗️', name: 'Подготовка / стройка', color: '#7a5a00', bg: '#fffbe6', border: '#f0d97a',
-            note: 'До открытия — ремонт, оснащение, регистрация',
-            inputs: [{ key: 'prepMonths', label: 'Длительность (мес)', val: prepMonths }],
-            duration: `${prepMonths} мес`, timeRange: `до открытия` },
+            note: 'До открытия — ремонт, оснащение, согласования, регистрация CNPJ',
+            inputs: [
+              { key: 'startMonth', label: 'Начало стройки (месяц года)', val: startMonth },
+              { key: 'prepMonths', label: 'Длительность стройки (мес)', val: prepMonths },
+            ],
+            duration: `${prepMonths} мес`, timeRange: `${MN[startMonth-1]} → открытие ${calOpen}` },
           { num: 1, emoji: '☕', name: 'Двор + напитки', color: '#1a4f1a', bg: '#f0f7ed', border: '#b8d9b8',
             note: 'Кофе, напитки, снеки — кухня ещё не работает',
             inputs: [],
-            duration: `${dur1} мес`, timeRange: `мес 1 – ${launchMonth2 - 1}` },
+            duration: `${dur1} мес`, timeRange: `${calOpen} – ${MN[(startMonth - 1 + prepMonths + launchMonth2 - 2) % 12]}` },
           { num: 2, emoji: '🍳', name: 'Кухня', color: '#1a3a5f', bg: '#edf3fa', border: '#b8cfe0',
             note: 'Открывается кухня — полноценные блюда',
-            inputs: [
-              { key: 'launchMonth2', label: 'Старт этапа (месяц)', val: launchMonth2 },
-            ],
-            duration: `${dur2} мес`, timeRange: `мес ${launchMonth2} – ${launchMonth3 - 1}` },
+            inputs: [{ key: 'launchMonth2', label: 'Старт этапа (опер. мес)', val: launchMonth2 }],
+            duration: `${dur2} мес`, timeRange: `${calL2} – ${MN[(startMonth - 1 + prepMonths + launchMonth3 - 2) % 12]}` },
           { num: 3, emoji: '🌟', name: 'Полный формат', color: '#4a1a5f', bg: '#f5edfb', border: '#cfb8e0',
             note: 'Полное меню, аниматор, магазин — выход на плановую мощность',
-            inputs: [
-              { key: 'launchMonth3', label: 'Старт этапа (месяц)', val: launchMonth3 },
-            ],
-            duration: `${dur3} мес`, timeRange: `мес ${launchMonth3} – 12` },
+            inputs: [{ key: 'launchMonth3', label: 'Старт этапа (опер. мес)', val: launchMonth3 }],
+            duration: `${dur3} мес`, timeRange: `${calL3} – ${calEnd}` },
         ]
         return (
           <div style={S.subGroup}>
@@ -623,18 +631,24 @@ function SectionInputs({ inputs, setInput, model }) {
           <div key={key} style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>{label}</div>
             <div style={{ fontSize: 11, color: '#aaa', marginBottom: 8, fontStyle: 'italic' }}>«{hint}»</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-              {MONTHS.map((mo, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ fontSize: 10, color: '#999', marginBottom: 3 }}>{mo}</div>
-                  <NumInput
-                    value={inputs[key][i]}
-                    onChange={v => setSeasonField(key, i, v)}
-                    style={{ width: '100%', textAlign: 'center' }}
-                  />
+            {(() => {
+              const off = (inputs.startMonth || 1) - 1 + (inputs.prepMonths || 3)
+              const calMo = Array.from({ length: 12 }, (_, i) => MONTHS[(off + i) % 12])
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                  {calMo.map((mo, i) => (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div style={{ fontSize: 10, color: '#999', marginBottom: 3 }}>{mo}</div>
+                      <NumInput
+                        value={inputs[key][i]}
+                        onChange={v => setSeasonField(key, i, v)}
+                        style={{ width: '100%', textAlign: 'center' }}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )
+            })()}
           </div>
         ))}
       </div>
@@ -646,6 +660,10 @@ function SectionInputs({ inputs, setInput, model }) {
 
 function ModelTable({ inputs, model }) {
   const { months, cumCash } = model
+
+  // Calendar month labels: shift by startMonth + prepMonths - 1
+  const openOffset = (inputs.startMonth || 1) - 1 + (inputs.prepMonths || 3)
+  const calMonths = Array.from({ length: 12 }, (_, i) => MONTHS[(openOffset + i) % 12])
 
   // Year totals / averages
   const sum = (arr) => arr.reduce((a, b) => a + b, 0)
@@ -709,7 +727,7 @@ function ModelTable({ inputs, model }) {
           <thead>
             <tr>
               <th style={{ ...S.th, textAlign: 'left', minWidth: 200 }}>Показатель</th>
-              {MONTHS.map(m => <th key={m} style={{ ...S.th, minWidth: 72 }}>{m}</th>)}
+              {calMonths.map((m, i) => <th key={i} style={{ ...S.th, minWidth: 72 }}>{m}</th>)}
               <th style={{ ...S.th, minWidth: 90 }}>Год</th>
             </tr>
           </thead>
