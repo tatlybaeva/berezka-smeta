@@ -232,11 +232,12 @@ export default function InvestmentCalc() {
   const [editing, setEditing] = useState({});
   const [beOpen, setBeOpen] = useState(false);
   const [bePhase, setBePhase] = useState(1);
+  const [currentChecksDay, setCurrentChecksDay] = useState(10);
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | saving | saved | error
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
-  const buildState = (rt, r, d, wc, res, ez, ei, q, p) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p });
+  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd });
 
   const applyState = (s) => {
     if (!s) return;
@@ -250,6 +251,8 @@ export default function InvestmentCalc() {
     if (s.enabledItems) setEnabledItems(s.enabledItems);
     if (s.quantities) setQuantities(s.quantities);
     if (s.prices) setPrices(s.prices);
+    if (s.bePhase !== undefined) setBePhase(s.bePhase);
+    if (s.currentChecksDay !== undefined) setCurrentChecksDay(s.currentChecksDay);
     setTimeout(() => { isRemoteUpdate.current = false; }, 0);
   };
 
@@ -316,8 +319,8 @@ export default function InvestmentCalc() {
   };
 
   useEffect(() => {
-    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices));
-  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices]);
+    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay));
+  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay]);
 
   const zoneTotal = (zone) =>
     zone.items.reduce((sum, item, i) => {
@@ -375,7 +378,6 @@ export default function InvestmentCalc() {
       {/* BREAK-EVEN SECTION */}
       {(() => {
         const be = breakEven(rent, bePhase);
-        const currentChecksDay = 10; // placeholder
         const progress = Math.min(1, currentChecksDay / be.checksPerDay);
         return (
           <div style={{ background: "#fff", borderRadius: 12, marginBottom: 12, border: "1px solid #ebebeb", overflow: "hidden" }}>
@@ -434,10 +436,20 @@ export default function InvestmentCalc() {
 
                 {/* Progress bar */}
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 11, color: "#666" }}>
-                    <span>Текущий прогноз: ~{currentChecksDay} чек/день</span>
-                    <span>Нужно: {be.checksPerDay} чек/день</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, color: "#666" }}>Фактических чеков/день сейчас:</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <button onClick={() => setCurrentChecksDay(v => Math.max(0, v - 1))}
+                        style={{ width: 22, height: 22, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                      <input type="number" value={currentChecksDay} min={0} max={200}
+                        onChange={e => setCurrentChecksDay(Math.max(0, Number(e.target.value) || 0))}
+                        style={{ width: 48, textAlign: "center", border: "1px solid #ddd", borderRadius: 4, fontSize: 13, padding: "2px 4px", fontFamily: "'Georgia',serif" }} />
+                      <button onClick={() => setCurrentChecksDay(v => v + 1)}
+                        style={{ width: 22, height: 22, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                      <span style={{ fontSize: 11, color: "#aaa" }}>из {be.checksPerDay} нужных</span>
+                    </div>
                   </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 11, color: "#666" }}></div>
                   <div style={{ height: 10, background: "#f0f0f0", borderRadius: 99, overflow: "hidden" }}>
                     <div style={{
                       height: "100%",

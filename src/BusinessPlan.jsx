@@ -319,8 +319,7 @@ function calcBDR(sc) {
   });
 }
 
-function BDRTable() {
-  const [active, setActive] = useState('realistic');
+function BDRTable({ active, setActive }) {
   const sc = BDR_SCENARIOS.find(s => s.id === active);
   const rows = calcBDR(sc);
   const cumProfit = rows.reduce((acc, r) => { acc.push((acc[acc.length-1] || 0) + r.netProfit); return acc; }, []);
@@ -569,6 +568,7 @@ export default function BusinessPlan() {
   const [staff, setStaff] = useState(initialStaff);
   const [todos, setTodos] = useState(initialTodos);
   const [admin, setAdmin] = useState(initialAdmin);
+  const [bdrScenario, setBdrScenario] = useState('realistic');
   const [syncStatus, setSyncStatus] = useState("idle");
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
@@ -587,6 +587,7 @@ export default function BusinessPlan() {
         if (s.staff) setStaff(s.staff);
         if (s.todos) setTodos(s.todos);
         if (s.admin) setAdmin(s.admin);
+        if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       });
 
@@ -600,6 +601,7 @@ export default function BusinessPlan() {
         if (s.staff) setStaff(s.staff);
         if (s.todos) setTodos(s.todos);
         if (s.admin) setAdmin(s.admin);
+        if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       })
       .subscribe();
@@ -619,7 +621,7 @@ export default function BusinessPlan() {
   };
 
   const saveAll = (overrides = {}) => {
-    scheduleSave({ ideas, kidsZone, staff, todos, admin, ...overrides });
+    scheduleSave({ ideas, kidsZone, staff, todos, admin, bdrScenario, ...overrides });
   };
 
   const addIdea = () => {
@@ -815,7 +817,7 @@ export default function BusinessPlan() {
           <div style={{ fontSize: 22, fontWeight: 600 }}>R${realisticTotal.toLocaleString()}</div>
           <div style={{ fontSize: 11, color: "#888" }}>~${Math.round(realisticTotal / RATE).toLocaleString()}/мес</div>
         </div>
-        <BDRTable />
+        <BDRTable active={bdrScenario} setActive={(v) => { setBdrScenario(v); saveAll({ bdrScenario: v }); }} />
       </Section>
 
       {/* ── SECTION 5: ДЕТСКАЯ ЗОНА ── */}
