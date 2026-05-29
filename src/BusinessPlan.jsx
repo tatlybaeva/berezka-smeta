@@ -693,7 +693,7 @@ function Section({ title, open, onToggle, children }) {
 }
 
 export default function BusinessPlan() {
-  const [openSections, setOpenSections] = useState({ 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true });
+  const [openSections, setOpenSections] = useState({});
   const [ideas, setIdeas] = useState(initialIdeas);
   const [newIdea, setNewIdea] = useState("");
   const [kidsZone, setKidsZone] = useState(initialKidsZone);

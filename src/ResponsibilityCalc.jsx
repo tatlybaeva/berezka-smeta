@@ -133,7 +133,7 @@ export default function ResponsibilityCalc({ onNavigate }) {
   const [partners, setPartners]   = useState(DEFAULT_PARTNERS);
   const [asgn, setAsgn]           = useState(() => initAsgn(DEFAULT_PARTNERS));
   const [hrs, setHrs]             = useState(INIT_HRS);
-  const [open, setOpen]           = useState({ "Концепция и стратегия": true });
+  const [open, setOpen]           = useState({});
   const [loaded, setLoaded]       = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [filter, setFilter]       = useState("all");
