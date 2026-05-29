@@ -204,19 +204,16 @@ const ZONES = [
   },
 ];
 
-const COSTS_PHASE1_FIXED = 7480 + 3060 + 700 + 1500 + 430 + 600 + 200 + 120 + 200 + 800; // without rent placeholder
-const COSTS_PHASE3_FIXED = 9520 + 7480 + 3400 + 3060 + 700 + 2500 + 600 + 200 + 120 + 250; // without rent placeholder
-
-const AVG_CHECK = 52;
 const FOOD_COST_PCT = 0.30;
 const TAX_PCT = 0.08;
 
-function breakEven(rent, phase) {
-  const costs_fixed = (phase === 1 ? COSTS_PHASE1_FIXED : COSTS_PHASE3_FIXED) + rent;
-  const netPerCheck = AVG_CHECK * (1 - (phase >= 2 ? FOOD_COST_PCT : 0.15) - TAX_PCT);
-  const checksPerMonth = Math.ceil(costs_fixed / netPerCheck);
+function computeBEP(rent, avgCheck, staff, other, phase) {
+  const foodCost = phase >= 2 ? FOOD_COST_PCT : 0.15;
+  const fixed = rent + staff + other;
+  const netPerCheck = Math.round(avgCheck * (1 - foodCost - TAX_PCT));
+  const checksPerMonth = netPerCheck > 0 ? Math.ceil(fixed / netPerCheck) : 0;
   const checksPerDay = Math.ceil(checksPerMonth / 30);
-  return { fixed: costs_fixed, netPerCheck: Math.round(netPerCheck), checksPerMonth, checksPerDay };
+  return { fixed, netPerCheck, checksPerMonth, checksPerDay };
 }
 
 export default function InvestmentCalc() {
@@ -247,10 +244,14 @@ export default function InvestmentCalc() {
   const [nameDraft, setNameDraft] = useState("");
   const [newRowDraft, setNewRowDraft] = useState({}); // { zoneId: {name, brl} }
   const [itemUrls, setItemUrls] = useState({});      // { key: "https://..." } overrides
+  // BEP editable inputs
+  const [avgCheck, setAvgCheck] = useState(52);
+  const [beStaff, setBeStaff] = useState({ 1: 8500, 3: 15000 });   // ФОТ по этапам
+  const [beOther, setBeOther] = useState({ 1: 3500, 3: 6000 });    // прочие расходы по этапам
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
-  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls });
+  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls, ac, bst, bot) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls, avgCheck: ac, beStaff: bst, beOther: bot });
 
   const applyState = (s) => {
     if (!s) return;
@@ -269,6 +270,9 @@ export default function InvestmentCalc() {
     if (s.itemNames) setItemNames(s.itemNames);
     if (s.extraItems) setExtraItems(s.extraItems);
     if (s.itemUrls) setItemUrls(s.itemUrls);
+    if (s.avgCheck !== undefined) setAvgCheck(s.avgCheck);
+    if (s.beStaff) setBeStaff(s.beStaff);
+    if (s.beOther) setBeOther(s.beOther);
     setTimeout(() => { isRemoteUpdate.current = false; }, 0);
   };
 
@@ -335,8 +339,8 @@ export default function InvestmentCalc() {
   };
 
   useEffect(() => {
-    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls));
-  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls]);
+    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls, avgCheck, beStaff, beOther));
+  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls, avgCheck, beStaff, beOther]);
 
   const getUrl = (key, item) => itemUrls[key] !== undefined ? itemUrls[key] : (item?.url || "");
   const setUrl = (key, val) => setItemUrls(p => ({ ...p, [key]: val }));
@@ -397,95 +401,125 @@ export default function InvestmentCalc() {
 
       {/* BREAK-EVEN SECTION */}
       {(() => {
-        const be = breakEven(rent, bePhase);
-        const progress = Math.min(1, currentChecksDay / be.checksPerDay);
+        const staff = beStaff[bePhase] || 8500;
+        const other = beOther[bePhase] || 3500;
+        const be = computeBEP(rent, avgCheck, staff, other, bePhase);
+        const progress = Math.min(1, currentChecksDay / (be.checksPerDay || 1));
+        const foodCostPct = bePhase >= 2 ? 30 : 15;
         return (
           <div style={{ background: "#fff", borderRadius: 12, marginBottom: 12, border: "1px solid #ebebeb", overflow: "hidden" }}>
-            <div
-              onClick={() => setBeOpen(p => !p)}
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", cursor: "pointer" }}
-            >
+            <div onClick={() => setBeOpen(p => !p)}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", cursor: "pointer" }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>📉 Точка безубыточности</div>
               <span style={{ fontSize: 12, color: "#bbb" }}>{beOpen ? "▲" : "▼"}</span>
             </div>
             {beOpen && (
               <div style={{ borderTop: "1px solid #f0f0f0", padding: "14px 16px" }}>
+
                 {/* Phase selector */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                  {[
-                    { phase: 1, label: "Этап 1 (кофе)" },
-                    { phase: 3, label: "Этап 3 (полный)" },
-                  ].map(opt => (
-                    <button
-                      key={opt.phase}
-                      onClick={() => setBePhase(opt.phase)}
-                      style={{
-                        flex: 1, padding: "8px 10px", borderRadius: 8, cursor: "pointer",
-                        border: "none",
-                        background: bePhase === opt.phase ? "#1a1a1a" : "#f4f3f0",
-                        color: bePhase === opt.phase ? "#fff" : "#555",
-                        fontSize: 12, fontFamily: "'Georgia', serif", fontWeight: bePhase === opt.phase ? 600 : 400,
-                      }}
-                    >
-                      {opt.label}
-                    </button>
+                <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                  {[{ phase: 1, label: "Этап 1 (кофе·напитки)" }, { phase: 3, label: "Этап 3 (полный формат)" }].map(opt => (
+                    <button key={opt.phase} onClick={() => setBePhase(opt.phase)} style={{
+                      flex: 1, padding: "8px 10px", borderRadius: 8, cursor: "pointer", border: "none",
+                      background: bePhase === opt.phase ? "#1a1a1a" : "#f4f3f0",
+                      color: bePhase === opt.phase ? "#fff" : "#555",
+                      fontSize: 12, fontFamily: "'Georgia', serif", fontWeight: bePhase === opt.phase ? 600 : 400,
+                    }}>{opt.label}</button>
                   ))}
                 </div>
 
-                {/* Stats grid */}
+                {/* Постоянные расходы breakdown */}
+                <div style={{ background: "#f7f7f5", borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#555", marginBottom: 10 }}>📋 Ежемесячные постоянные расходы</div>
+                  {[
+                    { label: "🏠 Аренда", value: rent, note: "из слайдера выше", readOnly: true },
+                    { label: "👥 ФОТ (персонал + налоги)", value: staff, note: "зарплаты + encargos",
+                      onChange: v => setBeStaff(p => ({ ...p, [bePhase]: v })) },
+                    { label: "⚡ Прочее (счета, расходники, связь)", value: other, note: "коммунальные, упаковка…",
+                      onChange: v => setBeOther(p => ({ ...p, [bePhase]: v })) },
+                  ].map(({ label, value, note, readOnly, onChange }) => (
+                    <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, color: "#444" }}>{label}</div>
+                        <div style={{ fontSize: 9, color: "#bbb" }}>{note}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
+                        {readOnly
+                          ? <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", minWidth: 60, textAlign: "right" }}>{value.toLocaleString()}</span>
+                          : <input type="number" value={value} min={0} step={500}
+                              onChange={e => onChange(Math.max(0, Number(e.target.value) || 0))}
+                              style={{ width: 72, textAlign: "right", border: "1px solid #ddd", borderRadius: 5, fontSize: 12, padding: "3px 5px", fontFamily: "Georgia,serif", MozAppearance: "textfield" }} />
+                        }
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ borderTop: "1px dashed #ddd", paddingTop: 8, marginTop: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>Итого постоянные/мес</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>R${be.fixed.toLocaleString()} <span style={{ fontSize: 10, color: "#aaa", fontWeight: 400 }}>≈ {fmt$(be.fixed)}</span></div>
+                  </div>
+                </div>
+
+                {/* Средний чек + формула */}
+                <div style={{ background: "#f7f7f5", borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#555", marginBottom: 10 }}>🧾 Параметры выручки</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, color: "#444" }}>Средний чек</div>
+                      <div style={{ fontSize: 9, color: "#bbb" }}>на одного гостя, всё включено</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <button onClick={() => setAvgCheck(v => Math.max(10, v - 5))}
+                        style={{ width: 22, height: 22, border: "1px solid #ddd", borderRadius: 4, background: "#fff", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                      <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
+                      <input type="number" value={avgCheck} min={10} step={5}
+                        onChange={e => setAvgCheck(Math.max(10, Number(e.target.value) || 10))}
+                        style={{ width: 52, textAlign: "center", border: "1px solid #ddd", borderRadius: 4, fontSize: 13, padding: "2px 4px", fontFamily: "Georgia,serif", MozAppearance: "textfield" }} />
+                      <button onClick={() => setAvgCheck(v => v + 5)}
+                        style={{ width: 22, height: 22, border: "1px solid #ddd", borderRadius: 4, background: "#fff", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 10, color: "#888", background: "#fff", borderRadius: 6, padding: "8px 10px", lineHeight: 1.9 }}>
+                    <div>R${avgCheck} × (1 − {foodCostPct}% food cost − 8% налог) = <b style={{ color: "#1a1a1a" }}>R${be.netPerCheck} с чека</b></div>
+                    <div>R${be.fixed.toLocaleString()} ÷ R${be.netPerCheck} = <b style={{ color: "#1a1a1a" }}>{be.checksPerMonth} чеков/мес</b></div>
+                    <div>{be.checksPerMonth} ÷ 30 дней = <b style={{ color: "#1a1a1a" }}>{be.checksPerDay} чеков/день</b></div>
+                  </div>
+                </div>
+
+                {/* Result */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
                   <div style={{ background: "#f7f7f5", borderRadius: 8, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 10, color: "#999", marginBottom: 2 }}>Постоянные расходы/мес</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>R${be.fixed.toLocaleString()}</div>
-                    <div style={{ fontSize: 11, color: "#aaa" }}>~${Math.round(be.fixed / RATE).toLocaleString()}</div>
-                  </div>
-                  <div style={{ background: "#f7f7f5", borderRadius: 8, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 10, color: "#999", marginBottom: 2 }}>Чистая прибыль с чека</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>R${be.netPerCheck}</div>
-                    <div style={{ fontSize: 11, color: "#aaa" }}>после food cost + налог</div>
-                  </div>
-                  <div style={{ background: "#f7f7f5", borderRadius: 8, padding: "10px 12px" }}>
                     <div style={{ fontSize: 10, color: "#999", marginBottom: 2 }}>Чеков/месяц для БУ</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>{be.checksPerMonth.toLocaleString()}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>{be.checksPerMonth.toLocaleString()}</div>
                   </div>
                   <div style={{ background: "#EAF3DE", borderRadius: 8, padding: "10px 12px" }}>
                     <div style={{ fontSize: 10, color: "#3B6D11", marginBottom: 2 }}>Чеков/день для БУ</div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: "#27500A" }}>{be.checksPerDay} чек/день</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: "#27500A" }}>{be.checksPerDay} чек/день</div>
                   </div>
                 </div>
 
                 {/* Progress bar */}
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <div style={{ fontSize: 11, color: "#666" }}>Фактических чеков/день сейчас:</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <button onClick={() => setCurrentChecksDay(v => Math.max(0, v - 1))}
-                        style={{ width: 22, height: 22, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-                      <input type="number" value={currentChecksDay} min={0} max={200}
-                        onChange={e => setCurrentChecksDay(Math.max(0, Number(e.target.value) || 0))}
-                        style={{ width: 48, textAlign: "center", border: "1px solid #ddd", borderRadius: 4, fontSize: 13, padding: "2px 4px", fontFamily: "'Georgia',serif" }} />
-                      <button onClick={() => setCurrentChecksDay(v => v + 1)}
-                        style={{ width: 22, height: 22, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
-                      <span style={{ fontSize: 11, color: "#aaa" }}>из {be.checksPerDay} нужных</span>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 11, color: "#666" }}></div>
-                  <div style={{ height: 10, background: "#f0f0f0", borderRadius: 99, overflow: "hidden" }}>
-                    <div style={{
-                      height: "100%",
-                      width: `${progress * 100}%`,
-                      background: progress >= 1 ? "#3B6D11" : progress >= 0.6 ? "#BA7517" : "#A32D2D",
-                      borderRadius: 99,
-                      transition: "width 0.3s",
-                    }} />
-                  </div>
-                  <div style={{ fontSize: 11, color: "#999", marginTop: 6 }}>
-                    {progress >= 1 ? "✅ Уже выше точки безубыточности!" : `${Math.round(progress * 100)}% от нужного трафика`}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, color: "#666" }}>Фактических чеков/день:</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <button onClick={() => setCurrentChecksDay(v => Math.max(0, v - 1))}
+                      style={{ width: 22, height: 22, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                    <input type="number" value={currentChecksDay} min={0} max={200}
+                      onChange={e => setCurrentChecksDay(Math.max(0, Number(e.target.value) || 0))}
+                      style={{ width: 44, textAlign: "center", border: "1px solid #ddd", borderRadius: 4, fontSize: 13, padding: "2px 4px", fontFamily: "'Georgia',serif", MozAppearance: "textfield" }} />
+                    <button onClick={() => setCurrentChecksDay(v => v + 1)}
+                      style={{ width: 22, height: 22, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                    <span style={{ fontSize: 11, color: "#aaa" }}>из {be.checksPerDay} нужных</span>
                   </div>
                 </div>
-
-                <div style={{ marginTop: 10, fontSize: 11, color: "#aaa", lineHeight: 1.5 }}>
-                  💡 Средний чек R${AVG_CHECK} · Food cost {bePhase >= 2 ? "30" : "15"}% · Налог 8%
+                <div style={{ height: 10, background: "#f0f0f0", borderRadius: 99, overflow: "hidden", marginBottom: 6 }}>
+                  <div style={{
+                    height: "100%", width: `${progress * 100}%`, borderRadius: 99, transition: "width 0.3s",
+                    background: progress >= 1 ? "#3B6D11" : progress >= 0.6 ? "#BA7517" : "#A32D2D",
+                  }} />
+                </div>
+                <div style={{ fontSize: 11, color: "#999" }}>
+                  {progress >= 1 ? "✅ Уже выше точки безубыточности!" : `${Math.round(progress * 100)}% от нужного трафика`}
                 </div>
               </div>
             )}
