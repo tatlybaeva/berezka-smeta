@@ -234,10 +234,15 @@ export default function InvestmentCalc() {
   const [bePhase, setBePhase] = useState(1);
   const [currentChecksDay, setCurrentChecksDay] = useState(10);
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | saving | saved | error
+  const [itemNames, setItemNames] = useState({});   // { "zone_idx": "custom name" }
+  const [extraItems, setExtraItems] = useState({}); // { zoneId: [{name, brl}] }
+  const [editingName, setEditingName] = useState(null); // { zoneId, idx, extra? }
+  const [nameDraft, setNameDraft] = useState("");
+  const [newRowDraft, setNewRowDraft] = useState({}); // { zoneId: {name, brl} }
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
-  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd });
+  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras });
 
   const applyState = (s) => {
     if (!s) return;
@@ -253,6 +258,8 @@ export default function InvestmentCalc() {
     if (s.prices) setPrices(s.prices);
     if (s.bePhase !== undefined) setBePhase(s.bePhase);
     if (s.currentChecksDay !== undefined) setCurrentChecksDay(s.currentChecksDay);
+    if (s.itemNames) setItemNames(s.itemNames);
+    if (s.extraItems) setExtraItems(s.extraItems);
     setTimeout(() => { isRemoteUpdate.current = false; }, 0);
   };
 
@@ -319,14 +326,20 @@ export default function InvestmentCalc() {
   };
 
   useEffect(() => {
-    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay));
-  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay]);
+    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems));
+  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems]);
 
-  const zoneTotal = (zone) =>
-    zone.items.reduce((sum, item, i) => {
+  const zoneTotal = (zone) => {
+    const base = zone.items.reduce((sum, item, i) => {
       const key = `${zone.id}_${i}`;
       return enabledItems[key] ? sum + (prices[key] ?? item.brl) * (quantities[key] || 1) : sum;
     }, 0);
+    const extras = (extraItems[zone.id] || []).reduce((sum, ex, j) => {
+      const key = `${zone.id}_x${j}`;
+      return enabledItems[key] !== false ? sum + (prices[key] ?? ex.brl) * (quantities[key] || 1) : sum;
+    }, 0);
+    return base + extras;
+  };
 
   const constructionTotal = rentType === "land" ? (enabledZones["construction"] ? zoneTotal(CONSTRUCTION_ZONE) : 0) : 0;
   const equipTotal = ZONES.reduce((sum, z) => sum + (enabledZones[z.id] ? zoneTotal(z) : 0), 0) + constructionTotal;
@@ -576,39 +589,38 @@ export default function InvestmentCalc() {
                   const qty = quantities[key] || 1;
                   const price = prices[key] ?? item.brl;
                   const lineTotal = price * qty;
+                  const displayName = itemNames[key] ?? item.name;
+                  const isEditingThisName = editingName?.zoneId === zone.id && editingName?.idx === i && !editingName?.extra;
                   return (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0",
-                      borderBottom: i < zone.items.length - 1 ? "1px solid #f5f5f5" : "none",
-                      opacity: on ? 1 : 0.35 }}>
+                      borderBottom: "1px solid #f5f5f5", opacity: on ? 1 : 0.35 }}>
                       <input type="checkbox" checked={on} onChange={() => toggleItem(zone.id, i)}
                         style={{ width: 14, height: 14, accentColor: "#1a1a1a", cursor: "pointer", flexShrink: 0 }} />
-                      <span style={{ flex: 1, fontSize: 12, color: "#444", lineHeight: 1.3 }}>{item.name}</span>
+                      {isEdit && isEditingThisName ? (
+                        <input autoFocus value={nameDraft} onChange={e => setNameDraft(e.target.value)}
+                          onBlur={() => { setItemNames(p => ({ ...p, [key]: nameDraft })); setEditingName(null); }}
+                          onKeyDown={e => { if (e.key === "Enter" || e.key === "Escape") { setItemNames(p => ({ ...p, [key]: nameDraft })); setEditingName(null); } }}
+                          style={{ flex: 1, border: "1px solid #ddd", borderRadius: 5, padding: "2px 6px", fontFamily: "Georgia,serif", fontSize: 12, outline: "none" }} />
+                      ) : (
+                        <span onClick={() => isEdit && (setEditingName({ zoneId: zone.id, idx: i }), setNameDraft(displayName))}
+                          style={{ flex: 1, fontSize: 12, color: "#444", lineHeight: 1.3, cursor: isEdit ? "text" : "default" }}>{displayName}</span>
+                      )}
 
                       {isEdit ? (
                         <>
-                          {/* qty stepper */}
                           <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
                             <button onClick={() => setQty(zone.id, i, qty - 1)}
-                              style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4,
-                                background: "#f7f7f5", cursor: "pointer", fontSize: 12,
-                                display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-                            <input type="number" value={qty} min={0} max={99}
-                              onChange={e => setQty(zone.id, i, e.target.value)}
-                              style={{ width: 32, textAlign: "center", border: "1px solid #ddd",
-                                borderRadius: 4, fontSize: 12, padding: "2px 0" }} />
+                              style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                            <span style={{ width: 24, textAlign: "center", fontSize: 12 }}>{qty}</span>
                             <button onClick={() => setQty(zone.id, i, qty + 1)}
-                              style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4,
-                                background: "#f7f7f5", cursor: "pointer", fontSize: 12,
-                                display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                              style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                           </div>
-                          {/* price input */}
                           <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
                             <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
                             <input type="number" value={price} min={0}
                               onChange={e => setPrice(zone.id, i, e.target.value)}
-                              style={{ width: 60, textAlign: "right", border: "1px solid #ddd",
-                                borderRadius: 4, fontSize: 12, padding: "2px 4px",
-                                color: price !== item.brl ? "#b45309" : "#333" }} />
+                              style={{ width: 60, textAlign: "right", border: "1px solid #ddd", borderRadius: 4, fontSize: 12, padding: "2px 4px",
+                                color: price !== item.brl ? "#b45309" : "#333", MozAppearance: "textfield" }} />
                           </div>
                         </>
                       ) : (
@@ -616,9 +628,7 @@ export default function InvestmentCalc() {
                           {price === 0
                             ? <span style={{ fontSize: 11, color: "#999" }}>бесплатно</span>
                             : <>
-                                <div style={{ fontSize: 12, fontWeight: 500, color: price !== item.brl ? "#b45309" : "#333" }}>
-                                  {fmtR(lineTotal)}
-                                </div>
+                                <div style={{ fontSize: 12, fontWeight: 500, color: price !== item.brl ? "#b45309" : "#333" }}>{fmtR(lineTotal)}</div>
                                 {qty > 1 && <div style={{ fontSize: 10, color: "#aaa" }}>{fmtR(price)}/шт × {qty}</div>}
                               </>
                           }
@@ -627,6 +637,84 @@ export default function InvestmentCalc() {
                     </div>
                   );
                 })}
+
+                {/* Extra items added by user */}
+                {(extraItems[zone.id] || []).map((ex, j) => {
+                  const xKey = `${zone.id}_x${j}`;
+                  const xOn = enabledItems[xKey] !== false;
+                  const xQty = quantities[xKey] || 1;
+                  const xPrice = prices[xKey] ?? ex.brl;
+                  const isEditingExtra = editingName?.zoneId === zone.id && editingName?.idx === j && editingName?.extra;
+                  return (
+                    <div key={`x${j}`} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid #f5f5f5", opacity: xOn ? 1 : 0.35 }}>
+                      <input type="checkbox" checked={xOn} onChange={() => setEnabledItems(p => ({ ...p, [xKey]: !xOn }))}
+                        style={{ width: 14, height: 14, accentColor: "#1a1a1a", cursor: "pointer", flexShrink: 0 }} />
+                      {isEdit && isEditingExtra ? (
+                        <input autoFocus value={nameDraft} onChange={e => setNameDraft(e.target.value)}
+                          onBlur={() => { setExtraItems(p => ({ ...p, [zone.id]: (p[zone.id]||[]).map((x,jj)=>jj===j?{...x,name:nameDraft}:x) })); setEditingName(null); }}
+                          onKeyDown={e => { if (e.key === "Enter" || e.key === "Escape") { setExtraItems(p => ({ ...p, [zone.id]: (p[zone.id]||[]).map((x,jj)=>jj===j?{...x,name:nameDraft}:x) })); setEditingName(null); } }}
+                          style={{ flex: 1, border: "1px solid #ddd", borderRadius: 5, padding: "2px 6px", fontFamily: "Georgia,serif", fontSize: 12, outline: "none" }} />
+                      ) : (
+                        <span onClick={() => isEdit && (setEditingName({ zoneId: zone.id, idx: j, extra: true }), setNameDraft(ex.name))}
+                          style={{ flex: 1, fontSize: 12, color: "#444", cursor: isEdit ? "text" : "default" }}>{ex.name}</span>
+                      )}
+                      {isEdit ? (
+                        <>
+                          <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+                            <button onClick={() => setQuantities(p => ({ ...p, [xKey]: Math.max(0, (p[xKey]||1)-1) }))}
+                              style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                            <span style={{ width: 24, textAlign: "center", fontSize: 12 }}>{xQty}</span>
+                            <button onClick={() => setQuantities(p => ({ ...p, [xKey]: (p[xKey]||1)+1 }))}
+                              style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+                            <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
+                            <input type="number" value={xPrice} min={0}
+                              onChange={e => setPrices(p => ({ ...p, [xKey]: Math.max(0, Number(e.target.value)||0) }))}
+                              style={{ width: 60, textAlign: "right", border: "1px solid #ddd", borderRadius: 4, fontSize: 12, padding: "2px 4px", MozAppearance: "textfield" }} />
+                          </div>
+                          <button onClick={() => setExtraItems(p => ({ ...p, [zone.id]: (p[zone.id]||[]).filter((_,jj)=>jj!==j) }))}
+                            style={{ background: "none", border: "none", cursor: "pointer", color: "#ddd", fontSize: 15, padding: "0 2px", lineHeight: 1 }}>×</button>
+                        </>
+                      ) : (
+                        <div style={{ textAlign: "right", flexShrink: 0, minWidth: 80 }}>
+                          {xPrice === 0 ? <span style={{ fontSize: 11, color: "#999" }}>бесплатно</span>
+                            : <div style={{ fontSize: 12, fontWeight: 500 }}>{fmtR(xPrice * xQty)}</div>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Add row */}
+                {isEdit && (
+                  newRowDraft[zone.id] !== undefined ? (
+                    <div style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center" }}>
+                      <input autoFocus placeholder="Название строки..." value={newRowDraft[zone.id]?.name || ""}
+                        onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], name: e.target.value } }))}
+                        onKeyDown={e => { if (e.key === "Escape") setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; }); }}
+                        style={{ flex: 1, border: "1px solid #ddd", borderRadius: 6, padding: "4px 8px", fontFamily: "Georgia,serif", fontSize: 12, outline: "none" }} />
+                      <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
+                      <input type="number" placeholder="0" value={newRowDraft[zone.id]?.brl || ""}
+                        onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], brl: Number(e.target.value)||0 } }))}
+                        style={{ width: 70, border: "1px solid #ddd", borderRadius: 6, padding: "4px 6px", fontFamily: "Georgia,serif", fontSize: 12, MozAppearance: "textfield" }} />
+                      <button onClick={() => {
+                        const row = newRowDraft[zone.id];
+                        if (!row?.name?.trim()) return;
+                        setExtraItems(p => ({ ...p, [zone.id]: [...(p[zone.id]||[]), { name: row.name.trim(), brl: row.brl||0 }] }));
+                        setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; });
+                      }} style={{ padding: "4px 12px", borderRadius: 6, border: "none", background: "#1a1a1a", color: "#fff", fontSize: 12, cursor: "pointer" }}>+</button>
+                      <button onClick={() => setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; })}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: 14 }}>✗</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setNewRowDraft(p => ({ ...p, [zone.id]: { name: "", brl: 0 } }))}
+                      style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: "1.5px dashed #ddd", background: "transparent", fontSize: 11, color: "#999", cursor: "pointer" }}>
+                      + добавить строку
+                    </button>
+                  )
+                )}
+
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>
                     Итого: {fmtR(total)} / {fmt$(total)}
