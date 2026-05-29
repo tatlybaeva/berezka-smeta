@@ -268,14 +268,15 @@ const revenueStreams = [
 ];
 
 // ── КЛЮЧЕВЫЕ МЕТРИКИ ─────────────────────────────────────────────────────────
-function KeyMetrics({ metrics, setMetrics }) {
+function KeyMetrics({ metrics, setMetrics, finRent }) {
   const upd = (key, val) => setMetrics({ ...metrics, [key]: val });
 
   const rev = metrics.monthlyRevenue || 1;
   const foodPct  = metrics.foodCost / 100;
   const laborPct = metrics.laborCost / 100;
-  const rentPct  = (metrics.rent / rev) * 100;
-  const ebitda   = rev - rev * foodPct - rev * laborPct - metrics.rent;
+  const rent = finRent !== undefined ? finRent : metrics.rent;
+  const rentPct  = (rent / rev) * 100;
+  const ebitda   = rev - rev * foodPct - rev * laborPct - rent;
   const ebitdaPct = (ebitda / rev) * 100;
   const maxDayRev = metrics.avgCheck * metrics.tableTurns * metrics.seats;
 
@@ -347,7 +348,8 @@ function KeyMetrics({ metrics, setMetrics }) {
 
       <MetricRow label="Аренда / выручка" value={rentPct} unit="%" range={[0,12]} st={rentSt}>
         <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
-          R${metrics.rent.toLocaleString()}/мес аренда ÷ R${rev.toLocaleString()} выручка
+          R${rent.toLocaleString()}/мес аренда ÷ R${rev.toLocaleString()} выручка
+          {finRent !== undefined && <span style={{ color: '#aaa', marginLeft: 6 }}>(из Финансов)</span>}
         </div>
       </MetricRow>
 
@@ -406,9 +408,7 @@ const BDR_SCENARIOS = [
     label: 'Пессимистичный',
     emoji: '📉',
     color: '#dc2626', bg: '#fef2f2', border: '#fca5a5',
-    // Среднемесячная выручка по годам (R$)
     rev:   [15000, 25000, 34000, 40000, 45000],
-    // Среднемесячные постоянные расходы по годам (аренда + зарплаты + оверхед, без food cost и налога)
     fixed: [22000, 35000, 37000, 39000, 41000],
     foodPct: 0.33,
     taxPct:  0.08,
@@ -702,18 +702,27 @@ export default function BusinessPlan() {
   const [admin, setAdmin] = useState(initialAdmin);
   const [bdrScenario, setBdrScenario] = useState('realistic');
   const [metrics, setMetrics] = useState({
-    monthlyRevenue: 35000,  // текущая выручка/мес
-    foodCost: 30,           // % от выручки
-    laborCost: 28,          // % от выручки
-    rent: 11000,            // R$/мес (фиксировано)
-    avgCheck: 55,           // R$
-    tableTurns: 2.5,        // оборот стола в день
-    seats: 40,              // посадочных мест
+    monthlyRevenue: 35000,
+    foodCost: 30,
+    laborCost: 28,
+    rent: 11000,
+    avgCheck: 55,
+    tableTurns: 2.5,
+    seats: 40,
   });
   const [projectInfo, setProjectInfo] = useState({ city: 'Флорианополис', area: 200, rent: 8000 });
   const [editingProjectInfo, setEditingProjectInfo] = useState(false);
   const [projectInfoDraft, setProjectInfoDraft] = useState(null);
   const [syncStatus, setSyncStatus] = useState("idle");
+
+  // New state vars
+  const [finInputs, setFinInputs] = useState(null);
+  const [staffNotes, setStaffNotes] = useState({});
+  const [phasesState, setPhasesState] = useState(phases);
+  const [styleState, setStyleState] = useState(visualData);
+  const [newKidsItem, setNewKidsItem] = useState({ name: '', who: 'купить', brl: 0 });
+  const [showNewKids, setShowNewKids] = useState(false);
+
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
@@ -734,8 +743,15 @@ export default function BusinessPlan() {
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
         if (s.projectInfo) setProjectInfo(s.projectInfo);
+        if (s.staffNotes) setStaffNotes(s.staffNotes);
+        if (s.phasesState) setPhasesState(s.phasesState);
+        if (s.styleState) setStyleState(s.styleState);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       });
+
+    // Load finance_state
+    supabase.from('finance_state').select('data').eq('id', 'main').single()
+      .then(({ data }) => { if (data?.data?.inputs) setFinInputs(data.data.inputs) });
 
     const channel = supabase.channel("biz_plan_realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "business_plan_state" }, (payload) => {
@@ -750,11 +766,24 @@ export default function BusinessPlan() {
         if (s.bdrScenario) setBdrScenario(s.bdrScenario);
         if (s.metrics) setMetrics(s.metrics);
         if (s.projectInfo) setProjectInfo(s.projectInfo);
+        if (s.staffNotes) setStaffNotes(s.staffNotes);
+        if (s.phasesState) setPhasesState(s.phasesState);
+        if (s.styleState) setStyleState(s.styleState);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       })
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    const finChannel = supabase.channel('finance_rt_in_biz')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'finance_state' }, (payload) => {
+        const d = payload.new?.data;
+        if (d?.inputs) setFinInputs(d.inputs);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(finChannel);
+    };
   }, []);
 
   const scheduleSave = (state) => {
@@ -769,7 +798,7 @@ export default function BusinessPlan() {
   };
 
   const saveAll = (overrides = {}) => {
-    scheduleSave({ ideas, kidsZone, staff, todos, admin, bdrScenario, metrics, projectInfo, ...overrides });
+    scheduleSave({ ideas, kidsZone, staffNotes, phasesState, styleState, todos, admin, bdrScenario, metrics, projectInfo, ...overrides });
   };
 
   const addIdea = () => {
@@ -780,16 +809,44 @@ export default function BusinessPlan() {
     saveAll({ ideas: next });
   };
 
+  const deleteIdea = (i) => {
+    const next = ideas.filter((_, j) => j !== i);
+    setIdeas(next); saveAll({ ideas: next });
+  };
+
   const toggleKids = (i) => {
     const next = kidsZone.map((item, j) => j === i ? { ...item, done: !item.done } : item);
     setKidsZone(next);
     saveAll({ kidsZone: next });
   };
 
-  const updateStaffNotes = (i, notes) => {
-    const next = staff.map((s, j) => j === i ? { ...s, notes } : s);
-    setStaff(next);
-    saveAll({ staff: next });
+  const addKidsItem = () => {
+    if (!newKidsItem.name.trim()) return;
+    const next = [...kidsZone, { ...newKidsItem, brl: Number(newKidsItem.brl) || 0, done: false }];
+    setKidsZone(next); setNewKidsItem({ name: '', who: 'купить', brl: 0 }); setShowNewKids(false); saveAll({ kidsZone: next });
+  };
+
+  const deleteKidsItem = (i) => {
+    const next = kidsZone.filter((_, j) => j !== i);
+    setKidsZone(next); saveAll({ kidsZone: next });
+  };
+
+  const deletePhaseItem = (phaseNum, itemIdx) => {
+    const next = phasesState.map(p => p.num !== phaseNum ? p : { ...p, items: p.items.filter((_, j) => j !== itemIdx) });
+    setPhasesState(next); saveAll({ phasesState: next });
+  };
+
+  const deleteStyleItem = (zoneType, zoneIdx, itemIdx) => {
+    const next = { ...styleState };
+    next[zoneType] = next[zoneType].map((zone, zi) => zi !== zoneIdx ? zone : {
+      ...zone, items: zone.items.filter((_, j) => j !== itemIdx)
+    });
+    setStyleState(next); saveAll({ styleState: next });
+  };
+
+  const updateStaffNote = (role, text) => {
+    const next = { ...staffNotes, [role]: text };
+    setStaffNotes(next); saveAll({ staffNotes: next });
   };
 
   const toggleTodo = (i) => {
@@ -812,13 +869,6 @@ export default function BusinessPlan() {
   const todosDone = todos.filter(t => t.done).length;
   const realisticTotal = revenueStreams.reduce((a, r) => a + r.scenarios[0].brl, 0);
 
-  // Group todos by tag
-  const todosByTag = todos.reduce((acc, t) => {
-    if (!acc[t.tag]) acc[t.tag] = [];
-    acc[t.tag].push(t);
-    return acc;
-  }, {});
-
   const sections = [
     { title: "💡 1. Концепция" },
     { title: "🗓️ 2. Этапы" },
@@ -826,8 +876,14 @@ export default function BusinessPlan() {
     { title: "💰 4. Доходы" },
     { title: "👶 5. Детская зона" },
     { title: "👔 6. Сотрудники" },
-    { title: "✅ 7. Админ + Задачи" },
+    { title: "✅ 7. Задачи" },
   ];
+
+  // Staff display logic
+  const displayStaff = finInputs?.staff ?? staff;
+  const displayMonthly = finInputs
+    ? finInputs.staff.reduce((s, r) => s + Number(r.count) * Number(r.salary) * Number(r.encargos), 0)
+    : staffMonthly;
 
   return (
     <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: "1rem 1rem 2rem" }}>
@@ -915,10 +971,11 @@ export default function BusinessPlan() {
           <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 10 }}>Идеи</div>
           {ideas.map((idea, i) => (
             <div key={i} style={{ background: "#fff", border: "1px solid #ebebeb", borderRadius: 8, padding: "10px 12px", marginBottom: 8 }}>
-              <div style={{ marginBottom: 5 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 5 }}>
                 <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 99, background: TAG_COLORS[idea.tag] || "#f0f0f0", color: TAG_TEXT[idea.tag] || "#333" }}>
                   {idea.tag}
                 </span>
+                <button onClick={() => deleteIdea(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
               </div>
               <div style={{ fontSize: 13, color: "#1a1a1a", lineHeight: 1.5 }}>{idea.text}</div>
             </div>
@@ -943,7 +1000,7 @@ export default function BusinessPlan() {
 
       {/* ── SECTION 2: ЭТАПЫ ── */}
       <Section title={sections[1].title} open={openSections[1]} onToggle={() => toggleSection(1)}>
-        {phases.map((p) => (
+        {phasesState.map((p) => (
           <div key={p.num} style={{ border: `2px solid ${p.border}`, borderRadius: 12, padding: "12px 14px", marginBottom: 12, background: "#fff" }}>
             <div style={{ fontSize: 11, background: p.color, color: p.text, padding: "2px 8px", borderRadius: 99, display: "inline-block", marginBottom: 6 }}>
               {p.title}
@@ -952,7 +1009,8 @@ export default function BusinessPlan() {
             {p.items.map((item, i) => (
               <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "4px 0", borderBottom: i < p.items.length - 1 ? "0.5px solid #ebebeb" : "none" }}>
                 <span style={{ color: p.border, fontSize: 12, flexShrink: 0 }}>→</span>
-                <span style={{ fontSize: 12, color: "#333", lineHeight: 1.4 }}>{item}</span>
+                <span style={{ flex: 1, fontSize: 12, color: "#333", lineHeight: 1.4 }}>{item}</span>
+                <button onClick={() => deletePhaseItem(p.num, i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ddd', fontSize: 13, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
               </div>
             ))}
           </div>
@@ -962,25 +1020,30 @@ export default function BusinessPlan() {
       {/* ── SECTION 3: СТИЛЬ ── */}
       <Section title={sections[2].title} open={openSections[2]} onToggle={() => toggleSection(2)}>
         <div style={{ background: "#f7f7f5", borderRadius: 10, padding: "10px 12px", marginBottom: 14, borderLeft: "3px solid #533AB7" }}>
-          <div style={{ fontSize: 12, color: "#555", lineHeight: 1.6 }}>{visualData.vibe}</div>
+          <div style={{ fontSize: 12, color: "#555", lineHeight: 1.6 }}>{styleState.vibe}</div>
         </div>
 
-        {[...visualData.exterior, ...visualData.interior, ...visualData.kids].map((section, si) => (
-          <div key={si} style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>{section.zone}</div>
-            {section.items.map((item, ii) => (
-              <div key={ii} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid #ebebeb" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  {item.diy && <span style={{ fontSize: 9, background: "#EAF3DE", color: "#3B6D11", padding: "1px 5px", borderRadius: 99 }}>сама</span>}
-                  <span style={{ fontSize: 12, color: "#1a1a1a" }}>{item.name}</span>
+        {['exterior', 'interior', 'kids'].map(zoneType =>
+          (styleState[zoneType] || []).map((section, si) => (
+            <div key={`${zoneType}-${si}`} style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>{section.zone}</div>
+              {section.items.map((item, ii) => (
+                <div key={ii} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid #ebebeb" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
+                    {item.diy && <span style={{ fontSize: 9, background: "#EAF3DE", color: "#3B6D11", padding: "1px 5px", borderRadius: 99 }}>сама</span>}
+                    <span style={{ fontSize: 12, color: "#1a1a1a" }}>{item.name}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 500 }}>
+                      {item.cost === 0 ? "✅ есть/бесплатно" : `R$${item.cost.toLocaleString()}`}
+                    </span>
+                    <button onClick={() => deleteStyleItem(zoneType, si, ii)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ddd', fontSize: 13, padding: 0, lineHeight: 1 }}>×</button>
+                  </div>
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 500, flexShrink: 0, marginLeft: 8 }}>
-                  {item.cost === 0 ? "✅ есть/бесплатно" : `R$${item.cost.toLocaleString()}`}
-                </span>
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+          ))
+        )}
       </Section>
 
       {/* ── SECTION 4: ДОХОДЫ ── */}
@@ -1005,7 +1068,7 @@ export default function BusinessPlan() {
           <div style={{ fontSize: 22, fontWeight: 600 }}>R${realisticTotal.toLocaleString()}</div>
           <div style={{ fontSize: 11, color: "#888" }}>~${Math.round(realisticTotal / RATE).toLocaleString()}/мес</div>
         </div>
-        <KeyMetrics metrics={metrics} setMetrics={(m) => { setMetrics(m); saveAll({ metrics: m }); }} />
+        <KeyMetrics metrics={metrics} setMetrics={(m) => { setMetrics(m); saveAll({ metrics: m }); }} finRent={finInputs?.rent} />
         <BDRTable active={bdrScenario} setActive={(v) => { setBdrScenario(v); saveAll({ bdrScenario: v }); }} />
       </Section>
 
@@ -1016,62 +1079,132 @@ export default function BusinessPlan() {
           <div style={{ fontSize: 14, fontWeight: 600 }}>R${kidsBrl.toLocaleString()} <span style={{ fontSize: 11, color: "#999" }}>/ ~${Math.round(kidsBrl / RATE)}</span></div>
         </div>
         {kidsZone.map((item, i) => (
-          <div key={i} onClick={() => toggleKids(i)} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0", borderBottom: "0.5px solid #ebebeb", cursor: "pointer" }}>
-            <div style={{ width: 17, height: 17, borderRadius: 4, border: item.done ? "none" : "1.5px solid #ccc", background: item.done ? "#185FA5" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0", borderBottom: "0.5px solid #ebebeb" }}>
+            <div onClick={() => toggleKids(i)} style={{ width: 17, height: 17, borderRadius: 4, border: item.done ? "none" : "1.5px solid #ccc", background: item.done ? "#185FA5" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, cursor: "pointer" }}>
               {item.done && <span style={{ color: "white", fontSize: 11 }}>✓</span>}
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, cursor: "pointer" }} onClick={() => toggleKids(i)}>
               <div style={{ fontSize: 13, color: item.done ? "#999" : "#1a1a1a", textDecoration: item.done ? "line-through" : "none" }}>{item.name}</div>
               <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>{item.who} · {item.brl === 0 ? "бесплатно" : `R$${item.brl}`}</div>
             </div>
+            <button onClick={() => deleteKidsItem(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ddd', fontSize: 14, padding: 0, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>×</button>
           </div>
         ))}
+
+        {/* Add new item */}
+        <div style={{ marginTop: 12 }}>
+          {!showNewKids ? (
+            <button onClick={() => setShowNewKids(true)} style={{ fontSize: 12, color: '#185FA5', background: 'none', border: '1px solid #c0d8f0', borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Georgia', serif" }}>
+              + Добавить
+            </button>
+          ) : (
+            <div style={{ background: '#f7f7f5', borderRadius: 10, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input
+                value={newKidsItem.name}
+                onChange={e => setNewKidsItem(p => ({ ...p, name: e.target.value }))}
+                placeholder="Название..."
+                style={{ border: '1px solid #ddd', borderRadius: 8, padding: '6px 10px', fontFamily: "'Georgia', serif", fontSize: 13, outline: 'none' }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <select
+                  value={newKidsItem.who}
+                  onChange={e => setNewKidsItem(p => ({ ...p, who: e.target.value }))}
+                  style={{ flex: 1, border: '1px solid #ddd', borderRadius: 8, padding: '6px 10px', fontFamily: "'Georgia', serif", fontSize: 12 }}
+                >
+                  <option value="купить">купить</option>
+                  <option value="сама">сама</option>
+                  <option value="сама (бесплатно)">сама (бесплатно)</option>
+                </select>
+                <input
+                  type="number"
+                  value={newKidsItem.brl}
+                  onChange={e => setNewKidsItem(p => ({ ...p, brl: e.target.value }))}
+                  placeholder="R$"
+                  style={{ width: 80, border: '1px solid #ddd', borderRadius: 8, padding: '6px 10px', fontFamily: "'Georgia', serif", fontSize: 12, textAlign: 'right' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={addKidsItem} style={{ flex: 1, background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, padding: '7px', cursor: 'pointer', fontFamily: "'Georgia', serif", fontSize: 12 }}>Добавить</button>
+                <button onClick={() => { setShowNewKids(false); setNewKidsItem({ name: '', who: 'купить', brl: 0 }); }} style={{ flex: 1, background: 'none', color: '#888', border: '1px solid #ddd', borderRadius: 8, padding: '7px', cursor: 'pointer', fontFamily: "'Georgia', serif", fontSize: 12 }}>Отмена</button>
+              </div>
+            </div>
+          )}
+        </div>
       </Section>
 
       {/* ── SECTION 6: СОТРУДНИКИ ── */}
       <Section title={sections[5].title} open={openSections[5]} onToggle={() => toggleSection(5)}>
         <div style={{ background: "#f7f7f5", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", justifyContent: "space-between" }}>
           <span style={{ fontSize: 12, color: "#666" }}>Ежемесячно (с encargos × 1.7)</span>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>R${staffMonthly.toLocaleString()}/мес</span>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>R${displayMonthly.toLocaleString()}/мес</span>
         </div>
-        {staff.map((s, i) => (
-          <div key={i} style={{ background: "#fff", border: s.urgent ? "2px solid #185FA5" : "1px solid #ebebeb", borderRadius: 10, padding: "12px 14px", marginBottom: 10 }}>
-            {s.urgent && <div style={{ fontSize: 10, background: "#E6F1FB", color: "#0C447C", padding: "2px 7px", borderRadius: 99, display: "inline-block", marginBottom: 6 }}>Приоритет</div>}
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.role}</div>
-            <div style={{ fontSize: 12, color: "#666", marginBottom: 3 }}>Статус: {s.status}</div>
-            <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>Найм: {s.visa}</div>
+
+        {finInputs ? (
+          <div style={{ overflowX: 'auto', marginBottom: 12 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr>
+                  {['Роль', 'Кол-во', 'ЗП брутто', 'Encargos', 'Этап', 'Итого/мес'].map(h => (
+                    <th key={h} style={{ background: '#f5f0e8', padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: h === 'Роль' ? 'left' : 'right', fontSize: 11 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {finInputs.staff.map((s, i) => {
+                  const total = Number(s.count) * Number(s.salary) * Number(s.encargos);
+                  return (
+                    <tr key={i}>
+                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', fontSize: 12 }}>{s.role}</td>
+                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'right', fontSize: 12 }}>{s.count}</td>
+                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'right', fontSize: 12 }}>R${Number(s.salary).toLocaleString()}</td>
+                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'right', fontSize: 12 }}>×{s.encargos}</td>
+                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'center', fontSize: 12 }}>{s.stage}</td>
+                      <td style={{ padding: '6px 8px', border: '1px solid #ebe2d3', textAlign: 'right', fontSize: 12, fontWeight: 600 }}>R${Math.round(total).toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div style={{ fontSize: 10, color: '#aaa', marginTop: 4 }}>Данные из вкладки Финансы · редактировать там</div>
+          </div>
+        ) : (
+          staff.map((s, i) => (
+            <div key={i} style={{ background: "#fff", border: s.urgent ? "2px solid #185FA5" : "1px solid #ebebeb", borderRadius: 10, padding: "12px 14px", marginBottom: 10 }}>
+              {s.urgent && <div style={{ fontSize: 10, background: "#E6F1FB", color: "#0C447C", padding: "2px 7px", borderRadius: 99, display: "inline-block", marginBottom: 6 }}>Приоритет</div>}
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.role}</div>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 3 }}>Статус: {s.status}</div>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>Найм: {s.visa}</div>
+              <div style={{ fontSize: 12, color: "#444", lineHeight: 1.5 }}>{s.notes}</div>
+            </div>
+          ))
+        )}
+
+        {/* Notes per role */}
+        {displayStaff.map((s, i) => (
+          <div key={i} style={{ marginBottom: 8 }}>
+            <div style={{ fontSize: 11, color: '#888', marginBottom: 3 }}>{s.role} — заметки</div>
             <textarea
-              value={s.notes}
-              onChange={e => updateStaffNotes(i, e.target.value)}
-              rows={3}
-              style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 8, padding: "7px 10px", fontFamily: "'Georgia', serif", fontSize: 12, color: "#444", lineHeight: 1.5, resize: "vertical", background: "#faf9f6", boxSizing: "border-box" }}
+              value={staffNotes[s.role] || ''}
+              onChange={e => updateStaffNote(s.role, e.target.value)}
+              rows={2}
+              style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 8, padding: "6px 10px", fontFamily: "'Georgia', serif", fontSize: 12, color: "#444", resize: "vertical", background: "#faf9f6", boxSizing: "border-box" }}
+              placeholder="Заметки..."
             />
           </div>
         ))}
       </Section>
 
-      {/* ── SECTION 7: АДМИН + ЗАДАЧИ ── */}
+      {/* ── SECTION 7: ЗАДАЧИ ── */}
       <Section title={sections[6].title} open={openSections[6]} onToggle={() => toggleSection(6)}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 10 }}>
-          Задачи ({todosDone}/{todos.length} выполнено)
+        <div style={{ fontSize: 12, color: "#666", marginBottom: 10 }}>
+          {todosDone}/{todos.length} выполнено
         </div>
-
-        {Object.entries(todosByTag).map(([tag, tagTodos]) => (
-          <div key={tag} style={{ marginBottom: 14 }}>
-            <div style={{ marginBottom: 6 }}>
-              <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: TAG_COLORS[tag] || "#f0f0f0", color: TAG_TEXT[tag] || "#333" }}>{tag}</span>
+        {todos.map((t, i) => (
+          <div key={i} onClick={() => toggleTodo(i)} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "7px 0", borderBottom: "0.5px solid #ebebeb", cursor: "pointer" }}>
+            <div style={{ width: 16, height: 16, borderRadius: 3, border: t.done ? "none" : "1.5px solid #ccc", background: t.done ? "#185FA5" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+              {t.done && <span style={{ color: "white", fontSize: 10 }}>✓</span>}
             </div>
-            {tagTodos.map((t) => {
-              const globalIdx = todos.indexOf(t);
-              return (
-                <div key={globalIdx} onClick={() => toggleTodo(globalIdx)} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "7px 0", borderBottom: "0.5px solid #ebebeb", cursor: "pointer" }}>
-                  <div style={{ width: 16, height: 16, borderRadius: 3, border: t.done ? "none" : "1.5px solid #ccc", background: t.done ? "#185FA5" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                    {t.done && <span style={{ color: "white", fontSize: 10 }}>✓</span>}
-                  </div>
-                  <span style={{ flex: 1, fontSize: 12, color: t.done ? "#aaa" : "#333", textDecoration: t.done ? "line-through" : "none", lineHeight: 1.4 }}>{t.text}</span>
-                </div>
-              );
-            })}
+            <span style={{ flex: 1, fontSize: 12, color: t.done ? "#aaa" : "#333", textDecoration: t.done ? "line-through" : "none", lineHeight: 1.4 }}>{t.text}</span>
           </div>
         ))}
 
