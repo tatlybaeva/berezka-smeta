@@ -743,7 +743,7 @@ export default function BusinessPlan() {
   const kidsBrl = kidsZone.reduce((a,x) => a+x.brl, 0);
   const kidsDone = kidsZone.filter(x => x.done).length;
   const realisticTotal = revenueStreams.reduce((a,r) => a+r.scenarios[0].brl, 0);
-  const totalStyleItems = ['exterior','interior','kids'].reduce((a,k) => (styleState[k]||[]).reduce((b,z)=>b+z.items.length,a), 0);
+  // style items moved to Бюджет tab
 
   // Finance key metrics (computed from finInputs)
   const finMetrics = finInputs ? (() => {
@@ -1011,62 +1011,17 @@ export default function BusinessPlan() {
       {/* SECTION 3: СТИЛЬ */}
       <Section title="🎨 3. Стиль" open={openSections[2]} onToggle={()=>toggleSection(2)}>
         <div style={{ background:"#f7f7f5", borderRadius:10, padding:"10px 12px", marginBottom:14, borderLeft:"3px solid #533AB7" }}>
-          <div style={{ fontSize:12, color:"#555", lineHeight:1.6 }}>{styleState.vibe}</div>
+          <div style={{ fontSize:12, color:"#555", lineHeight:1.6 }}>{visualData.vibe}</div>
         </div>
-        {['exterior','interior','kids'].map(zoneType=>
-          (styleState[zoneType]||[]).map((section,si)=>(
-            <div key={`${zoneType}-${si}`} style={{ marginBottom:14 }}>
-              <div style={{ fontSize:13, fontWeight:600, color:"#1a1a1a", marginBottom:8 }}>{section.zone}</div>
-              {section.items.map((item,ii)=>(
-                editingStyle?.zoneType===zoneType && editingStyle?.zoneIdx===si && editingStyle?.itemIdx===ii ? (
-                  <div key={ii} style={{ display:"flex", gap:6, padding:"4px 0", alignItems:"center", flexWrap:"wrap" }}>
-                    <input autoFocus value={styleDraft} onChange={e=>setStyleDraft(e.target.value)}
-                      onKeyDown={e=>{ if(e.key==="Enter") saveStyleEdit(); if(e.key==="Escape") setEditingStyle(null); }}
-                      style={{ flex:1, minWidth:100, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
-                    <input value={styleCostDraft} onChange={e=>setStyleCostDraft(e.target.value)} type="number" min="0"
-                      onKeyDown={e=>{ if(e.key==="Enter") saveStyleEdit(); if(e.key==="Escape") setEditingStyle(null); }}
-                      placeholder="R$" style={{ width:72, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
-                    <button onClick={saveStyleEdit} style={{ background:"none", border:"none", cursor:"pointer", color:"#16a34a", fontSize:14 }}>✓</button>
-                    <button onClick={()=>setEditingStyle(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"#aaa", fontSize:14 }}>✗</button>
-                  </div>
-                ) : (
-                  <div key={ii} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:"0.5px solid #ebebeb" }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:6, flex:1 }}>
-                      {item.diy && <span style={{ fontSize:9, background:"#EAF3DE", color:"#3B6D11", padding:"1px 5px", borderRadius:99 }}>сама</span>}
-                      <span style={{ fontSize:12, color:"#1a1a1a" }}>{item.name}</span>
-                    </div>
-                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                      <span style={{ fontSize:12, fontWeight:500, whiteSpace:"nowrap" }}>
-                        {item.cost===0?"✅ бесплатно":`R$${item.cost.toLocaleString()}`}
-                      </span>
-                      <button onClick={()=>startStyleEdit(zoneType,si,ii)} style={{ background:"none", border:"none", cursor:"pointer", color:"#bbb", fontSize:11, padding:"0 2px" }}>✏️</button>
-                      <button onClick={()=>deleteStyleItem(zoneType,si,ii)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ddd", fontSize:15, padding:"0 2px", lineHeight:1 }}>×</button>
-                    </div>
-                  </div>
-                )
-              ))}
-              {addingStyle?.zoneType===zoneType && addingStyle?.zoneIdx===si ? (
-                <div style={{ display:"flex", gap:6, marginTop:6, flexWrap:"wrap", alignItems:"center" }}>
-                  <input placeholder="Название..." value={styleNewItem.name} onChange={e=>setStyleNewItem(x=>({...x,name:e.target.value}))}
-                    style={{ flex:1, minWidth:140, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
-                  <input placeholder="R$" type="number" value={styleNewItem.cost} onChange={e=>setStyleNewItem(x=>({...x,cost:e.target.value}))}
-                    style={{ width:70, border:"1px solid #ddd", borderRadius:6, padding:"4px 8px", fontFamily:"Georgia,serif", fontSize:12 }} />
-                  <label style={{ display:"flex", alignItems:"center", gap:4, fontSize:12, cursor:"pointer" }}>
-                    <input type="checkbox" checked={styleNewItem.diy} onChange={e=>setStyleNewItem(x=>({...x,diy:e.target.checked}))} />
-                    сама
-                  </label>
-                  <button onClick={addStyleItem} style={{ padding:"4px 10px", borderRadius:6, border:"none", background:"#1a1a1a", color:"#fff", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Добавить</button>
-                  <button onClick={()=>setAddingStyle(null)} style={{ padding:"4px 8px", borderRadius:6, border:"1px solid #ccc", background:"#fff", color:"#555", fontSize:12, cursor:"pointer", fontFamily:"Georgia,serif" }}>Отмена</button>
-                </div>
-              ) : (
-                <button onClick={()=>{ setAddingStyle({zoneType,zoneIdx:si}); setStyleNewItem({name:'',cost:0,diy:false}); }}
-                  style={{ marginTop:6, background:"none", border:"1px dashed #ddd", borderRadius:6, padding:"3px 10px", fontSize:11, color:"#aaa", cursor:"pointer", fontFamily:"Georgia,serif" }}>
-                  + Добавить
-                </button>
-              )}
+        <div style={{ background:"#EAF3DE", borderRadius:10, padding:"12px 16px", display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ fontSize:18 }}>📋</span>
+          <div>
+            <div style={{ fontSize:13, fontWeight:600, color:"#3B6D11", marginBottom:2 }}>Все позиции закупки перенесены в раздел «Бюджет»</div>
+            <div style={{ fontSize:11, color:"#555", lineHeight:1.5 }}>
+              Зоны: Вход / Фасад, Уличная веранда, Игровая, Огород, Зал, Стойка бариста, Кухня — там же ссылки на MercadoLivre и OLX.
             </div>
-          ))
-        )}
+          </div>
+        </div>
       </Section>
 
       {/* SECTION 4: ДОХОДЫ */}

@@ -50,6 +50,8 @@ const ZONES = [
       { name: "Меловая доска с меню у входа", brl: 300, url: ML("quadro negro lousa menu restaurante") },
       { name: "Скамейка у входа (б/у)", brl: 400, url: OLX("banco madeira jardim") },
       { name: "Таблички (часы работы, Wi-Fi и т.д.)", brl: 200, url: ML("placa informativa acrílico restaurante") },
+      { name: "Белые распашные окна (janela de abrir) — marceneiro", brl: 2400, url: ML("janela de abrir madeira marceneiro") },
+      { name: "Резные наличники — деревянный декор на окна", brl: 800, url: ML("moldura janela madeira entalhada decorativa") },
     ]
   },
   {
@@ -111,7 +113,9 @@ const ZONES = [
       { name: "Светильники чёрные × 6", brl: 720, url: ML("luminária pendente industrial preta") },
       { name: "Открытые полки с посудой", brl: 300, url: ML("prateleira madeira rústica parede") },
       { name: "Печь-муляж (гипсокартон)", brl: 2500, url: ML("lareira decorativa gesso drywall") },
-      { name: "Декор (горшки, вазы, картины, тюль)", brl: 800, url: ML("decoração rústica vaso artesanato") },
+      { name: "Декор (горшки, вазы, картины)", brl: 800, url: ML("decoração rústica vaso artesanato") },
+      { name: "Тюль белый на окна", brl: 300, url: ML("cortina voil branco janela") },
+      { name: "Декоративные дрова + медный чайник б/у", brl: 300, url: OLX("chaleira cobre decorativa lenha decorativa") },
       { name: "Кресло-качалка б/у", brl: 400, url: OLX("cadeira balanço madeira usado") },
     ]
   },
