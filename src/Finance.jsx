@@ -26,6 +26,7 @@ const DEFAULT_INPUTS = {
   workDays: 26,
   capex: 300000,
   capital: 350000,
+  prepMonths: 3,
   launchMonth2: 5,
   launchMonth3: 9,
   usdRate: 5.4,
@@ -372,14 +373,12 @@ function SectionInputs({ inputs, setInput, model }) {
     <div>
       {/* Общие */}
       <div style={S.subGroup}>
-        <div style={S.subTitle}>Общие</div>
+        <div style={S.subTitle}>Общие параметры</div>
         {[
-          ['workDays',    'Рабочих дней в месяц'],
-          ['capex',       'Стартовые инвестиции CAPEX, R$'],
-          ['capital',     'Привлечённый капитал, R$'],
-          ['launchMonth2','Месяц запуска Этапа 2 (1–12)'],
-          ['launchMonth3','Месяц старта Этапа 3 (1–12)'],
-          ['usdRate',     'Курс USD→BRL'],
+          ['workDays', 'Рабочих дней в месяц'],
+          ['capex',    'Стартовые инвестиции CAPEX, R$'],
+          ['capital',  'Привлечённый капитал, R$'],
+          ['usdRate',  'Курс USD→BRL'],
         ].map(([key, label]) => (
           <div key={key} style={S.inputRow}>
             <span style={S.label}>{label}</span>
@@ -387,6 +386,76 @@ function SectionInputs({ inputs, setInput, model }) {
           </div>
         ))}
       </div>
+
+      {/* Этапы — сроки */}
+      {(() => {
+        const { prepMonths, launchMonth2, launchMonth3 } = inputs
+        const dur1 = launchMonth2 - 1
+        const dur2 = launchMonth3 - launchMonth2
+        const dur3 = 12 - launchMonth3 + 1
+        const stages = [
+          { num: 0, emoji: '🏗️', name: 'Подготовка / стройка', color: '#7a5a00', bg: '#fffbe6', border: '#f0d97a',
+            note: 'До открытия — ремонт, оснащение, регистрация',
+            inputs: [{ key: 'prepMonths', label: 'Длительность (мес)', val: prepMonths }],
+            duration: `${prepMonths} мес`, timeRange: `до открытия` },
+          { num: 1, emoji: '☕', name: 'Двор + напитки', color: '#1a4f1a', bg: '#f0f7ed', border: '#b8d9b8',
+            note: 'Кофе, напитки, снеки — кухня ещё не работает',
+            inputs: [],
+            duration: `${dur1} мес`, timeRange: `мес 1 – ${launchMonth2 - 1}` },
+          { num: 2, emoji: '🍳', name: 'Кухня', color: '#1a3a5f', bg: '#edf3fa', border: '#b8cfe0',
+            note: 'Открывается кухня — полноценные блюда',
+            inputs: [
+              { key: 'launchMonth2', label: 'Старт этапа (месяц)', val: launchMonth2 },
+            ],
+            duration: `${dur2} мес`, timeRange: `мес ${launchMonth2} – ${launchMonth3 - 1}` },
+          { num: 3, emoji: '🌟', name: 'Полный формат', color: '#4a1a5f', bg: '#f5edfb', border: '#cfb8e0',
+            note: 'Полное меню, аниматор, магазин — выход на плановую мощность',
+            inputs: [
+              { key: 'launchMonth3', label: 'Старт этапа (месяц)', val: launchMonth3 },
+            ],
+            duration: `${dur3} мес`, timeRange: `мес ${launchMonth3} – 12` },
+        ]
+        return (
+          <div style={S.subGroup}>
+            <div style={S.subTitle}>Этапы развития</div>
+
+            {/* Timeline bar */}
+            <div style={{ display: 'flex', gap: 3, marginBottom: 16, borderRadius: 8, overflow: 'hidden', height: 28 }}>
+              {[
+                { label: `Э0 · ${prepMonths}м`, flex: prepMonths, bg: '#f0d97a', color: '#7a5a00' },
+                { label: `Э1 · ${dur1}м`,       flex: Math.max(dur1, 1), bg: '#b8d9b8', color: '#1a4f1a' },
+                { label: `Э2 · ${dur2}м`,        flex: Math.max(dur2, 1), bg: '#b8cfe0', color: '#1a3a5f' },
+                { label: `Э3 · ${dur3}м`,        flex: Math.max(dur3, 1), bg: '#cfb8e0', color: '#4a1a5f' },
+              ].map((seg, i) => (
+                <div key={i} style={{ flex: seg.flex, background: seg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 600, color: seg.color }}>
+                  {seg.label}
+                </div>
+              ))}
+            </div>
+
+            {/* Stage cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+              {stages.map(st => (
+                <div key={st.num} style={{ border: `1.5px solid ${st.border}`, borderRadius: 10, padding: '12px 14px', background: st.bg }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: st.color }}>{st.emoji} Этап {st.num} — {st.name}</div>
+                  </div>
+                  <div style={{ fontSize: 10, color: '#888', marginBottom: 8, lineHeight: 1.4 }}>{st.note}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: st.color, marginBottom: st.inputs.length ? 8 : 0 }}>
+                    ⏱ {st.duration} &nbsp;·&nbsp; {st.timeRange}
+                  </div>
+                  {st.inputs.map(inp => (
+                    <div key={inp.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
+                      <span style={{ fontSize: 11, color: '#555' }}>{inp.label}</span>
+                      <NumInput value={inp.val} onChange={v => setInput(inp.key, Math.max(1, Math.min(12, v)))} style={{ width: 60 }} />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Этап 1 */}
       <div style={S.subGroup}>
@@ -554,14 +623,14 @@ function SectionInputs({ inputs, setInput, model }) {
           <div key={key} style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>{label}</div>
             <div style={{ fontSize: 11, color: '#aaa', marginBottom: 8, fontStyle: 'italic' }}>«{hint}»</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
               {MONTHS.map((mo, i) => (
-                <div key={i}>
-                  <div style={{ fontSize: 10, color: '#999', marginBottom: 2, textAlign: 'center' }}>{mo}</div>
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ fontSize: 10, color: '#999', marginBottom: 3 }}>{mo}</div>
                   <NumInput
                     value={inputs[key][i]}
                     onChange={v => setSeasonField(key, i, v)}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', textAlign: 'center' }}
                   />
                 </div>
               ))}
