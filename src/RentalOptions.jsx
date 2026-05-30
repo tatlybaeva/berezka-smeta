@@ -416,7 +416,28 @@ export default function RentalOptions() {
                   {/* Top row */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a", flex: 1, marginRight: 8 }}>{d.name || "Без названия"}</div>
-                    <Badge text={d.status} />
+                    <select
+                      value={d.status || "рассматриваем"}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => {
+                        e.stopPropagation();
+                        handleUpdate(o.id, { ...d, status: e.target.value });
+                      }}
+                      style={{
+                        fontFamily: "'Georgia', serif",
+                        fontSize: 10,
+                        fontWeight: 600,
+                        padding: "2px 6px",
+                        borderRadius: 99,
+                        border: "none",
+                        cursor: "pointer",
+                        outline: "none",
+                        background: (STATUS_COLORS[d.status] || STATUS_COLORS["рассматриваем"]).bg,
+                        color: (STATUS_COLORS[d.status] || STATUS_COLORS["рассматриваем"]).color,
+                      }}
+                    >
+                      {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
                   <Stars score={d.score} />
                   {/* Address + area + rent */}
