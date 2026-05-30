@@ -255,6 +255,7 @@ export default function InvestmentCalc() {
   const [calcProperties, setCalcProperties] = useState([]); // rental options with status "в расчёте"
   const [activePropId, setActivePropId] = useState(null);   // currently selected property ID
   const saveTimer = useRef(null);
+  const globalSaveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
   const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls, ac, bst, bot, gt) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls, avgCheck: ac, beStaff: bst, beOther: bot, grandTotal: gt });
@@ -282,6 +283,38 @@ export default function InvestmentCalc() {
     setTimeout(() => { isRemoteUpdate.current = false; }, 0);
   };
 
+  const applyPropertyState = (s) => {
+    if (!s) return;
+    isRemoteUpdate.current = true;
+    if (s.rentType) setRentType(s.rentType);
+    if (s.rent !== undefined) setRent(s.rent);
+    if (s.depositMonths !== undefined) setDepositMonths(s.depositMonths);
+    if (s.workingCapMonths !== undefined) setWorkingCapMonths(s.workingCapMonths);
+    if (s.reserve !== undefined) setReserve(s.reserve);
+    if (s.enabledZones) setEnabledZones(s.enabledZones);
+    if (s.enabledItems) setEnabledItems(s.enabledItems);
+    if (s.quantities) setQuantities(s.quantities);
+    // Merge local extras with existing global extras
+    if (s.extraItems) {
+      setExtraItems(prev => {
+        const merged = {};
+        const allZones = new Set([...Object.keys(prev), ...Object.keys(s.extraItems)]);
+        allZones.forEach(zoneId => {
+          const globalItems = (prev[zoneId] || []).filter(it => it.global);
+          const localItems = s.extraItems[zoneId] || [];
+          merged[zoneId] = [...globalItems, ...localItems];
+        });
+        return merged;
+      });
+    }
+    if (s.avgCheck !== undefined) setAvgCheck(s.avgCheck);
+    if (s.beStaff) setBeStaff(s.beStaff);
+    if (s.beOther !== undefined) setBeOther(s.beOther);
+    if (s.bePhase !== undefined) setBePhase(s.bePhase);
+    if (s.currentChecksDay !== undefined) setCurrentChecksDay(s.currentChecksDay);
+    setTimeout(() => { isRemoteUpdate.current = false; }, 0);
+  };
+
   useEffect(() => {
     const init = async () => {
       // 1. Load "в расчёте" properties
@@ -289,14 +322,33 @@ export default function InvestmentCalc() {
       const inCalc = (rentalData || []).filter(o => o.data?.status === 'в расчёте');
       setCalcProperties(inCalc);
 
-      // 2. Determine which state to load
+      // 2. Load global item definitions
+      const { data: globalData } = await supabase
+        .from("smeta_state").select("state").eq("id", "_global").maybeSingle();
+      if (globalData?.state) {
+        const g = globalData.state;
+        if (g.itemNames) setItemNames(g.itemNames);
+        if (g.prices) setPrices(g.prices);
+        if (g.itemUrls) setItemUrls(g.itemUrls);
+        if (g.extraItems) {
+          setExtraItems(prev => {
+            const merged = { ...prev };
+            Object.entries(g.extraItems).forEach(([zoneId, items]) => {
+              merged[zoneId] = [...(merged[zoneId] || []).filter(it => !it.global), ...items];
+            });
+            return merged;
+          });
+        }
+      }
+
+      // 3. Determine which state to load
       const targetId = inCalc[0]?.id || 'main';
       setActivePropId(targetId);
 
-      // 3. Load smeta state for target
+      // 4. Load smeta state for target
       const { data } = await supabase.from("smeta_state").select("state").eq("id", targetId).maybeSingle();
       if (data?.state) {
-        applyState(data.state);
+        applyPropertyState(data.state);
       } else if (inCalc[0]?.data?.rent) {
         // No saved state yet — auto-set rent from property card
         setRent(Number(inCalc[0].data.rent));
@@ -311,9 +363,17 @@ export default function InvestmentCalc() {
     // Realtime for smeta_state
     const channel = supabase.channel("smeta_rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "smeta_state" }, (payload) => {
+        if (payload.new?.id === '_global') {
+          const g = payload.new?.state;
+          if (!g) return;
+          if (g.itemNames) setItemNames(g.itemNames);
+          if (g.prices) setPrices(g.prices);
+          if (g.itemUrls) setItemUrls(g.itemUrls);
+          return;
+        }
         if (payload.new?.id !== activePropId) return;
         isRemoteUpdate.current = true;
-        applyState(payload.new?.state);
+        applyPropertyState(payload.new?.state);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       })
       .subscribe();
@@ -339,7 +399,7 @@ export default function InvestmentCalc() {
       .then(({ data }) => {
         isRemoteUpdate.current = true;
         if (data?.state) {
-          applyState(data.state);
+          applyPropertyState(data.state);
         } else {
           // No saved state for this property — use defaults but set rent from card
           const prop = calcProperties.find(p => p.id === activePropId);
@@ -360,6 +420,17 @@ export default function InvestmentCalc() {
       const { error } = await supabase.from("smeta_state").upsert({ id: saveId, state, updated_at: new Date().toISOString() });
       setSyncStatus(error ? "error" : "saved");
       if (!error) setTimeout(() => setSyncStatus("idle"), 2000);
+    }, 800);
+  };
+
+  const scheduleGlobalSave = (globalState) => {
+    clearTimeout(globalSaveTimer.current);
+    globalSaveTimer.current = setTimeout(async () => {
+      await supabase.from("smeta_state").upsert({
+        id: '_global',
+        state: globalState,
+        updated_at: new Date().toISOString()
+      });
     }, 800);
   };
 
@@ -401,9 +472,34 @@ export default function InvestmentCalc() {
     setPrices(prev => ({ ...prev, [key]: n }));
   };
 
+  // Effect A — global save
   useEffect(() => {
-    scheduleSave(buildState(rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls, avgCheck, beStaff, beOther, grandTotal));
-  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, bePhase, currentChecksDay, itemNames, extraItems, itemUrls, avgCheck, beStaff, beOther]);
+    if (isRemoteUpdate.current) return;
+    const globalExtras = {};
+    Object.entries(extraItems).forEach(([zoneId, items]) => {
+      const g = items.filter(it => it.global);
+      if (g.length > 0) globalExtras[zoneId] = g;
+    });
+    scheduleGlobalSave({ itemNames, prices, itemUrls, extraItems: globalExtras });
+  }, [itemNames, prices, itemUrls, extraItems]); // eslint-disable-line
+
+  // Effect B — per-property save
+  useEffect(() => {
+    if (!activePropId) return;
+    const localExtras = {};
+    Object.entries(extraItems).forEach(([zoneId, items]) => {
+      const l = items.filter(it => !it.global);
+      if (l.length > 0) localExtras[zoneId] = l;
+    });
+    const propertyState = {
+      rentType, rent, depositMonths, workingCapMonths, reserve,
+      enabledZones, enabledItems, quantities,
+      extraItems: localExtras,
+      avgCheck, beStaff, beOther, bePhase, currentChecksDay,
+      grandTotal,
+    };
+    scheduleSave(propertyState);
+  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, grandTotal, activePropId]); // eslint-disable-line
 
   const getUrl = (key, item) => itemUrls[key] !== undefined ? itemUrls[key] : (item?.url || "");
   const setUrl = (key, val) => setItemUrls(p => ({ ...p, [key]: val }));
@@ -750,23 +846,33 @@ export default function InvestmentCalc() {
                 {/* Add row */}
                 {isEdit && (
                   newRowDraft[zone.id] !== undefined ? (
-                    <div style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center" }}>
-                      <input autoFocus placeholder="Название строки..." value={newRowDraft[zone.id]?.name || ""}
-                        onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], name: e.target.value } }))}
-                        onKeyDown={e => { if (e.key === "Escape") setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; }); }}
-                        style={{ flex: 1, border: "1px solid #ddd", borderRadius: 6, padding: "4px 8px", fontFamily: "Georgia,serif", fontSize: 12, outline: "none" }} />
-                      <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
-                      <input type="number" placeholder="0" value={newRowDraft[zone.id]?.brl || ""}
-                        onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], brl: Number(e.target.value)||0 } }))}
-                        style={{ width: 70, border: "1px solid #ddd", borderRadius: 6, padding: "4px 6px", fontFamily: "Georgia,serif", fontSize: 12, MozAppearance: "textfield" }} />
-                      <button onClick={() => {
-                        const row = newRowDraft[zone.id];
-                        if (!row?.name?.trim()) return;
-                        setExtraItems(p => ({ ...p, [zone.id]: [...(p[zone.id]||[]), { name: row.name.trim(), brl: row.brl||0 }] }));
-                        setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; });
-                      }} style={{ padding: "4px 12px", borderRadius: 6, border: "none", background: "#1a1a1a", color: "#fff", fontSize: 12, cursor: "pointer" }}>+</button>
-                      <button onClick={() => setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; })}
-                        style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: 14 }}>✗</button>
+                    <div style={{ marginTop: 6 }}>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <input autoFocus placeholder="Название строки..." value={newRowDraft[zone.id]?.name || ""}
+                          onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], name: e.target.value } }))}
+                          onKeyDown={e => { if (e.key === "Escape") setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; }); }}
+                          style={{ flex: 1, border: "1px solid #ddd", borderRadius: 6, padding: "4px 8px", fontFamily: "Georgia,serif", fontSize: 12, outline: "none" }} />
+                        <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
+                        <input type="number" placeholder="0" value={newRowDraft[zone.id]?.brl || ""}
+                          onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], brl: Number(e.target.value)||0 } }))}
+                          style={{ width: 70, border: "1px solid #ddd", borderRadius: 6, padding: "4px 6px", fontFamily: "Georgia,serif", fontSize: 12, MozAppearance: "textfield" }} />
+                        <button onClick={() => {
+                          const row = newRowDraft[zone.id];
+                          if (!row?.name?.trim()) return;
+                          setExtraItems(p => ({ ...p, [zone.id]: [...(p[zone.id]||[]), { name: row.name.trim(), brl: row.brl||0, global: row.global || false }] }));
+                          setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; });
+                        }} style={{ padding: "4px 12px", borderRadius: 6, border: "none", background: "#1a1a1a", color: "#fff", fontSize: 12, cursor: "pointer" }}>+</button>
+                        <button onClick={() => setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; })}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: 14 }}>✗</button>
+                      </div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', marginTop: 4 }}>
+                        <input
+                          type="checkbox"
+                          checked={newRowDraft[zone.id]?.global || false}
+                          onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], global: e.target.checked } }))}
+                        />
+                        Для всех объектов
+                      </label>
                     </div>
                   ) : (
                     <button onClick={() => setNewRowDraft(p => ({ ...p, [zone.id]: { name: "", brl: 0 } }))}
