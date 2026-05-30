@@ -135,17 +135,25 @@ const ZONES = [
     items: [
       { name: "Fogão industrial 4 bocas + forno б/у", brl: 2200, url: OLX("fogão industrial 4 bocas usado") },
       { name: "Geladeira comercial б/у", brl: 2000, url: OLX("geladeira comercial 4 portas usado") },
-      { name: "Freezer б/у", brl: 1000, url: OLX("freezer horizontal comercial usado") },
-      { name: "Mesa inox + Pia inox dupla б/у", brl: 1700, url: OLX("mesa pia inox dupla cozinha comercial") },
-      { name: "Exaustor (вытяжка)", brl: 1200, url: ML("exaustor coifa industrial cozinha") },
-      { name: "Forno de convecção б/у", brl: 1500, url: OLX("forno convecção eletrico usado comercial") },
       { name: "Batedeira + panelas inox набор", brl: 1200, url: ML("batedeira industrial panela inox kit") },
-      { name: "Мясорубка профессиональная б/у", brl: 650, url: OLX("moedor de carne elétrico profissional usado") },
-      { name: "Fritadeira (фритюрница) б/у", brl: 500, url: OLX("fritadeira elétrica comercial usado") },
       { name: "Блинные сковороды × 3", brl: 150, url: ML("frigideira crepe bliny antiaderente") },
       { name: "Кастрюли большие × 3 + средние × 3", brl: 500, url: ML("panela inox caldeirão grande conjunto") },
       { name: "Посудомоечная машина б/у", brl: 2000, url: OLX("lava louça industrial comercial usado") },
       { name: "Ремонт кухни (плитка, стены, под VISA)", brl: 2000, url: "" },
+    ]
+  },
+  {
+    id: "workshop", emoji: "🏭", name: "Цех (заготовки)",
+    items: [
+      { name: "Freezer б/у", brl: 1000, url: OLX("freezer horizontal comercial usado") },
+      { name: "Mesa inox + Pia inox dupla б/у", brl: 1700, url: OLX("mesa pia inox dupla cozinha comercial") },
+      { name: "Exaustor (вытяжка)", brl: 1200, url: ML("exaustor coifa industrial cozinha") },
+      { name: "Forno de convecção б/у", brl: 1500, url: OLX("forno convecção eletrico usado comercial") },
+      { name: "Мясорубка профессиональная б/у", brl: 650, url: OLX("moedor de carne elétrico profissional usado") },
+      { name: "Fritadeira (фритюрница) б/у", brl: 500, url: OLX("fritadeira elétrica comercial usado") },
+      { name: "Вакуматор (упаковщик) б/у", brl: 800, url: ML("seladora vacuo alimentos comercial") },
+      { name: "Контейнеры GN 1/3 × 20 шт", brl: 400, url: ML("cuba gastronorm 1/3 inox aço") },
+      { name: "Маркировочный принтер / этикетки", brl: 300, url: ML("impressora etiqueta rotulo termico") },
     ]
   },
   {
@@ -281,6 +289,12 @@ export default function InvestmentCalc() {
   const [nameDraft, setNameDraft] = useState("");
   const [newRowDraft, setNewRowDraft] = useState({}); // { zoneId: {name, brl} }
   const [itemUrls, setItemUrls] = useState({});      // { key: "https://..." } overrides
+  const dragState = useRef(null); // { zoneId, idx, isExtra } — no re-render during drag
+  const [dropIndicator, setDropIndicator] = useState(null); // { zoneId, beforeIdx } for visual line
+  const [zoneOrder, setZoneOrder] = useState(() =>
+    Object.fromEntries([...ZONES, CONSTRUCTION_ZONE].map(z => [z.id, z.items.map((_, i) => i)]))
+  );
+  const [extraOrder, setExtraOrder] = useState({}); // { zoneId: [0, 1, 2, ...] }
   // BEP editable inputs
   const [avgCheck, setAvgCheck] = useState(52);
   const [beStaff, setBeStaff] = useState({ 1: 8500, 2: 15000, 3: 15000 });   // ФОТ по этапам
@@ -291,7 +305,7 @@ export default function InvestmentCalc() {
   const globalSaveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
-  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls, ac, bst, bot, gt) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls, avgCheck: ac, beStaff: bst, beOther: bot, grandTotal: gt });
+  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls, ac, bst, bot, gt, zo, eo) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls, avgCheck: ac, beStaff: bst, beOther: bot, grandTotal: gt, zoneOrder: zo, extraOrder: eo });
 
   const applyState = (s) => {
     if (!s) return;
@@ -313,6 +327,8 @@ export default function InvestmentCalc() {
     if (s.avgCheck !== undefined) setAvgCheck(s.avgCheck);
     if (s.beStaff) setBeStaff(s.beStaff);
     if (s.beOther) setBeOther(s.beOther);
+    if (s.zoneOrder) setZoneOrder(s.zoneOrder);
+    if (s.extraOrder) setExtraOrder(s.extraOrder);
     setTimeout(() => { isRemoteUpdate.current = false; }, 0);
   };
 
@@ -345,6 +361,8 @@ export default function InvestmentCalc() {
     if (s.beOther !== undefined) setBeOther(s.beOther);
     if (s.bePhase !== undefined) setBePhase(s.bePhase);
     if (s.currentChecksDay !== undefined) setCurrentChecksDay(s.currentChecksDay);
+    if (s.zoneOrder) setZoneOrder(s.zoneOrder);
+    if (s.extraOrder) setExtraOrder(s.extraOrder);
     setTimeout(() => { isRemoteUpdate.current = false; }, 0);
   };
 
@@ -529,10 +547,101 @@ export default function InvestmentCalc() {
       enabledZones, enabledItems, quantities,
       extraItems: localExtras,
       avgCheck, beStaff, beOther, bePhase, currentChecksDay,
-      grandTotal,
+      grandTotal, zoneOrder, extraOrder,
     };
     scheduleSave(propertyState);
-  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, activePropId]); // eslint-disable-line
+  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, activePropId, zoneOrder, extraOrder]); // eslint-disable-line
+
+  // Ensure zoneOrder has entries for all zones (e.g. after new zones are added)
+  const getZoneOrder = (zoneId, itemsLen) => {
+    const order = zoneOrder[zoneId];
+    if (order && order.length === itemsLen) return order;
+    return Array.from({ length: itemsLen }, (_, i) => i);
+  };
+  const getExtraOrder = (zoneId, extrasLen) => {
+    const order = extraOrder[zoneId];
+    if (order && order.length === extrasLen) return order;
+    return Array.from({ length: extrasLen }, (_, i) => i);
+  };
+
+  // Drag handlers for built-in items (reorder within zone only)
+  const handleDragStartBuiltin = (zoneId, orderedIdx) => {
+    dragState.current = { zoneId, orderedIdx, isExtra: false };
+  };
+  const handleDragOverBuiltin = (e, zoneId, orderedIdx) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropIndicator({ zoneId, beforeIdx: orderedIdx, isExtra: false });
+  };
+  const handleDropBuiltin = (e, zoneId, targetOrderedIdx, itemsLen) => {
+    e.preventDefault();
+    const ds = dragState.current;
+    if (!ds || ds.isExtra) { setDropIndicator(null); return; }
+    if (ds.zoneId !== zoneId) { setDropIndicator(null); return; } // no cross-zone for built-ins
+    const order = [...getZoneOrder(zoneId, itemsLen)];
+    const fromIdx = ds.orderedIdx;
+    if (fromIdx === targetOrderedIdx) { setDropIndicator(null); return; }
+    const [moved] = order.splice(fromIdx, 1);
+    order.splice(targetOrderedIdx, 0, moved);
+    setZoneOrder(p => ({ ...p, [zoneId]: order }));
+    dragState.current = null;
+    setDropIndicator(null);
+  };
+  const handleDragEndBuiltin = () => {
+    dragState.current = null;
+    setDropIndicator(null);
+  };
+
+  // Drag handlers for extra items (allow cross-zone)
+  const handleDragStartExtra = (zoneId, orderedIdx) => {
+    dragState.current = { zoneId, orderedIdx, isExtra: true };
+  };
+  const handleDragOverExtra = (e, zoneId, orderedIdx) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropIndicator({ zoneId, beforeIdx: orderedIdx, isExtra: true });
+  };
+  const handleDropExtra = (e, targetZoneId, targetOrderedIdx) => {
+    e.preventDefault();
+    const ds = dragState.current;
+    if (!ds || !ds.isExtra) { setDropIndicator(null); return; }
+    const srcZoneId = ds.zoneId;
+    const srcOrderedIdx = ds.orderedIdx;
+    setExtraItems(prev => {
+      const srcExtras = [...(prev[srcZoneId] || [])];
+      const srcOrder = getExtraOrder(srcZoneId, srcExtras.length);
+      const realSrcIdx = srcOrder[srcOrderedIdx];
+      const movedItem = srcExtras[realSrcIdx];
+      if (!movedItem) return prev;
+
+      if (srcZoneId === targetZoneId) {
+        // Same zone — just reorder
+        const newOrder = [...srcOrder];
+        newOrder.splice(srcOrderedIdx, 1);
+        newOrder.splice(targetOrderedIdx, 0, realSrcIdx);
+        setExtraOrder(p => ({ ...p, [srcZoneId]: newOrder }));
+        return prev;
+      } else {
+        // Cross-zone: remove from src, add to target
+        const newSrcExtras = srcExtras.filter((_, i) => i !== realSrcIdx);
+        const tgtExtras = [...(prev[targetZoneId] || []), movedItem];
+        setExtraOrder(p => {
+          const newSrcOrder = getExtraOrder(srcZoneId, srcExtras.length)
+            .filter(i => i !== realSrcIdx)
+            .map(i => i > realSrcIdx ? i - 1 : i);
+          const newTgtOrder = [...getExtraOrder(targetZoneId, tgtExtras.length - 1), tgtExtras.length - 1];
+          return { ...p, [srcZoneId]: newSrcOrder, [targetZoneId]: newTgtOrder };
+        });
+        return { ...prev, [srcZoneId]: newSrcExtras, [targetZoneId]: tgtExtras };
+      }
+    });
+    dragState.current = null;
+    setDropIndicator(null);
+  };
+  const handleDragEndExtra = () => {
+    dragState.current = null;
+    setDropIndicator(null);
+  };
 
   const getUrl = (key, item) => itemUrls[key] !== undefined ? itemUrls[key] : (item?.url || "");
   const setUrl = (key, val) => setItemUrls(p => ({ ...p, [key]: val }));
@@ -734,7 +843,8 @@ export default function InvestmentCalc() {
             </div>
             {isExp && (
               <div style={{ borderTop: "1px solid #f0f0f0", padding: "8px 14px 12px" }}>
-                {zone.items.map((item, i) => {
+                {getZoneOrder(zone.id, zone.items.length).map((i, orderedIdx) => {
+                  const item = zone.items[i];
                   const key = `${zone.id}_${i}`;
                   const on = enabledItems[key];
                   const qty = quantities[key] || 1;
@@ -743,9 +853,17 @@ export default function InvestmentCalc() {
                   const displayName = itemNames[key] ?? item.name;
                   const isEditingThisName = editingName?.zoneId === zone.id && editingName?.idx === i && !editingName?.extra;
                   const itemUrl = getUrl(key, item);
+                  const isDropTarget = dropIndicator?.zoneId === zone.id && dropIndicator?.beforeIdx === orderedIdx && !dropIndicator?.isExtra;
                   return (
-                    <div key={i} style={{ borderBottom: "1px solid #f5f5f5", opacity: on ? 1 : 0.35 }}>
+                    <div key={i}
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; handleDragStartBuiltin(zone.id, orderedIdx); }}
+                      onDragOver={(e) => handleDragOverBuiltin(e, zone.id, orderedIdx)}
+                      onDrop={(e) => handleDropBuiltin(e, zone.id, orderedIdx, zone.items.length)}
+                      onDragEnd={handleDragEndBuiltin}
+                      style={{ borderBottom: "1px solid #f5f5f5", opacity: on ? 1 : 0.35, borderTop: isDropTarget ? "2px solid #3b82f6" : undefined }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0" }}>
+                      <span title="Перетащить" style={{ cursor: 'grab', opacity: 0.3, userSelect: 'none', paddingRight: 2, fontSize: 13, flexShrink: 0 }}>⋮⋮</span>
                       <input type="checkbox" checked={on} onChange={() => toggleItem(zone.id, i)}
                         style={{ width: 14, height: 14, accentColor: "#1a1a1a", cursor: "pointer", flexShrink: 0 }} />
                       {isEdit && isEditingThisName ? (
@@ -809,16 +927,26 @@ export default function InvestmentCalc() {
                 })}
 
                 {/* Extra items added by user */}
-                {(extraItems[zone.id] || []).map((ex, j) => {
+                {getExtraOrder(zone.id, (extraItems[zone.id] || []).length).map((j, orderedIdx) => {
+                  const ex = (extraItems[zone.id] || [])[j];
+                  if (!ex) return null;
                   const xKey = `${zone.id}_x${j}`;
                   const xOn = enabledItems[xKey] !== false;
                   const xQty = quantities[xKey] || 1;
                   const xPrice = prices[xKey] ?? ex.brl;
                   const isEditingExtra = editingName?.zoneId === zone.id && editingName?.idx === j && editingName?.extra;
                   const xUrl = itemUrls[xKey] || "";
+                  const isDropTarget = dropIndicator?.zoneId === zone.id && dropIndicator?.beforeIdx === orderedIdx && dropIndicator?.isExtra;
                   return (
-                    <div key={`x${j}`} style={{ borderBottom: "1px solid #f5f5f5", opacity: xOn ? 1 : 0.35 }}>
+                    <div key={`x${j}`}
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; handleDragStartExtra(zone.id, orderedIdx); }}
+                      onDragOver={(e) => handleDragOverExtra(e, zone.id, orderedIdx)}
+                      onDrop={(e) => handleDropExtra(e, zone.id, orderedIdx)}
+                      onDragEnd={handleDragEndExtra}
+                      style={{ borderBottom: "1px solid #f5f5f5", opacity: xOn ? 1 : 0.35, borderTop: isDropTarget ? "2px solid #3b82f6" : undefined }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0" }}>
+                      <span title="Перетащить" style={{ cursor: 'grab', opacity: 0.3, userSelect: 'none', paddingRight: 2, fontSize: 13, flexShrink: 0 }}>⋮⋮</span>
                       <input type="checkbox" checked={xOn} onChange={() => setEnabledItems(p => ({ ...p, [xKey]: !xOn }))}
                         style={{ width: 14, height: 14, accentColor: "#1a1a1a", cursor: "pointer", flexShrink: 0 }} />
                       {isEdit && isEditingExtra ? (

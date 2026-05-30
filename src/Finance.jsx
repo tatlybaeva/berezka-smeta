@@ -470,6 +470,143 @@ function SectionInputs({ inputs, setInput, model }) {
         )
       })()}
 
+      {/* Бюджет по этапам */}
+      {(() => {
+        const { prepMonths, launchMonth2, launchMonth3 } = inputs
+        const dur1 = launchMonth2 - 1
+        const dur2 = launchMonth3 - launchMonth2
+        const dur3 = 12 - launchMonth3 + 1
+
+        const fot0 = staffFOT(inputs.staff, 1) * prepMonths
+        const total0 = inputs.capex
+          + inputs.rent * prepMonths
+          + inputs.utilities * prepMonths
+          + fot0
+          + 5000
+          + 10000
+
+        const total1 = 3000
+          + inputs.utilities * dur1
+          + inputs.marketing * dur1
+          + staffFOT(inputs.staff, 1) * dur1
+          + inputs.accountant * dur1
+          + inputs.other * dur1
+
+        const total2 = 2000
+          + 5000
+          + inputs.utilities * dur2
+          + inputs.marketing * dur2
+          + staffFOT(inputs.staff, 2) * dur2
+          + inputs.accountant * dur2
+          + inputs.other * dur2
+
+        const total3 = 3000
+          + 5000
+          + inputs.utilities * dur3
+          + inputs.marketing * dur3
+          + staffFOT(inputs.staff, 3) * dur3
+          + inputs.accountant * dur3
+          + inputs.other * dur3
+
+        const grandTotal = total0 + total1 + total2 + total3
+        const hasCapital = inputs.capital >= grandTotal
+
+        const stages = [
+          {
+            num: 0, emoji: '🏗️', name: 'Подготовка / строительство',
+            color: '#7a5a00', bg: '#fffbe6', border: '#f0d97a',
+            total: total0,
+            items: [
+              ['Оснащение / оборудование (смета)', inputs.capex],
+              [`Аренда × ${prepMonths} мес`, inputs.rent * prepMonths],
+              [`ЖКУ × ${prepMonths} мес`, inputs.utilities * prepMonths],
+              [`ФОТ (подготовительный, опц.) × ${prepMonths} мес`, fot0],
+              ['Юридические / регистрация', 5000],
+              ['Ремонт доп. работы (буфер)', 10000],
+            ],
+          },
+          {
+            num: 1, emoji: '☕', name: 'Двор + напитки',
+            color: '#1a4f1a', bg: '#f0f7ed', border: '#b8d9b8',
+            total: total1,
+            items: [
+              ['Закуп напитков, снеков (стартовый запас)', 3000],
+              [`ЖКУ × ${dur1} мес`, inputs.utilities * dur1],
+              [`Маркетинг запуска × ${dur1} мес`, inputs.marketing * dur1],
+              [`ФОТ этап 1 × ${dur1} мес`, staffFOT(inputs.staff, 1) * dur1],
+              [`Бухгалтер × ${dur1} мес`, inputs.accountant * dur1],
+              [`Прочее × ${dur1} мес`, inputs.other * dur1],
+            ],
+          },
+          {
+            num: 2, emoji: '🍳', name: 'Кухня',
+            color: '#1a3a5f', bg: '#edf3fa', border: '#b8cfe0',
+            total: total2,
+            items: [
+              ['Лицензия кухни (VISA)', 2000],
+              ['Закуп продуктов (дополнительный)', 5000],
+              [`ЖКУ × ${dur2} мес`, inputs.utilities * dur2],
+              [`Маркетинг × ${dur2} мес`, inputs.marketing * dur2],
+              [`ФОТ этап 2 × ${dur2} мес`, staffFOT(inputs.staff, 2) * dur2],
+              [`Бухгалтер × ${dur2} мес`, inputs.accountant * dur2],
+              [`Прочее × ${dur2} мес`, inputs.other * dur2],
+            ],
+          },
+          {
+            num: 3, emoji: '🌟', name: 'Полный формат',
+            color: '#4a1a5f', bg: '#f5edfb', border: '#cfb8e0',
+            total: total3,
+            items: [
+              ['Аниматор / детские мероприятия (запуск)', 3000],
+              ['Магазин (стартовый запас товаров)', 5000],
+              [`ЖКУ × ${dur3} мес`, inputs.utilities * dur3],
+              [`Маркетинг × ${dur3} мес`, inputs.marketing * dur3],
+              [`ФОТ этап 3 × ${dur3} мес`, staffFOT(inputs.staff, 3) * dur3],
+              [`Бухгалтер × ${dur3} мес`, inputs.accountant * dur3],
+              [`Прочее × ${dur3} мес`, inputs.other * dur3],
+            ],
+          },
+        ]
+
+        return (
+          <div style={S.subGroup}>
+            <div style={S.subTitle}>💸 Бюджет по этапам — что нужно вложить</div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+              {stages.map(st => (
+                <div key={st.num} style={{ border: `1.5px solid ${st.border}`, borderRadius: 10, padding: '12px 14px', background: st.bg }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: st.color, marginBottom: 8 }}>
+                    {st.emoji} Этап {st.num} — {st.name}
+                  </div>
+                  {st.items.map(([label, val], i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 11, color: '#444', marginBottom: 3 }}>
+                      <span style={{ color: '#555' }}>{label}</span>
+                      <span style={{ fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 8 }}>R$ {fmt(val)}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: `1.5px solid ${st.border}`, marginTop: 8, paddingTop: 6, fontSize: 13, fontWeight: 700, color: st.color }}>
+                    <span>Итого</span>
+                    <span>R$ {fmt(st.total)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Grand total */}
+            <div style={{ marginTop: 14, border: '2px solid #aaa', borderRadius: 10, padding: '14px 16px', background: '#fafafa' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 15, fontWeight: 700, color: '#222', marginBottom: 8 }}>
+                <span>Суммарные потребности (все этапы)</span>
+                <span>R$ {fmt(grandTotal)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 13, fontWeight: 600, color: hasCapital ? '#1a7a1a' : '#b00000' }}>
+                <span>Доступный капитал</span>
+                <span>R$ {fmt(inputs.capital)} {hasCapital ? '✅ достаточно' : '⚠️ не хватает R$ ' + fmt(grandTotal - inputs.capital)}</span>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Этап 1 */}
       <div style={S.subGroup}>
         <div style={S.subTitle}>Этап 1 — двор + напитки</div>

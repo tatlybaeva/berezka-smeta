@@ -1030,6 +1030,119 @@ export default function BusinessPlan() {
         </div>
       </Section>
 
+      {/* SECTION 3.5: ВЫВЕСКА */}
+      <Section title="🪧 Вывеска — спил дерева" open={openSections['vyveska']} onToggle={()=>toggleSection('vyveska')}>
+        <div style={{ fontSize:13, color:"#444", lineHeight:1.7, marginBottom:14 }}>
+          Подвесная вывеска БЕРЁЗКА — деревянный спил с «живым» краем и ручной росписью логотипа. Стиль — тёплый, рукотворный, природный (срубы и берёзовые рощи).
+        </div>
+
+        {/* Collapsible card 1 */}
+        <div style={{ marginBottom:10, borderRadius:8, border:"1px solid #EBE2D3", overflow:"hidden" }}>
+          <button
+            onClick={()=>toggleSection('vyveska_price')}
+            style={{
+              width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center",
+              padding:"9px 14px", background:"#faf9f6", border:"none", cursor:"pointer",
+              fontFamily:"Georgia,serif", fontSize:13, color:"#1a1a1a", textAlign:"left",
+            }}
+          >
+            <span>💰 Из чего складывается цена</span>
+            <span style={{ fontSize:11, opacity:0.5, transform:openSections['vyveska_price']?"rotate(180deg)":"none", transition:"transform 0.15s" }}>▼</span>
+          </button>
+          {openSections['vyveska_price'] && (
+            <div style={{ background:"#faf9f6", padding:"10px 14px 14px", borderTop:"1px solid #EBE2D3", fontSize:12, color:"#444", lineHeight:1.7 }}>
+              <ul style={{ margin:0, paddingLeft:18 }}>
+                <li><b>Спил дерева (bolacha).</b> Круг с «живым» краем и корой, диаметр ~40–60 см. На лесопилке в SC — R$ 50–200, иногда бесплатно из обрезков. Важно: спил должен быть высушенным, иначе потрескается.</li>
+                <li><b>Сушка + защита торца</b> (пропитка/масло, эпоксидная заливка трещин). Материалы R$ 50–150.</li>
+                <li><b>Ручная роспись/леттеринг</b> — роспись логотипа от руки обычно R$ 150–500 в зависимости от сложности и размера.</li>
+                <li><b>Лак для улицы (Verniz marítimo)</b> поверх росписи. R$ 30–80.</li>
+                <li><b>Подвес</b> (цепи + крюки + карабины). R$ 50–150.</li>
+              </ul>
+              <div style={{ marginTop:10, fontWeight:700, color:"#2d5a27", fontSize:13 }}>
+                Итого ориентир: R$ 330–1.080 за полный комплект «под ключ»
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Collapsible card 2 */}
+        <div style={{ borderRadius:8, border:"1px solid #EBE2D3", overflow:"hidden" }}>
+          <button
+            onClick={()=>toggleSection('vyveska_tz')}
+            style={{
+              width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center",
+              padding:"9px 14px", background:"#faf9f6", border:"none", cursor:"pointer",
+              fontFamily:"Georgia,serif", fontSize:13, color:"#1a1a1a", textAlign:"left",
+            }}
+          >
+            <span>📋 ТЗ для художника (можно передать как есть)</span>
+            <span style={{ fontSize:11, opacity:0.5, transform:openSections['vyveska_tz']?"rotate(180deg)":"none", transition:"transform 0.15s" }}>▼</span>
+          </button>
+          {openSections['vyveska_tz'] && (
+            <div style={{ background:"#faf9f6", padding:"10px 14px 14px", borderTop:"1px solid #EBE2D3", fontSize:12, color:"#444", lineHeight:1.8 }}>
+              <div style={{ fontWeight:600, marginBottom:6, color:"#1a1a1a" }}>ТЗ: вывеска BERЁZKA на спиле дерева с ручной росписью</div>
+              <p style={{ margin:"0 0 6px" }}><b>Основа:</b> спил дерева (bolacha) с натуральным краем. Диаметр 45–55 см, толщина 4–6 см. Дерево сухое (камерной/естественной сушки). Порода — твёрдая/влагостойкая (климат влажный, вывеска на улице).</p>
+              <p style={{ margin:"0 0 6px" }}><b>Подготовка:</b> торец и поверхность отшлифовать; трещины — залить прозрачной эпоксидкой; кору закрепить.</p>
+              <p style={{ margin:"0 0 6px" }}><b>Роспись:</b> белый окрашенный круг-фон в центре, по контуру — натуральное дерево. Внутри круга — логотип BERЁZKA (макет передам отдельно). Цвета: фон белый, надпись/рисунок — тёмные.</p>
+              <p style={{ margin:"0 0 6px" }}><b>Защита:</b> verniz marítimo или атмосферостойкое покрытие, минимум 2 слоя, защита от УФ/влаги/грибка.</p>
+              <p style={{ margin:"0 0 10px" }}><b>Подвес:</b> 2 кольца/рым-болты из нержавейки сверху + цепи + карабины в комплекте.</p>
+              <p style={{ margin:0 }}>Прошу указать в orçamento: цена «под ключ», срок, гарантия, возможность работы по макету.</p>
+              <div style={{ marginTop:10, fontSize:11, color:"#888", fontStyle:"italic" }}>Скажи, если нужно перевести на португальский — сделаю.</div>
+            </div>
+          )}
+        </div>
+      </Section>
+
+      {/* SECTION 3.6: БЕЗОПАСНОСТЬ */}
+      <Section title="🔒 Система безопасности" open={openSections['security']} onToggle={()=>toggleSection('security')}>
+        <div style={{ background:"#faf9f6", border:"1px solid #EBE2D3", borderRadius:10, padding:"12px 16px", marginBottom:14, fontSize:13, color:"#444", lineHeight:1.7 }}>
+          Система безопасности складывается из 5 блоков. Всё от бренда Intelbras (Санта-Катарина) — местная гарантия, nota fiscal, есть в любом магазине.
+        </div>
+
+        <div style={{ overflowX:"auto", marginBottom:14 }}>
+          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
+            <thead>
+              <tr style={{ background:"#EBE2D3" }}>
+                <th style={{ padding:"8px 12px", textAlign:"left", fontWeight:600, color:"#1a1a1a", borderRadius:"4px 0 0 0" }}>Блок</th>
+                <th style={{ padding:"8px 12px", textAlign:"right", fontWeight:600, color:"#1a1a1a", borderRadius:"0 4px 0 0", whiteSpace:"nowrap" }}>Ориентир, R$</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ["Видеонаблюдение (4 IP-камеры + NVR)", "2.100–3.000"],
+                ["Сигнализация (базовый кит)", "450–800"],
+                ["Физзащита + прожекторы + решётка", "500–2.000"],
+                ["Пожарная безопасность", "350–850"],
+                ["Сейф (опц.)", "200–800"],
+              ].map(([label, val], i) => (
+                <tr key={i} style={{ borderBottom:"1px solid #EBE2D3", background: i%2===0 ? "#fff" : "#faf9f6" }}>
+                  <td style={{ padding:"7px 12px", color:"#333" }}>{label}</td>
+                  <td style={{ padding:"7px 12px", textAlign:"right", color:"#555" }}>{val}</td>
+                </tr>
+              ))}
+              <tr style={{ background:"#EAF3DE", borderTop:"2px solid #2d5a27" }}>
+                <td style={{ padding:"8px 12px", fontWeight:700, color:"#2d5a27" }}>Итого разово</td>
+                <td style={{ padding:"8px 12px", textAlign:"right", fontWeight:700, color:"#2d5a27" }}>≈ 3.600–7.450</td>
+              </tr>
+              <tr style={{ background:"#faf9f6" }}>
+                <td style={{ padding:"7px 12px", color:"#555" }}>Мониторинг (опц.)</td>
+                <td style={{ padding:"7px 12px", textAlign:"right", color:"#555" }}>+80–150/мес</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          onClick={() => document.dispatchEvent(new CustomEvent('navigate-tab', { detail: 'kb' }))}
+          style={{
+            background:"#EAF3DE", border:"1px solid #b6d9a0", borderRadius:8, padding:"10px 14px",
+            fontSize:12, color:"#2d5a27", lineHeight:1.6, cursor:"pointer",
+          }}
+        >
+          📚 Подробная инструкция по подбору, установке и шаблоны запросов продавцу — в <b>Базе знаний</b> → раздел «Система безопасности»
+        </div>
+      </Section>
+
       {/* SECTION 4: ДОХОДЫ */}
       <Section title="💰 4. Доходы" open={openSections[3]} onToggle={()=>toggleSection(3)}>
         <div style={{ background:"#EAF3DE", borderRadius:10, padding:"12px 16px", display:"flex", alignItems:"center", gap:10 }}>

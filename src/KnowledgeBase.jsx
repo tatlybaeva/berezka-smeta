@@ -673,6 +673,181 @@ Local de instalação: Rio Tavares, Florianópolis. Vocês fazem a instalação?
   )
 }
 
+// ─── SECURITY ARTICLE ─────────────────────────────────────────────────────────
+
+function SecurityContent() {
+  const tip = { background: '#fef9c3', border: '1px solid #fde68a', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 12 }
+  const codeBlock = { background: '#f7f7f5', borderRadius: 8, padding: '12px 14px', fontSize: 13, lineHeight: 1.7, fontFamily: 'monospace', whiteSpace: 'pre-wrap', color: '#1a1a1a', marginBottom: 12 }
+
+  return (
+    <div>
+      <Section id="kb-security-summary" title="1. Краткий вывод" defaultOpen={true}>
+        <p style={p}>Система безопасности складывается из 5 блоков:</p>
+        <ol style={ol}>
+          <li>Видеонаблюдение — 4 камеры Intelbras IP/PoE ≈ R$ 2.100–3.000.</li>
+          <li>Сигнализация — базовый беспроводной комплект Intelbras ≈ R$ 450–800.</li>
+          <li>Физическая защита и свет — замки, прожекторы с датчиком, решётка ≈ R$ 500–2.000.</li>
+          <li>Пожарная безопасность — огнетушители (требование Bombeiros) ≈ R$ 300–700.</li>
+          <li>Периметр детской зоны — забор/калитка — считается в смете двора.</li>
+        </ol>
+        <div style={tip}>
+          <b>Итого электронная + базовая физическая часть: ≈ R$ 3.500–6.500.</b> Монтаж камер и сигнализации реально сделать самостоятельно.
+        </div>
+      </Section>
+
+      <Section id="kb-security-cctv" title="2. Видеонаблюдение (CCTV)">
+        <p style={p}>Рекомендуемый комплект (IP + PoE, 4 камеры):</p>
+        <ul style={ul}>
+          <li>Регистратор NVR: <b>Intelbras NVD 1404 P</b> — 1 шт, R$ 650–950 (4 канала, 4 порта PoE, до 4K)</li>
+          <li>Камеры IP: <b>Intelbras VIP 1230 B (или 1130 B) G4</b> — 4 шт, R$ 920–1.320 (Full HD, внешние, IP67, ночная съёмка)</li>
+          <li>Жёсткий диск: <b>WD Purple 1 ТБ</b> — 1 шт, R$ 350–450 (спец-диск для CFTV)</li>
+          <li>Расходники (кабель cat5e/cat6, коннекторы RJ45, кабель-каналы) — R$ 150–300</li>
+          <li>(Опц.) Мини-ИБП Nobreak для регистратора — R$ 200–400</li>
+        </ul>
+        <div style={tip}><b>Итого ≈ 2.100–3.000</b></div>
+
+        <p style={{ ...p, marginTop: 12 }}>Размещение 4 камер:</p>
+        <ol style={ol}>
+          <li><b>Вход / ворота</b> — кто заходит; вечерний контроль периметра.</li>
+          <li><b>Детская зона / двор</b> — безопасность детей + мамы могут поглядывать.</li>
+          <li><b>Касса / стойка выдачи</b> — где деньги, там камера обязательна.</li>
+          <li><b>Тыл / склад-кухня</b> — задняя дверь и зона хранения.</li>
+        </ol>
+
+        <p style={{ ...p, marginTop: 12 }}><b>Почему НЕ Китай (импорт 2026):</b> свыше US$ 50 — налог на импорт 60% + ICMS ~17-20%. Нет nota fiscal (стоп-фактор для CNPJ), нет местной гарантии. Брать Intelbras локально, по CNPJ, с накладной.</p>
+      </Section>
+
+      <Section id="kb-security-alarm" title="3. Сигнализация">
+        <p style={p}>Базовый беспроводной комплект:</p>
+        <ul style={ul}>
+          <li>Центр с доступом по приложению: <b>Intelbras ANM 24 NET</b> — 1 шт</li>
+          <li>Датчики открытия (двери/окно): <b>XAS 4010 Smart</b> — 2-3 шт, ~R$ 87/шт</li>
+          <li>Датчик движения IVP — 1 шт</li>
+          <li>Сирена 120 дБ — 1 шт</li>
+        </ul>
+        <div style={tip}><b>Готовый комплект целиком ≈ R$ 450–800</b></div>
+        <p style={p}>Беспроводные комплекты ставятся самостоятельно: датчики клеятся на двери/окна, привязываются к центру, приложение настраивается по инструкции.</p>
+      </Section>
+
+      <Section id="kb-security-physical" title="4. Физзащита, свет, периметр">
+        <ul style={ul}>
+          <li>Замки (нержавейка/оцинковка) на двери контейнера + навесной на окно выдачи. R$ 100–400.</li>
+          <li>Прожекторы с датчиком движения (refletor LED com sensor de presença). 2–3 шт по периметру. R$ 80–200/шт.</li>
+          <li>Решётка/ставня на окно выдачи на ночь. R$ 300–1.500.</li>
+        </ul>
+        <p style={p}><b>Итого ≈ R$ 500–2.000.</b></p>
+      </Section>
+
+      <Section id="kb-security-fire" title="5. Пожарная безопасность">
+        <p style={p}>Огнетушители обязательны. Тип <b>ABC</b> (универсальный) + рядом с плитой <b>BC/класс K</b> (под жир). R$ 150–350/шт → закладывать R$ 300–700.</p>
+        <p style={p}>Это требование <b>Corpo de Bombeiros</b> — для легальной работы нужен AVCB/CLCB.</p>
+        <p style={p}>Также: аварийное освещение (iluminação de emergência, R$ 50–150) + табличка «saída».</p>
+      </Section>
+
+      <Section id="kb-security-templates" title="6. Шаблоны для продавца (PT)">
+        <p style={{ ...p, fontWeight: 600 }}>Видеонаблюдение:</p>
+        <div style={codeBlock}>{`Olá! Gostaria de um orçamento com nota fiscal (CNPJ) para um kit de CFTV: 1× Gravador NVR Intelbras NVD 1404 P (4 canais, PoE); 4× Câmera IP Intelbras VIP 1230 B — Full HD, externa, IP67; 1× HD WD Purple 1 TB (próprio para CFTV); Cabo de rede cat5e/cat6, conectores RJ45 e canaletas. Local: Rio Tavares, Florianópolis. Vocês fazem a instalação? Prazo e formas de pagamento? Obrigada!`}</div>
+
+        <p style={{ ...p, fontWeight: 600 }}>Сигнализация:</p>
+        <div style={codeBlock}>{`Olá! Gostaria de orçamento com nota fiscal (CNPJ) para um kit de alarme sem fio Intelbras: 1× Central ANM 24 NET (acesso por app); 2–3× Sensores de abertura XAS 4010 Smart; 1× Sensor de presença (IVP); 1× Sirene. Para um comércio pequeno (contêiner). Obrigada!`}</div>
+
+        <p style={{ ...p, fontWeight: 600 }}>Огнетушители:</p>
+        <div style={codeBlock}>{`Olá! Preciso de extintores para um comércio (café com cozinha a gás) em Florianópolis: 1× ABC e 1× para gordura (classe K / BC), com nota fiscal. Vocês fazem a recarga/manutenção anual também? Obrigada!`}</div>
+      </Section>
+
+      <Section id="kb-security-checklist" title="7. Чек-лист перед запуском">
+        <ul style={{ ...ul, lineHeight: 2 }}>
+          <li>☐ Камеры IP67, регистратор + WD Purple 1 ТБ — запрошен orçamento com nota fiscal</li>
+          <li>☐ Определены 4 точки установки камер</li>
+          <li>☐ Настроен удалённый доступ с телефона</li>
+          <li>☐ Куплен базовый кит сигнализации, датчики на двери/окно</li>
+          <li>☐ Прожекторы с датчиком движения по периметру</li>
+          <li>☐ Замки/решётка на окно выдачи</li>
+          <li>☐ Огнетушители ABC + класс K, аварийный свет, табличка «saída»</li>
+          <li>☐ Пожарная безопасность увязана с треком Bombeiros (AVCB/CLCB)</li>
+          <li>☐ Периметр детской зоны: забор + калитка с защёлкой</li>
+          <li>☐ Аптечка на месте</li>
+          <li>☐ (Опц.) сейф для выручки</li>
+          <li>☐ (Опц.) решение по службе мониторинга</li>
+        </ul>
+      </Section>
+    </div>
+  )
+}
+
+// ─── FOOD STORAGE ARTICLE ──────────────────────────────────────────────────────
+
+function FoodStorageContent() {
+  const highlight = { background: '#F0F7E8', border: '1px solid #B7D9A0', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 12 }
+  const warn = { background: '#FDECEA', border: '1px solid #F5C6C2', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 12 }
+
+  return (
+    <div>
+      <Section id="kb-food-basics" title="Базовые принципы" defaultOpen={true}>
+        <ul style={ul}>
+          <li>Сырое мясо/рыба/птица хранить <b>НИЖЕ</b> готовой еды и овощей — чтобы капли не загрязняли.</li>
+          <li>Каждый вид в отдельной закрытой ёмкости/пакете с маркировкой (продукт + дата).</li>
+          <li>Сильные запахи изолировать: рыба, квашеная капуста, маринованный лук — всегда в плотно закрытых контейнерах.</li>
+          <li>Готовая еда <b>никогда</b> не хранится рядом с сырым мясом, рыбой, яйцами.</li>
+        </ul>
+      </Section>
+
+      <Section id="kb-food-fridge" title="Холодильник — зонирование по полкам">
+        <ul style={ul}>
+          <li><b>Верхняя полка:</b> готовые блюда, соусы, десерты (уже прошли тепловую обработку)</li>
+          <li><b>Средняя полка:</b> молочное (сметана, творог, молоко, масло), яйца</li>
+          <li><b>Нижняя полка:</b> сырое мясо, птица, рыба (в лотках/контейнерах, чтобы не капало)</li>
+          <li><b>Ящики-овощницы:</b> свежие овощи и фрукты (раздельно — сильные запахи в пакетах)</li>
+          <li><b>Дверь:</b> напитки, соусы в бутылках, варенье</li>
+        </ul>
+        <div style={warn}>
+          <b>Нельзя хранить вместе:</b>
+          <ul style={{ ...ul, marginBottom: 0, marginTop: 6 }}>
+            <li>Рыба + мясо (запах, кросс-контаминация) — разные ящики или отдельный холодильник</li>
+            <li>Яйца + готовая еда рядом — яйца могут быть источником сальмонеллы</li>
+            <li>Дыня/ананас + молочное — дыня выделяет этилен, ускоряет порчу молочного</li>
+            <li>Лук + яблоки — ускоряют потемнение друг друга</li>
+          </ul>
+        </div>
+      </Section>
+
+      <Section id="kb-food-freezer" title="Заморозка / цех">
+        <p style={p}>Для кафе с цехом заготовок (пельмени, вареники, заготовки супов):</p>
+        <ul style={ul}>
+          <li>Сырые заготовки (нелепленые пельмени) <b>ОТДЕЛЬНО</b> от готовых изделий</li>
+          <li>Маркировка обязательна: название, дата заморозки, срок годности</li>
+          <li>Рыбные заготовки — отдельная зона от мясных (запах)</li>
+          <li>Готовые порционные заготовки (бульоны, зажарка, мясо для супа) — подписать «ГОТОВО»</li>
+          <li>Рекомендуемые сроки при -18°С: пельмени/вареники до 3 мес, бульоны до 6 мес, жареное мясо до 3 мес</li>
+        </ul>
+      </Section>
+
+      <Section id="kb-food-dry" title="Сухой склад">
+        <ul style={ul}>
+          <li>Мука, крупы, сахар — в герметичных контейнерах (от влаги и насекомых)</li>
+          <li>Мука не рядом с кофе/чаем (впитывает запахи)</li>
+          <li>Специи — вдали от плиты (тепло разрушает ароматику)</li>
+          <li>Лук/чеснок — в тёмном, сухом месте, НЕ в холодильнике; не рядом с картошкой (взаимно ускоряют порчу)</li>
+          <li>Картошка — тёмное, прохладное, НЕ в холодильнике; отдельно от лука</li>
+        </ul>
+      </Section>
+
+      <Section id="kb-food-anvisa" title="ANVISA / санитарные нормы BR">
+        <p style={p}>В Бразилии действует <b>RDC 216/2004</b> (ANVISA) — правила для предприятий общепита:</p>
+        <ul style={ul}>
+          <li>Продукты хранятся минимум на <b>25 см от пола</b> (на стеллажах)</li>
+          <li>Маркировка открытых упаковок обязательна (что + когда открыто)</li>
+          <li>Готовые блюда при температуре выше 60°С или ниже 5°С — зона опасности 5-60°С (<b>zona de perigo</b>) максимум 2 часа</li>
+          <li>При проверке <b>Vigilância Sanitária</b> инспектор проверяет температуру холодильников и маркировки</li>
+        </ul>
+        <div style={highlight}>
+          Держать холодильник при <b>≤ 5°С</b>, морозильник при <b>≤ -18°С</b>. Завести термометры и проверять каждое утро.
+        </div>
+      </Section>
+    </div>
+  )
+}
+
 // ─── EXPERTS LIST ─────────────────────────────────────────────────────────────
 const EXPERTS = [
   {
@@ -698,6 +873,22 @@ const EXPERTS = [
     emoji: '📹',
     tags: ['Intelbras', 'IP камеры', 'PoE', 'NVR', 'монтаж', 'CFTV', 'nota fiscal'],
     component: CctvContent,
+  },
+  {
+    id: 'security',
+    name: 'Система безопасности',
+    role: 'Сигнализация · Видеонаблюдение · Физзащита · Флорианополис 2026',
+    emoji: '🔒',
+    tags: ['Intelbras', 'сигнализация', 'alarme', 'ANM 24 NET', 'огнетушитель', 'пожарная', 'сейф', 'монтаж'],
+    component: SecurityContent,
+  },
+  {
+    id: 'food_storage',
+    name: 'Товарное соседство',
+    role: 'Хранение продуктов · Совместимость · Санитарные нормы',
+    emoji: '🥦',
+    tags: ['хранение', 'холодильник', 'совместимость', 'ANVISA', 'sanidade', 'продукты', 'цех'],
+    component: FoodStorageContent,
   },
   // Будущие эксперты добавляются сюда
 ]

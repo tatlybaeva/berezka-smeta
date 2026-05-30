@@ -3,6 +3,7 @@ import InvestmentCalc from './InvestmentCalc'
 import ResponsibilityCalc from './ResponsibilityCalc'
 import BrandTab from './BrandTab'
 import KnowledgeBase from './KnowledgeBase'
+import ChecklistTab from './ChecklistTab'
 import BusinessPlan from './BusinessPlan'
 import MenuPricing from './MenuPricing'
 import RentalOptions from './RentalOptions'
@@ -16,7 +17,8 @@ const TABS = [
   { id: 'finance', label: '💰 Финансы' },
   { id: 'menu',    label: '🍽️ Меню' },
   { id: 'brand',   label: '🎨 Дизайн-код' },
-  { id: 'kb',      label: '📚 База знаний' },
+  { id: 'kb',         label: '📚 База знаний' },
+  { id: 'checklists', label: '✅ Чек-листы' },
 ]
 
 function getInitTab() {
@@ -93,7 +95,8 @@ export default function App() {
       {tab === 'brand'   && <BrandTab />}
       {tab === 'resp'    && <ResponsibilityCalc onNavigate={handleNavigate} />}
       {tab === 'finance' && <Finance />}
-      {tab === 'kb'      && <KnowledgeBase />}
+      {tab === 'kb'         && <KnowledgeBase />}
+      {tab === 'checklists' && <ChecklistTab />}
     </div>
   )
 }
