@@ -208,6 +208,39 @@ const ZONES = [
   },
 ];
 
+function LgpdNote() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ marginTop: 8, borderRadius: 8, border: "1px solid #F0E4B0", overflow: "hidden" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "7px 12px", background: "#FFFBF0", border: "none", cursor: "pointer",
+          fontFamily: "Georgia,serif", fontSize: 11, color: "#6B5B1E", textAlign: "left",
+        }}
+      >
+        <span>📋 Политика видеонаблюдения (LGPD)</span>
+        <span style={{ fontSize: 10, opacity: 0.6, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ background: "#FFFBF0", padding: "8px 12px 10px", borderTop: "1px solid #F0E4B0", fontSize: 11, color: "#6B5B1E", lineHeight: 1.6 }}>
+          <ul style={{ margin: 0, paddingLeft: 16 }}>
+            <li><b>Таблички</b> «Ambiente monitorado por câmeras» — обязательны на входе и в зонах съёмки</li>
+            <li><b>Хранение записей</b> — 30–90 дней, затем безопасное удаление</li>
+            <li><b>Доступ</b> — только владелец/ответственный. Передача третьим лицам — только по запросу полиции/суда</li>
+            <li><b>Без аудио</b> — только видео (аудио повышает юридический риск)</li>
+            <li><b>Туалеты/раздевалки</b> — камеры запрещены</li>
+            <li><b>Детская зона</b> — общий обзор допустим; информировать родителей. Публикация кадров с детьми — только с согласия</li>
+            <li><b>Штраф ANPD</b> до 2% оборота — закрывается табличками и политикой</li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 const FOOD_COST_PCT = 0.30;
 const TAX_PCT = 0.08;
 
@@ -887,6 +920,8 @@ export default function InvestmentCalc() {
                     Итого: {fmtR(total)} / {fmt$(total)}
                   </div>
                 </div>
+
+                {zone.id === "territory" && <LgpdNote />}
               </div>
             )}
           </div>
