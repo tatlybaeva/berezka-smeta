@@ -19,13 +19,14 @@ const BASELINE_REVENUE = 35000;
 
 const STATUS_COLORS = {
   "рассматриваем": { bg: "#eff6ff", color: "#1d4ed8" },
+  "в расчёте":     { bg: "#fef9c3", color: "#854d0e" },
   "отказали":       { bg: "#fef2f2", color: "#dc2626" },
   "выбрали":        { bg: "#f0fdf4", color: "#16a34a" },
   "архив":          { bg: "#f3f4f6", color: "#6b7280" },
 };
 
 const CONDITION_OPTIONS = ["с ремонтом", "под ремонт", "хорошее", "требует работ"];
-const STATUS_OPTIONS    = ["рассматриваем", "отказали", "выбрали", "архив"];
+const STATUS_OPTIONS    = ["рассматриваем", "в расчёте", "отказали", "выбрали", "архив"];
 
 const emptyForm = {
   name: "", address: "", area: "", rent: "", deposit: "",

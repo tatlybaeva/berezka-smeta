@@ -252,6 +252,8 @@ export default function InvestmentCalc() {
   const [avgCheck, setAvgCheck] = useState(52);
   const [beStaff, setBeStaff] = useState({ 1: 8500, 2: 15000, 3: 15000 });   // ФОТ по этапам
   const [beOther, setBeOther] = useState({ 1: 3500, 2: 5000,  3: 6000 });    // прочие расходы по этапам
+  const [calcProperties, setCalcProperties] = useState([]); // rental options with status "в расчёте"
+  const [activePropId, setActivePropId] = useState(null);   // currently selected property ID
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
@@ -281,24 +283,81 @@ export default function InvestmentCalc() {
   };
 
   useEffect(() => {
-    supabase.from("smeta_state").select("state").eq("id", "main").maybeSingle()
-      .then(({ data }) => { if (data?.state) applyState(data.state); });
+    const init = async () => {
+      // 1. Load "в расчёте" properties
+      const { data: rentalData } = await supabase.from('rental_options').select('id, data').order('created_at');
+      const inCalc = (rentalData || []).filter(o => o.data?.status === 'в расчёте');
+      setCalcProperties(inCalc);
 
-    const channel = supabase.channel("smeta_realtime")
+      // 2. Determine which state to load
+      const targetId = inCalc[0]?.id || 'main';
+      setActivePropId(targetId);
+
+      // 3. Load smeta state for target
+      const { data } = await supabase.from("smeta_state").select("state").eq("id", targetId).maybeSingle();
+      if (data?.state) {
+        applyState(data.state);
+      } else if (inCalc[0]?.data?.rent) {
+        // No saved state yet — auto-set rent from property card
+        setRent(Number(inCalc[0].data.rent));
+      }
+
+      isRemoteUpdate.current = false;
+    };
+
+    isRemoteUpdate.current = true;
+    init();
+
+    // Realtime for smeta_state
+    const channel = supabase.channel("smeta_rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "smeta_state" }, (payload) => {
-        if (payload.new?.state) applyState(payload.new.state);
+        if (payload.new?.id !== activePropId) return;
+        isRemoteUpdate.current = true;
+        applyState(payload.new?.state);
+        setTimeout(() => { isRemoteUpdate.current = false; }, 0);
       })
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
-  }, []);
+    // Realtime for rental_options
+    const rentalChannel = supabase.channel('rental_for_budget')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rental_options' }, async () => {
+        const { data } = await supabase.from('rental_options').select('id, data').order('created_at');
+        const inCalc = (data || []).filter(o => o.data?.status === 'в расчёте');
+        setCalcProperties(inCalc);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(rentalChannel);
+    };
+  }, []); // eslint-disable-line
+
+  useEffect(() => {
+    if (!activePropId) return;
+    supabase.from("smeta_state").select("state").eq("id", activePropId).maybeSingle()
+      .then(({ data }) => {
+        isRemoteUpdate.current = true;
+        if (data?.state) {
+          applyState(data.state);
+        } else {
+          // No saved state for this property — use defaults but set rent from card
+          const prop = calcProperties.find(p => p.id === activePropId);
+          if (prop?.data?.rent) {
+            setRent(Number(prop.data.rent));
+          }
+        }
+        setTimeout(() => { isRemoteUpdate.current = false; }, 0);
+      });
+  }, [activePropId]); // eslint-disable-line
 
   const scheduleSave = (state) => {
     if (isRemoteUpdate.current) return;
     setSyncStatus("saving");
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      const { error } = await supabase.from("smeta_state").upsert({ id: "main", state, updated_at: new Date().toISOString() });
+      const saveId = activePropId || 'main';
+      const { error } = await supabase.from("smeta_state").upsert({ id: saveId, state, updated_at: new Date().toISOString() });
       setSyncStatus(error ? "error" : "saved");
       if (!error) setTimeout(() => setSyncStatus("idle"), 2000);
     }, 800);
@@ -371,10 +430,51 @@ export default function InvestmentCalc() {
   return (
     <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: "1rem 1rem 2rem" }}>
 
+      {calcProperties.length > 0 && (
+        <div style={{
+          display: 'flex', gap: 8, marginBottom: 16,
+          overflowX: 'auto', paddingBottom: 4,
+          borderBottom: '1px solid #ebebeb'
+        }}>
+          {calcProperties.map(prop => {
+            const isActive = activePropId === prop.id;
+            return (
+              <button
+                key={prop.id}
+                onClick={() => setActivePropId(prop.id)}
+                style={{
+                  fontFamily: "'Georgia', serif",
+                  fontSize: 12,
+                  padding: '6px 16px',
+                  borderRadius: 20,
+                  border: isActive ? 'none' : '1px solid #e5e7eb',
+                  background: isActive ? '#1a1a1a' : '#fff',
+                  color: isActive ? '#fff' : '#666',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  fontWeight: isActive ? 600 : 400,
+                }}
+              >
+                {prop.data.name || 'Объект'}
+                {prop.data.rent ? ` · R$${Number(prop.data.rent).toLocaleString()}` : ''}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div style={{ marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "#999", textTransform: "uppercase", marginBottom: 4 }}>Конструктор инвестиций</div>
           <div style={{ fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>БЕРЁЗКА — Инвестиционный бюджет по зонам</div>
+          {activePropId && activePropId !== 'main' && (() => {
+            const prop = calcProperties.find(p => p.id === activePropId);
+            return prop ? (
+              <div style={{ fontSize: 11, color: '#854d0e', background: '#fef9c3', borderRadius: 8, padding: '4px 12px', display: 'inline-block', marginTop: 8 }}>
+                Расчёт для: {prop.data.name} · аренда R${Number(prop.data.rent||0).toLocaleString()}/мес
+              </div>
+            ) : null;
+          })()}
         </div>
         <div style={{ fontSize: 11, marginTop: 6, color: syncStatus === "saved" ? "#16a34a" : syncStatus === "saving" ? "#aaa" : syncStatus === "error" ? "#dc2626" : "transparent" }}>
           {syncStatus === "saving" && "сохранение…"}
