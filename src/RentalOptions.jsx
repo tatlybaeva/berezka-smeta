@@ -31,8 +31,21 @@ const emptyForm = {
   name: "", address: "", area: "", rent: "", deposit: "",
   condition: "хорошее", parking: false, outdoor: false, kids_zone: false,
   contract_years: "", notes: "", score: 5, status: "рассматриваем",
-  contact: "", link: "",
+  contact: "", link: "", maps_link: "",
 };
+
+const QUESTIONS = [
+  "Можно ли завести кур?",
+  "Можно ли делать ремонт и какой?",
+  "Можно ли сносить стены, чтобы объединить комнаты?",
+  "Можно ли сажать растения в землю на территории?",
+  "Разрешено ли коммерческое использование (alvará de funcionamento) по этому адресу?",
+  "Электрическая мощность (carga elétrica) — хватит ли на кофемашину/кухню?",
+  "Канализация и жироуловитель (caixa de gordura) — есть или можно установить?",
+  "Кто платит IPTU и кондоминиум?",
+  "Срок договора и индексация (reajuste — IGPM/IPCA)?",
+  "Можно ли вывеску/фасад (letreiro/fachada)?",
+];
 
 function Stars({ score, onChange }) {
   return (
@@ -152,6 +165,11 @@ function RentalForm({ initial, onSave, onCancel }) {
           <label style={labelStyle}>Ссылка</label>
           <input style={inputStyle} value={form.link} onChange={e => upd("link", e.target.value)} placeholder="https://..." />
         </div>
+        {/* Google Maps */}
+        <div style={{ gridColumn: "span 2" }}>
+          <label style={labelStyle}>Google Maps</label>
+          <input style={inputStyle} value={form.maps_link || ""} onChange={e => upd("maps_link", e.target.value)} placeholder="https://maps.app.goo.gl/..." />
+        </div>
         {/* Notes */}
         <div style={{ gridColumn: "span 2" }}>
           <label style={labelStyle}>Заметки</label>
@@ -175,26 +193,13 @@ const inputStyle = {
 const btnPrimary   = { fontFamily: "'Georgia', serif", fontSize: 13, padding: "7px 18px", borderRadius: 8, border: "none", background: "#1a1a1a", color: "#fff", cursor: "pointer" };
 const btnSecondary = { fontFamily: "'Georgia', serif", fontSize: 13, padding: "7px 18px", borderRadius: 8, border: "1px solid #ccc", background: "#fff", color: "#555", cursor: "pointer" };
 
-const QUESTIONS = [
-  "Можно ли завести кур?",
-  "Можно ли делать ремонт и какой?",
-  "Можно ли сносить стены, чтобы объединить комнаты?",
-  "Можно ли сажать растения в землю на территории?",
-  "Разрешено ли коммерческое использование (alvará de funcionamento) по этому адресу?",
-  "Электрическая мощность (carga elétrica) — хватит ли на кофемашину/кухню?",
-  "Канализация и жироуловитель (caixa de gordura) — есть или можно установить?",
-  "Кто платит IPTU и кондоминиум?",
-  "Срок договора и индексация (reajuste — IGPM/IPCA)?",
-  "Можно ли вывеску/фасад (letreiro/fachada)?",
-];
-
 export default function RentalOptions() {
   const [options, setOptions] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [compareMode, setCompareMode] = useState(false);
   const [syncStatus, setSyncStatus] = useState("idle");
-  const [qAnswers, setQAnswers] = useState({});
+  const [selectedId, setSelectedId] = useState(null);
   const qSaveTimer = useRef(null);
 
   const loadAll = async () => {
@@ -212,32 +217,8 @@ export default function RentalOptions() {
         loadAll();
       })
       .subscribe();
-
-    // Load qAnswers from supabase
-    supabase.from("rental_options").select("data").eq("id", "00000000-0000-0000-0000-000000000001").maybeSingle()
-      .then(({ data }) => { if (data?.data?.qAnswers) setQAnswers(data.data.qAnswers); });
-
     return () => supabase.removeChannel(channel);
   }, []);
-
-  const saveQAnswers = (next) => {
-    clearTimeout(qSaveTimer.current);
-    qSaveTimer.current = setTimeout(() => {
-      supabase.from("rental_options").upsert({
-        id: "00000000-0000-0000-0000-000000000001",
-        data: { qAnswers: next },
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "id" });
-    }, 600);
-  };
-
-  const setQField = (idx, field, value) => {
-    setQAnswers(prev => {
-      const next = { ...prev, [idx]: { ...(prev[idx] || {}), [field]: value } };
-      saveQAnswers(next);
-      return next;
-    });
-  };
 
   const handleAdd = async (formData) => {
     setSyncStatus("saving");
@@ -263,6 +244,7 @@ export default function RentalOptions() {
 
   const handleDelete = async (id) => {
     if (!confirm("Удалить этот вариант?")) return;
+    if (selectedId === id) setSelectedId(null);
     await supabase.from("rental_options").delete().eq("id", id);
   };
 
@@ -294,6 +276,26 @@ export default function RentalOptions() {
     if (row.better === "min") { const m = Math.min(...vals.map(x => x.v)); return new Set(vals.filter(x => x.v === m).map(x => x.i)); }
     if (row.better === "bool") { return new Set(vals.filter(x => x.v).map(x => x.i)); }
     return new Set();
+  };
+
+  // Selected option for detail panel
+  const selectedOption = selectedId ? options.find(o => o.id === selectedId) : null;
+
+  const handleQAnswerChange = (optionId, data, idx, field, value) => {
+    const prevAnswers = data.qAnswers || {};
+    const updatedAnswers = {
+      ...prevAnswers,
+      [idx]: { ...(prevAnswers[idx] || {}), [field]: value },
+    };
+    // Update local state immediately for responsiveness
+    setOptions(prev => prev.map(o =>
+      o.id === optionId ? { ...o, data: { ...o.data, qAnswers: updatedAnswers } } : o
+    ));
+    // Debounced save
+    clearTimeout(qSaveTimer.current);
+    qSaveTimer.current = setTimeout(() => {
+      handleUpdate(optionId, { ...data, qAnswers: updatedAnswers });
+    }, 600);
   };
 
   return (
@@ -374,60 +376,224 @@ export default function RentalOptions() {
         </div>
       ) : (
         /* Cards view */
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
-          {options.map(o => {
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+            {options.map(o => {
+              const d = o.data;
+              const isSelected = d.status === "выбрали";
+              const isDetailOpen = selectedId === o.id;
+              return editingId === o.id ? (
+                <div key={o.id} style={{ gridColumn: "span 2" }}>
+                  <RentalForm
+                    initial={d}
+                    onSave={form => handleUpdate(o.id, form)}
+                    onCancel={() => setEditingId(null)}
+                  />
+                </div>
+              ) : (
+                <div
+                  key={o.id}
+                  onClick={() => setSelectedId(id => id === o.id ? null : o.id)}
+                  style={{
+                    background: "#fff",
+                    border: isDetailOpen
+                      ? "2px solid #5C3D1E"
+                      : isSelected
+                        ? "2px solid #f59e0b"
+                        : "1px solid #ebebeb",
+                    borderRadius: 12,
+                    padding: "14px 14px",
+                    boxShadow: isDetailOpen
+                      ? "0 0 0 3px rgba(92,61,30,0.12)"
+                      : isSelected
+                        ? "0 0 0 3px #fef9c3"
+                        : undefined,
+                    cursor: "pointer",
+                    transition: "border-color 0.15s, box-shadow 0.15s",
+                  }}
+                >
+                  {/* Top row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a", flex: 1, marginRight: 8 }}>{d.name || "Без названия"}</div>
+                    <Badge text={d.status} />
+                  </div>
+                  <Stars score={d.score} />
+                  {/* Address + area + rent */}
+                  {d.address && <div style={{ fontSize: 11, color: "#777", marginTop: 6 }}>{d.address}</div>}
+                  <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>
+                    {d.area ? `${d.area} м²` : ""}
+                    {d.area && d.rent ? " · " : ""}
+                    {d.rent ? `R$${Number(d.rent).toLocaleString()}/мес` : ""}
+                    {d.deposit ? ` · залог ${d.deposit} мес` : ""}
+                    {d.condition ? ` · ${d.condition}` : ""}
+                  </div>
+                  {/* Feature badges */}
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 8 }}>
+                    <FeatureBadge label="Парковка" yes={d.parking} />
+                    <FeatureBadge label="Терраса" yes={d.outdoor} />
+                    <FeatureBadge label="Дет. зона" yes={d.kids_zone} />
+                  </div>
+                  {d.notes && <div style={{ fontSize: 11, color: "#888", marginTop: 6, lineHeight: 1.4, borderTop: "1px solid #f3f4f6", paddingTop: 6 }}>{d.notes}</div>}
+                  {/* Actions — stop propagation so card click doesn't fire */}
+                  <div style={{ display: "flex", gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
+                    <button onClick={() => setEditingId(o.id)} style={{ ...btnSecondary, fontSize: 11, padding: "4px 12px" }}>Изменить</button>
+                    <button onClick={() => handleDelete(o.id)} style={{ ...btnSecondary, fontSize: 11, padding: "4px 10px", color: "#dc2626", borderColor: "#fecaca" }}>🗑</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Detail panel */}
+          {selectedOption && (() => {
+            const o = selectedOption;
             const d = o.data;
-            const isSelected = d.status === "выбрали";
-            return editingId === o.id ? (
-              <div key={o.id} style={{ gridColumn: "span 2" }}>
-                <RentalForm
-                  initial={d}
-                  onSave={form => handleUpdate(o.id, form)}
-                  onCancel={() => setEditingId(null)}
-                />
-              </div>
-            ) : (
-              <div key={o.id} style={{
+            const qAnswers = d.qAnswers || {};
+            return (
+              <div style={{
                 background: "#fff",
-                border: isSelected ? "2px solid #f59e0b" : "1px solid #ebebeb",
-                borderRadius: 12,
-                padding: "14px 14px",
-                boxShadow: isSelected ? "0 0 0 3px #fef9c3" : undefined,
+                border: "1.5px solid #EBE2D3",
+                borderRadius: 14,
+                padding: "20px 18px",
+                marginTop: 14,
               }}>
-                {/* Top row */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a", flex: 1, marginRight: 8 }}>{d.name || "Без названия"}</div>
-                  <Badge text={d.status} />
+                {/* Header row */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>{d.name || "Без названия"}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Badge text={d.status} />
+                      <Stars score={d.score} />
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedId(null)}
+                    style={{ ...btnSecondary, fontSize: 12, padding: "4px 14px" }}
+                  >Закрыть</button>
                 </div>
-                <Stars score={d.score} />
-                {/* Address + area + rent */}
-                {d.address && <div style={{ fontSize: 11, color: "#777", marginTop: 6 }}>{d.address}</div>}
-                <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>
-                  {d.area ? `${d.area} м²` : ""}
-                  {d.area && d.rent ? " · " : ""}
-                  {d.rent ? `R$${Number(d.rent).toLocaleString()}/мес` : ""}
-                  {d.deposit ? ` · залог ${d.deposit} мес` : ""}
-                  {d.condition ? ` · ${d.condition}` : ""}
+
+                {/* Info grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10, marginBottom: 14 }}>
+                  {[
+                    ["Площадь", d.area ? `${d.area} м²` : "—"],
+                    ["Аренда", d.rent ? `R$${Number(d.rent).toLocaleString()}/мес` : "—"],
+                    ["Залог", d.deposit ? `${d.deposit} мес` : "—"],
+                    ["Состояние", d.condition || "—"],
+                    ["Контакт", d.contact || "—"],
+                    ["Срок договора", d.contract_years ? `${d.contract_years} лет` : "—"],
+                  ].map(([label, value]) => (
+                    <div key={label} style={{ background: "#faf9f6", borderRadius: 8, padding: "8px 10px" }}>
+                      <div style={{ fontSize: 9, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>{label}</div>
+                      <div style={{ fontSize: 12, color: "#1a1a1a", fontWeight: 500 }}>{value}</div>
+                    </div>
+                  ))}
                 </div>
-                {/* Feature badges */}
-                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 8 }}>
-                  <FeatureBadge label="Парковка" yes={d.parking} />
-                  <FeatureBadge label="Терраса" yes={d.outdoor} />
-                  <FeatureBadge label="Дет. зона" yes={d.kids_zone} />
+
+                {/* Links row */}
+                {(d.maps_link || d.link) && (
+                  <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+                    {d.maps_link && (
+                      <a
+                        href={d.maps_link}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          background: "#4285F4", color: "#fff",
+                          fontSize: 12, fontFamily: "'Georgia', serif",
+                          padding: "6px 14px", borderRadius: 8,
+                          textDecoration: "none", fontWeight: 500,
+                        }}
+                      >
+                        📍 Google Maps
+                      </a>
+                    )}
+                    {d.link && (
+                      <a
+                        href={d.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          background: "#fff", color: "#2563eb",
+                          fontSize: 12, fontFamily: "'Georgia', serif",
+                          padding: "6px 14px", borderRadius: 8,
+                          border: "1px solid #bfdbfe",
+                          textDecoration: "none", fontWeight: 500,
+                        }}
+                      >
+                        🔗 Объявление
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Questions section */}
+                <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", marginBottom: 4 }}>
+                  🏡 Вопросы по помещению
                 </div>
-                {/* Contact + link */}
-                {d.contact && <div style={{ fontSize: 11, color: "#777", marginTop: 6 }}>📞 {d.contact}</div>}
-                {d.link && <div style={{ fontSize: 11, marginTop: 2 }}><a href={d.link} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>🔗 ссылка</a></div>}
-                {d.notes && <div style={{ fontSize: 11, color: "#888", marginTop: 6, lineHeight: 1.4, borderTop: "1px solid #f3f4f6", paddingTop: 6 }}>{d.notes}</div>}
-                {/* Actions */}
-                <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-                  <button onClick={() => setEditingId(o.id)} style={{ ...btnSecondary, fontSize: 11, padding: "4px 12px" }}>Изменить</button>
-                  <button onClick={() => handleDelete(o.id)} style={{ ...btnSecondary, fontSize: 11, padding: "4px 10px", color: "#dc2626", borderColor: "#fecaca" }}>🗑</button>
+                <div style={{ fontSize: 12, color: "#aaa", marginBottom: 14 }}>
+                  Список вопросов для переговоров с арендодателем
+                </div>
+
+                {QUESTIONS.map((q, idx) => {
+                  const a = qAnswers[idx] || {};
+                  const hasAnswer = !!(a.answer && a.answer.trim());
+                  return (
+                    <div key={idx} style={{
+                      display: "flex", flexDirection: "column", gap: 6,
+                      padding: "10px 0",
+                      borderBottom: idx < QUESTIONS.length - 1 ? "1px solid #EBE2D3" : "none",
+                    }}>
+                      <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={!!a.done}
+                          onChange={e => handleQAnswerChange(o.id, d, idx, "done", e.target.checked)}
+                          style={{ marginTop: 2, accentColor: "#5C3D1E", flexShrink: 0 }}
+                        />
+                        <span style={{
+                          fontSize: 13, color: a.done ? "#aaa" : "#1a1a1a",
+                          textDecoration: a.done ? "line-through" : "none",
+                          lineHeight: 1.5, fontFamily: "'Georgia', serif",
+                        }}>
+                          {q}
+                        </span>
+                      </label>
+                      <div style={{
+                        marginLeft: 24,
+                        borderLeft: hasAnswer ? "3px solid #16a34a" : "none",
+                        paddingLeft: hasAnswer ? 8 : 0,
+                        transition: "border-left 0.15s",
+                      }}>
+                        <input
+                          type="text"
+                          value={a.answer || ""}
+                          onChange={e => handleQAnswerChange(o.id, d, idx, "answer", e.target.value)}
+                          placeholder="Ответ арендодателя..."
+                          style={{
+                            fontFamily: "'Georgia', serif", fontSize: 12,
+                            border: "1px solid #EBE2D3", borderRadius: 8,
+                            padding: "5px 10px", background: "#fff", color: "#1a1a1a",
+                            outline: "none", width: "100%", boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Close button at bottom */}
+                <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    onClick={() => setSelectedId(null)}
+                    style={{ ...btnSecondary, fontSize: 12 }}
+                  >Закрыть</button>
                 </div>
               </div>
             );
-          })}
-        </div>
+          })()}
+        </>
       )}
 
       {options.length === 0 && !showForm && (
@@ -435,61 +601,6 @@ export default function RentalOptions() {
           Вариантов пока нет. Нажмите «+ Добавить вариант»
         </div>
       )}
-
-      {/* Вопросы по помещению */}
-      <div style={{
-        marginTop: 32,
-        background: "#faf9f6",
-        border: "1.5px solid #EBE2D3",
-        borderRadius: 14,
-        padding: "20px 18px",
-      }}>
-        <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", marginBottom: 4, fontFamily: "'Georgia', serif" }}>
-          🏡 Вопросы по помещению
-        </div>
-        <div style={{ fontSize: 12, color: "#aaa", marginBottom: 16 }}>
-          Список вопросов для переговоров с арендодателем
-        </div>
-        {QUESTIONS.map((q, idx) => {
-          const a = qAnswers[idx] || {};
-          return (
-            <div key={idx} style={{
-              display: "flex", flexDirection: "column", gap: 6,
-              padding: "10px 0",
-              borderBottom: idx < QUESTIONS.length - 1 ? "1px solid #EBE2D3" : "none",
-            }}>
-              <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={!!a.done}
-                  onChange={e => setQField(idx, "done", e.target.checked)}
-                  style={{ marginTop: 2, accentColor: "#5C3D1E", flexShrink: 0 }}
-                />
-                <span style={{
-                  fontSize: 13, color: a.done ? "#aaa" : "#1a1a1a",
-                  textDecoration: a.done ? "line-through" : "none",
-                  lineHeight: 1.5, fontFamily: "'Georgia', serif",
-                }}>
-                  {q}
-                </span>
-              </label>
-              <input
-                type="text"
-                value={a.answer || ""}
-                onChange={e => setQField(idx, "answer", e.target.value)}
-                placeholder="Ответ арендодателя..."
-                style={{
-                  marginLeft: 24,
-                  fontFamily: "'Georgia', serif", fontSize: 12,
-                  border: "1px solid #EBE2D3", borderRadius: 8,
-                  padding: "5px 10px", background: "#fff", color: "#1a1a1a",
-                  outline: "none", width: "calc(100% - 24px)", boxSizing: "border-box",
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
