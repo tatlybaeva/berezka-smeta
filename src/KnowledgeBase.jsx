@@ -514,6 +514,165 @@ function TaxContent() {
   )
 }
 
+// ─── CCTV ARTICLE ─────────────────────────────────────────────────────────────
+
+function CctvContent() {
+  const table = { width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 12 }
+  const th = { textAlign: 'left', padding: '6px 10px', background: '#F5F0E8', fontWeight: 600, borderBottom: '1px solid #EBE2D3', fontSize: 12 }
+  const td = { padding: '6px 10px', borderBottom: '1px solid #f3f4f6', verticalAlign: 'top', fontSize: 13, color: '#3D3530' }
+  const tip = { background: '#fef9c3', border: '1px solid #fde68a', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 12 }
+  const warn = { background: '#FDECEA', border: '1px solid #F5C6C2', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 12 }
+  const link = { color: '#5C3D1E', fontSize: 12 }
+
+  return (
+    <div>
+      <div style={tip}>
+        <b>Краткий вывод:</b> 4 камеры IP + PoE, бренд Intelbras. Бюджет ≈ R$ 2.100–3.000. Монтаж можно сделать самостоятельно. Китай невыгоден — налог на импорт съедает экономию + нет nota fiscal.
+      </div>
+
+      <Section id="kb-cctv-why" title="Почему Intelbras">
+        <p style={p}>Бренд <b>из Санта-Катарины</b> — местная гарантия и сервис, есть в любом магазине штата. Продаётся готовыми комплектами (kit), что обычно дешевле сборки по частям. Приложение для удалённого просмотра с телефона (Intelbras Mibo / IM).</p>
+      </Section>
+
+      <Section id="kb-cctv-kit" title="Рекомендуемый комплект (IP + PoE)" defaultOpen={true}>
+        <p style={p}>PoE = один сетевой кабель несёт и сигнал, и питание. Не нужны отдельные блоки питания у каждой камеры.</p>
+        <table style={table}>
+          <thead>
+            <tr>
+              <th style={th}>Позиция</th>
+              <th style={th}>Модель</th>
+              <th style={th}>Кол-во</th>
+              <th style={th}>R$</th>
+              <th style={th}>Примечание</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ['Регистратор NVR', 'Intelbras NVD 1404 P', '1', '650–950', '4 канала, 4 порта PoE, до 4K'],
+              ['Камеры IP', 'Intelbras VIP 1230 B (или 1130 B) G4', '4', '920–1.320', 'Full HD, внешние, IP67, ночная съёмка'],
+              ['Жёсткий диск', 'WD Purple 1 ТБ', '1', '350–450', 'Спец-диск для CFTV (круглосуточная запись)'],
+              ['Расходники', 'Кабель cat5e/cat6, RJ45, кабель-каналы', '—', '150–300', 'На прокладку'],
+              ['(Опц.) ИБП', 'Nobreak для регистратора', '1', '200–400', 'Чтобы запись не пропадала при отключении света'],
+              ['Итого', '', '', '≈ 2.100–3.000', ''],
+            ].map((row, i) => (
+              <tr key={i}>
+                {row.map((cell, j) => (
+                  <td key={j} style={{ ...td, fontWeight: i === 5 ? 700 : 400 }}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p style={{ ...p, fontSize: 12, color: '#888' }}>Где смотреть живые цены:</p>
+        <ul style={{ ...ul, fontSize: 12 }}>
+          <li><a style={link} href="https://www.digimania.com.br/cftv/gravadores/gravadores-ip-nvr/gravador-de-video-ip-nvr-4-canais-poe-nvd-1404-p-intelbras" target="_blank" rel="noopener noreferrer">NVR NVD 1404 P — Digimania</a></li>
+          <li><a style={link} href="https://lista.mercadolivre.com.br/kit-cameras-ip-intelbras-4" target="_blank" rel="noopener noreferrer">Комплекты 4 IP-камеры Intelbras — Mercado Livre</a></li>
+          <li><a style={link} href="https://www.americanas.com.br/busca/kit-4-cameras-ip-intelbras" target="_blank" rel="noopener noreferrer">Americanas</a></li>
+          <li><a style={link} href="https://www.intelbras.com/pt-br/seguranca-eletronica/cameras/cameras-ip" target="_blank" rel="noopener noreferrer">Каталог камер Intelbras</a></li>
+        </ul>
+        <div style={tip}>Совет: на Mercado Livre в фильтрах выбирай <b>Santa Catarina</b> — доставка дешевле и быстрее.</div>
+      </Section>
+
+      <Section id="kb-cctv-cheap" title="Дешёвая альтернатива (HD / аналог)">
+        <p style={p}>Регистратор <b>MHDX 1204</b> + 4 камеры линейки <b>VHL</b> + коаксиальный кабель. Выходит на R$ 400–700 дешевле, но кабель толще и монтаж чуть «грязнее». Для старта тоже годится.</p>
+      </Section>
+
+      <Section id="kb-cctv-china" title="⚠️ Почему НЕ Китай">
+        <div style={warn}>
+          <b>Актуальные правила импорта (2026):</b><br/>
+          • До US$ 50: ICMS штатный остался (~17–20%).<br/>
+          • Свыше US$ 50: налог на импорт <b>60% + ICMS</b>.<br/>
+          Комплект заведомо дороже US$ 50 → попадает под +~80% сверху.
+        </div>
+        <ul style={ul}>
+          <li><b>Нет nota fiscal</b> — а она нужна для CNPJ и постановки на баланс. Главный стоп-фактор.</li>
+          <li><b>Нет местной гарантии и сервиса.</b></li>
+          <li><b>Риск таможни</b> — недели ожидания, возможные задержки.</li>
+        </ul>
+        <p style={p}>Брать Intelbras локально, по CNPJ, с nota fiscal.</p>
+      </Section>
+
+      <Section id="kb-cctv-placement" title="Размещение 4 камер">
+        <ol style={ol}>
+          <li><b>Вход / ворота</b> — кто заходит; вечерний контроль периметра.</li>
+          <li><b>Детская зона / двор</b> — безопасность детей + мамы могут поглядывать (фишка бренда).</li>
+          <li><b>Касса / стойка выдачи</b> — где деньги, там камера обязательна.</li>
+          <li><b>Тыл / склад-кухня</b> — задняя дверь и зона хранения.</li>
+        </ol>
+      </Section>
+
+      <Section id="kb-cctv-diy" title="Установка своими силами">
+        <p style={p}>Для одного контейнера реально. Современные IP/PoE-комплекты почти plug-and-play.</p>
+        <ol style={ol}>
+          <li>Закрепить камеры в 4 точках, вывести по одному сетевому кабелю к регистратору.</li>
+          <li>Подключить в PoE-порты NVR (питание идёт по тому же кабелю).</li>
+          <li>Установить HD, включить, пройти первичную настройку.</li>
+          <li>Настроить приложение (Mibo / IM) и <b>удалённый доступ</b> с телефона.</li>
+          <li>Проверить углы обзора днём и ночью, поправить.</li>
+        </ol>
+        <div style={tip}>
+          <b>Критично для Флорипы:</b> только камеры <b>IP66/IP67</b> (влажность + соль). Герметизировать стыки кабелей. Поставить ИБП на регистратор.
+        </div>
+        <p style={p}>Если делать не самим: монтаж <b>R$ 600–1.000</b> — нормальная рыночная цена.</p>
+      </Section>
+
+      <Section id="kb-cctv-budget" title="Сравнение бюджета">
+        <table style={table}>
+          <thead>
+            <tr>
+              <th style={th}>Статья</th>
+              <th style={th}>Первоначальная смета</th>
+              <th style={th}>Реалистично</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ['Камеры + регистратор + HD', 'R$ 3.440', 'R$ 2.100–3.000'],
+              ['Сигнализация', 'R$ 1.500', 'R$ 0–800 (камеры шлют уведомления по движению)'],
+              ['Монтаж', 'R$ 800', 'R$ 0 (сами) или R$ 600–1.000'],
+              ['Итого', 'R$ 5.740', '≈ R$ 2.100–4.000'],
+            ].map((row, i) => (
+              <tr key={i}>
+                {row.map((cell, j) => (
+                  <td key={j} style={{ ...td, fontWeight: i === 3 ? 700 : 400 }}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Section>
+
+      <Section id="kb-cctv-request" title="Текст для продавца (PT — WhatsApp / orçamento)">
+        <div style={{ background: '#f7f7f5', borderRadius: 8, padding: '12px 14px', fontSize: 13, lineHeight: 1.7, fontFamily: 'monospace', whiteSpace: 'pre-wrap', color: '#1a1a1a' }}>{`Olá! Gostaria de um orçamento com nota fiscal (CNPJ) para um kit de CFTV:
+
+• 1× Gravador NVR Intelbras NVD 1404 P (4 canais, PoE)
+• 4× Câmera IP Intelbras VIP 1230 B (ou 1130 B) — Full HD, externa, IP67
+• 1× HD WD Purple 1 TB (próprio para CFTV)
+• Cabo de rede cat5e/cat6, conectores RJ45 e canaletas para a instalação
+
+Local de instalação: Rio Tavares, Florianópolis. Vocês fazem a instalação? Qual o prazo de entrega e as formas de pagamento? Obrigada!`}</div>
+      </Section>
+
+      <Section id="kb-cctv-checklist" title="Чек-лист перед запуском">
+        {[
+          'Выбрана модель камер с рейтингом IP66/IP67',
+          'Регистратор с диском WD Purple 1 ТБ',
+          'Запрошен orçamento com nota fiscal у местного продавца SC',
+          'Определены 4 точки установки',
+          'Настроен удалённый доступ с телефона',
+          'Решён вопрос монтажа (сами / профи)',
+          '(Опц.) Куплен мини-ИБП на регистратор',
+        ].map((item, i) => (
+          <div key={i} style={{ display: 'flex', gap: 10, padding: '6px 0', borderBottom: '0.5px solid #f3f4f6', fontSize: 13, color: '#3D3530', alignItems: 'flex-start' }}>
+            <span style={{ color: '#C5BDB5', marginTop: 1 }}>☐</span>
+            <span>{item}</span>
+          </div>
+        ))}
+      </Section>
+    </div>
+  )
+}
+
 // ─── EXPERTS LIST ─────────────────────────────────────────────────────────────
 const EXPERTS = [
   {
@@ -531,6 +690,14 @@ const EXPERTS = [
     emoji: '🧾',
     tags: ['Simples Nacional', 'CNPJ', 'ФОТ', 'encargos', 'NFC-e', 'LGPD'],
     component: TaxContent,
+  },
+  {
+    id: 'cctv',
+    name: 'Видеонаблюдение',
+    role: 'Покупка и установка · Флорианополис 2026',
+    emoji: '📹',
+    tags: ['Intelbras', 'IP камеры', 'PoE', 'NVR', 'монтаж', 'CFTV', 'nota fiscal'],
+    component: CctvContent,
   },
   // Будущие эксперты добавляются сюда
 ]
