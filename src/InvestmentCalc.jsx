@@ -532,7 +532,7 @@ export default function InvestmentCalc() {
       grandTotal,
     };
     scheduleSave(propertyState);
-  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, grandTotal, activePropId]); // eslint-disable-line
+  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, activePropId]); // eslint-disable-line
 
   const getUrl = (key, item) => itemUrls[key] !== undefined ? itemUrls[key] : (item?.url || "");
   const setUrl = (key, val) => setItemUrls(p => ({ ...p, [key]: val }));
