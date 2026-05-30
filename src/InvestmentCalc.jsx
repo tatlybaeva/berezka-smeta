@@ -781,20 +781,6 @@ export default function InvestmentCalc() {
                     Итого: {fmtR(total)} / {fmt$(total)}
                   </div>
                 </div>
-                {zone.id === "territory" && (
-                  <div style={{ background: "#FFFBF0", border: "1px solid #F0E4B0", borderRadius: 8, padding: "12px 14px", marginTop: 8, fontSize: 11, color: "#6B5B1E", lineHeight: 1.6 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 6 }}>📋 Политика видеонаблюдения (LGPD)</div>
-                    <ul style={{ margin: 0, paddingLeft: 16 }}>
-                      <li><b>Таблички</b> «Ambiente monitorado por câmeras» — обязательны на входе и в зонах съёмки</li>
-                      <li><b>Хранение записей</b> — 30–90 дней, затем безопасное удаление</li>
-                      <li><b>Доступ</b> — только владелец/ответственный. Передача третьим лицам — только по официальному запросу (полиция, суд)</li>
-                      <li><b>Без аудио</b> — только видео (аудио повышает юридический риск)</li>
-                      <li><b>Туалеты/раздевалки</b> — камеры запрещены</li>
-                      <li><b>Детская зона</b> — общий обзор допустим; информировать родителей (табличка + правила зоны). Публикация кадров с детьми — только с согласия</li>
-                      <li><b>Штраф ANPD</b> до 2% оборота — риск реальный, но закрывается табличками и политикой</li>
-                    </ul>
-                  </div>
-                )}
               </div>
             )}
           </div>
