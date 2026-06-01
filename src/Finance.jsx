@@ -164,8 +164,8 @@ export default function Finance() {
         isRemoteUpdate.current = true
         const loadedInputs = data.data.inputs ? { ...DEFAULT_INPUTS, ...data.data.inputs } : null
         if (loadedInputs) {
-          // Always sync rent/capex + smeta computed values from smeta_state
-          supabase.from('smeta_state').select('state').eq('id', 'main').single()
+          // Грузим самую свежую запись из smeta_state (любой объект, не только 'main')
+          supabase.from('smeta_state').select('state').not('id', 'eq', '_global').order('updated_at', { ascending: false }).limit(1).maybeSingle()
             .then(({ data: sData }) => {
               const s = sData?.state
               const patch = {}
