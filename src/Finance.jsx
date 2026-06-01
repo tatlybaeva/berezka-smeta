@@ -51,6 +51,8 @@ const DEFAULT_INPUTS = {
   staff: DEFAULT_STAFF,
   season: [1.4, 1.4, 1.4, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 1.4],
   ramp:   [0.6, 0.75, 0.85, 0.95, 1, 1, 1, 1, 1, 1, 1, 1],
+  agentDeposit: 0,
+  stage1Supplies: 8000,
 }
 
 const DEFAULT_CHECKLIST = {}
@@ -142,10 +144,11 @@ function NumInput({ value, onChange, style }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function Finance() {
-  const [open, setOpen] = useState({})
+  const [open, setOpen] = useState({inputs:true,model:true,bep:true,checklist:true,revenue:true,edu:true})
   const [inputs, setInputs] = useState(DEFAULT_INPUTS)
   const [checklist, setChecklist] = useState(DEFAULT_CHECKLIST)
   const [saveStatus, setSaveStatus] = useState('') // '', 'saving', 'saved', 'error'
+  const [smetaData, setSmetaData] = useState({ equipOnlyTotal: null, laborTotal: null, legalTotal: null, rentHolidayEnabled: false, rentHolidayMonths: 0, rentHolidayAmount: 0 })
   const debounceRef = useRef(null)
   const isRemoteUpdate = useRef(false)
 
@@ -157,19 +160,23 @@ export default function Finance() {
         isRemoteUpdate.current = true
         const loadedInputs = data.data.inputs ? { ...DEFAULT_INPUTS, ...data.data.inputs } : null
         if (loadedInputs) {
-          // If finance_state doesn't have rent, try to pull from smeta_state
-          if (loadedInputs.rent === DEFAULT_INPUTS.rent || loadedInputs.capex === DEFAULT_INPUTS.capex) {
-            supabase.from('smeta_state').select('state').eq('id', 'main').single()
-              .then(({ data: sData }) => {
-                const patch = {}
-                if (sData?.state?.rent !== undefined) patch.rent = sData.state.rent
-                if (sData?.state?.grandTotal !== undefined) patch.capex = sData.state.grandTotal
-                if (Object.keys(patch).length) setInputs(prev => ({ ...prev, ...loadedInputs, ...patch }))
-                else setInputs(loadedInputs)
-              })
-          } else {
-            setInputs(loadedInputs)
-          }
+          // Always sync rent/capex + smeta computed values from smeta_state
+          supabase.from('smeta_state').select('state').eq('id', 'main').single()
+            .then(({ data: sData }) => {
+              const s = sData?.state
+              const patch = {}
+              if (s?.rent !== undefined) patch.rent = s.rent
+              if (s?.grandTotal !== undefined) patch.capex = s.grandTotal
+              const sd = {}
+              if (s?.equipOnlyTotal !== undefined) sd.equipOnlyTotal = s.equipOnlyTotal
+              if (s?.laborTotal !== undefined) sd.laborTotal = s.laborTotal
+              if (s?.legalTotal !== undefined) sd.legalTotal = s.legalTotal
+              if (s?.rentHolidayEnabled !== undefined) sd.rentHolidayEnabled = s.rentHolidayEnabled
+              if (s?.rentHolidayMonths !== undefined) sd.rentHolidayMonths = s.rentHolidayMonths
+              if (s?.rentHolidayAmount !== undefined) sd.rentHolidayAmount = s.rentHolidayAmount
+              if (Object.keys(sd).length) setSmetaData(prev => ({ ...prev, ...sd }))
+              setInputs(prev => ({ ...prev, ...loadedInputs, ...patch }))
+            })
         }
         if (data.data.checklist) setChecklist(data.data.checklist)
         setTimeout(() => { isRemoteUpdate.current = false }, 0)
@@ -199,13 +206,19 @@ export default function Finance() {
       .channel('smeta_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'smeta_state' }, (payload) => {
         const s = payload.new?.state
-        if (s?.rent !== undefined || s?.grandTotal !== undefined) {
-          setInputs(prev => ({
-            ...prev,
-            ...(s.rent !== undefined ? { rent: s.rent } : {}),
-            ...(s.grandTotal !== undefined ? { capex: s.grandTotal } : {}),
-          }))
-        }
+        if (!s) return
+        const inputPatch = {}
+        if (s.rent !== undefined) inputPatch.rent = s.rent
+        if (s.grandTotal !== undefined) inputPatch.capex = s.grandTotal
+        if (Object.keys(inputPatch).length) setInputs(prev => ({ ...prev, ...inputPatch }))
+        const sd = {}
+        if (s.equipOnlyTotal !== undefined) sd.equipOnlyTotal = s.equipOnlyTotal
+        if (s.laborTotal !== undefined) sd.laborTotal = s.laborTotal
+        if (s.legalTotal !== undefined) sd.legalTotal = s.legalTotal
+        if (s.rentHolidayEnabled !== undefined) sd.rentHolidayEnabled = s.rentHolidayEnabled
+        if (s.rentHolidayMonths !== undefined) sd.rentHolidayMonths = s.rentHolidayMonths
+        if (s.rentHolidayAmount !== undefined) sd.rentHolidayAmount = s.rentHolidayAmount
+        if (Object.keys(sd).length) setSmetaData(prev => ({ ...prev, ...sd }))
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
@@ -401,36 +414,73 @@ function SectionInputs({ inputs, setInput, model }) {
       {(() => {
         const { startMonth, prepMonths, launchMonth2, launchMonth3 } = inputs
         const MN = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек']
-        const mn = (m) => MN[((m - 1 + startMonth - 1) % 12 + 12) % 12] // operational month m → calendar
-        const openCalMonth = (startMonth - 1 + prepMonths) % 12 + 1 // calendar month of opening
         const dur1 = launchMonth2 - 1
         const dur2 = launchMonth3 - launchMonth2
         const dur3 = 12 - launchMonth3 + 1
-        // calendar month names for stage boundaries
         const calOpen = MN[(startMonth - 1 + prepMonths) % 12]
         const calL2   = MN[(startMonth - 1 + prepMonths + launchMonth2 - 1) % 12]
         const calL3   = MN[(startMonth - 1 + prepMonths + launchMonth3 - 1) % 12]
         const calEnd  = MN[(startMonth - 1 + prepMonths + 11) % 12]
+
+        const selStyle = { border: '1.5px solid #D4C4A8', borderRadius: 5, padding: '3px 6px', fontFamily: "Georgia,serif", fontSize: 12, background: '#FDFAF5', cursor: 'pointer', outline: 'none' }
+
         const stages = [
           { num: 0, emoji: '🏗️', name: 'Подготовка / стройка', color: '#7a5a00', bg: '#fffbe6', border: '#f0d97a',
             note: 'До открытия — ремонт, оснащение, согласования, регистрация CNPJ',
-            inputs: [
-              { key: 'startMonth', label: 'Начало стройки (месяц года)', val: startMonth },
-              { key: 'prepMonths', label: 'Длительность стройки (мес)', val: prepMonths },
-            ],
-            duration: `${prepMonths} мес`, timeRange: `${MN[startMonth-1]} → открытие ${calOpen}` },
+            duration: `${prepMonths} мес`, timeRange: `${MN[startMonth-1]} → открытие ${calOpen}`,
+            customInputs: (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 6 }}>
+                  <span style={{ fontSize: 11, color: '#555' }}>Начало стройки</span>
+                  <select value={startMonth} onChange={e => setInput('startMonth', Number(e.target.value))} style={selStyle}>
+                    {MN.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
+                  <span style={{ fontSize: 11, color: '#555' }}>Длительность</span>
+                  <select value={prepMonths} onChange={e => setInput('prepMonths', Number(e.target.value))} style={selStyle}>
+                    {Array.from({length: 24}, (_, i) => <option key={i+1} value={i+1}>{i+1} мес</option>)}
+                  </select>
+                </div>
+              </>
+            ),
+          },
           { num: 1, emoji: '☕', name: 'Двор + напитки', color: '#1a4f1a', bg: '#f0f7ed', border: '#b8d9b8',
             note: 'Кофе, напитки, снеки — кухня ещё не работает',
-            inputs: [],
-            duration: `${dur1} мес`, timeRange: `${calOpen} – ${MN[(startMonth - 1 + prepMonths + launchMonth2 - 2) % 12]}` },
+            duration: `${dur1} мес`, timeRange: `${calOpen} – ${MN[(startMonth - 1 + prepMonths + launchMonth2 - 2) % 12]}`,
+            customInputs: (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 6 }}>
+                <span style={{ fontSize: 11, color: '#555' }}>Продолжительность</span>
+                <select value={dur1} onChange={e => setInput('launchMonth2', Number(e.target.value) + 1)} style={selStyle}>
+                  {Array.from({length: 11}, (_, i) => <option key={i+1} value={i+1}>{i+1} мес</option>)}
+                </select>
+              </div>
+            ),
+          },
           { num: 2, emoji: '🍳', name: 'Кухня', color: '#1a3a5f', bg: '#edf3fa', border: '#b8cfe0',
             note: 'Открывается кухня — полноценные блюда',
-            inputs: [{ key: 'launchMonth2', label: 'Старт этапа (опер. мес)', val: launchMonth2 }],
-            duration: `${dur2} мес`, timeRange: `${calL2} – ${MN[(startMonth - 1 + prepMonths + launchMonth3 - 2) % 12]}` },
+            duration: `${dur2} мес`, timeRange: `${calL2} – ${MN[(startMonth - 1 + prepMonths + launchMonth3 - 2) % 12]}`,
+            customInputs: (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 6 }}>
+                <span style={{ fontSize: 11, color: '#555' }}>Старт (опер. мес)</span>
+                <select value={launchMonth2} onChange={e => setInput('launchMonth2', Number(e.target.value))} style={selStyle}>
+                  {Array.from({length: 11}, (_, i) => <option key={i+2} value={i+2}>{i+2}</option>)}
+                </select>
+              </div>
+            ),
+          },
           { num: 3, emoji: '🌟', name: 'Полный формат', color: '#4a1a5f', bg: '#f5edfb', border: '#cfb8e0',
             note: 'Полное меню, аниматор, магазин — выход на плановую мощность',
-            inputs: [{ key: 'launchMonth3', label: 'Старт этапа (опер. мес)', val: launchMonth3 }],
-            duration: `${dur3} мес`, timeRange: `${calL3} – ${calEnd}` },
+            duration: `${dur3} мес`, timeRange: `${calL3} – ${calEnd}`,
+            customInputs: (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 6 }}>
+                <span style={{ fontSize: 11, color: '#555' }}>Старт (опер. мес)</span>
+                <select value={launchMonth3} onChange={e => setInput('launchMonth3', Number(e.target.value))} style={selStyle}>
+                  {Array.from({length: 11}, (_, i) => <option key={i+2} value={i+2}>{i+2}</option>)}
+                </select>
+              </div>
+            ),
+          },
         ]
         return (
           <div style={S.subGroup}>
@@ -454,19 +504,12 @@ function SectionInputs({ inputs, setInput, model }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
               {stages.map(st => (
                 <div key={st.num} style={{ border: `1.5px solid ${st.border}`, borderRadius: 10, padding: '12px 14px', background: st.bg }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: st.color }}>{st.emoji} Этап {st.num} — {st.name}</div>
-                  </div>
-                  <div style={{ fontSize: 10, color: '#888', marginBottom: 8, lineHeight: 1.4 }}>{st.note}</div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: st.color, marginBottom: st.inputs.length ? 8 : 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: st.color, marginBottom: 4 }}>{st.emoji} Этап {st.num} — {st.name}</div>
+                  <div style={{ fontSize: 10, color: '#888', marginBottom: 6, lineHeight: 1.4 }}>{st.note}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: st.color }}>
                     ⏱ {st.duration} &nbsp;·&nbsp; {st.timeRange}
                   </div>
-                  {st.inputs.map(inp => (
-                    <div key={inp.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
-                      <span style={{ fontSize: 11, color: '#555' }}>{inp.label}</span>
-                      <NumInput value={inp.val} onChange={v => setInput(inp.key, Math.max(1, Math.min(12, v)))} style={{ width: 60 }} />
-                    </div>
-                  ))}
+                  {st.customInputs}
                 </div>
               ))}
             </div>
@@ -481,15 +524,38 @@ function SectionInputs({ inputs, setInput, model }) {
         const dur2 = launchMonth3 - launchMonth2
         const dur3 = 12 - launchMonth3 + 1
 
-        const fot0 = staffFOT(inputs.staff, 1) * prepMonths
-        const total0 = inputs.capex
-          + inputs.rent * prepMonths
-          + inputs.utilities * prepMonths
-          + fot0
-          + 5000
-          + 10000
+        // Values from Бюджет (InvestmentCalc) via smeta_state sync
+        const equipOnlyTotal = smetaData.equipOnlyTotal != null ? smetaData.equipOnlyTotal : (inputs.capex || 0)
+        const laborTotal     = smetaData.laborTotal    != null ? smetaData.laborTotal    : 0
+        const legalBudget    = smetaData.legalTotal    != null ? smetaData.legalTotal    : 5000
+        const allEquip       = equipOnlyTotal + laborTotal
 
-        const total1 = 3000
+        // Buffer = 10% of all smeta items (purchase + labor)
+        const buffer = allEquip > 0 ? Math.round(allEquip * 0.1) : 10000
+
+        // Rental with optional holiday period
+        const hEnabled = smetaData.rentHolidayEnabled
+        const hMonths  = hEnabled ? Math.min(smetaData.rentHolidayMonths || 0, prepMonths) : 0
+        const hAmount  = smetaData.rentHolidayAmount || 0
+        const regularRentMonths = prepMonths - hMonths
+        const rentCost0 = hMonths * hAmount + regularRentMonths * inputs.rent
+
+        const rentLabel0 = hEnabled && hMonths > 0
+          ? `Аренда (${hMonths} мес × R$${hAmount.toLocaleString()} + ${regularRentMonths} мес × R$${inputs.rent.toLocaleString()})`
+          : `Аренда × ${prepMonths} мес`
+
+        const total0 = equipOnlyTotal
+          + laborTotal
+          + rentCost0
+          + inputs.utilities * prepMonths
+          + legalBudget
+          + buffer
+
+        const agentDep = inputs.agentDeposit || 0
+        const stage1Sup = inputs.stage1Supplies || 0
+
+        const total1 = agentDep
+          + stage1Sup
           + inputs.utilities * dur1
           + inputs.marketing * dur1
           + staffFOT(inputs.staff, 1) * dur1
@@ -515,18 +581,20 @@ function SectionInputs({ inputs, setInput, model }) {
         const grandTotal = total0 + total1 + total2 + total3
         const hasCapital = inputs.capital >= grandTotal
 
+        const noteStyle = { fontSize: 9, color: '#aaa', fontStyle: 'italic', marginLeft: 4 }
+
         const stages = [
           {
             num: 0, emoji: '🏗️', name: 'Подготовка / строительство',
             color: '#7a5a00', bg: '#fffbe6', border: '#f0d97a',
             total: total0,
             items: [
-              ['Оснащение / оборудование (смета)', inputs.capex],
-              [`Аренда × ${prepMonths} мес`, inputs.rent * prepMonths],
-              [`ЖКУ × ${prepMonths} мес`, inputs.utilities * prepMonths],
-              [`ФОТ (подготовительный, опц.) × ${prepMonths} мес`, fot0],
-              ['Юридические / регистрация', 5000],
-              ['Ремонт доп. работы (буфер)', 10000],
+              { label: 'Оснащение / закупка (← Смета)', val: equipOnlyTotal, note: smetaData.equipOnlyTotal == null ? 'из capex' : 'из Бюджета' },
+              { label: 'Оплата ремонтных работ (← теги «работа»)', val: laborTotal, note: null, hide: laborTotal === 0 && smetaData.laborTotal == null },
+              { label: rentLabel0, val: rentCost0, note: null },
+              { label: `ЖКУ × ${prepMonths} мес`, val: inputs.utilities * prepMonths, note: '← Финансы → Коммуналка' },
+              { label: 'Юридические / регистрация (← Юр. смета)', val: legalBudget, note: smetaData.legalTotal == null ? 'дефолт 5 000' : 'из Бюджета' },
+              { label: 'Ремонт — буфер 10%', val: buffer, note: `10% от ${fmt(allEquip)}` },
             ],
           },
           {
@@ -534,12 +602,13 @@ function SectionInputs({ inputs, setInput, model }) {
             color: '#1a4f1a', bg: '#f0f7ed', border: '#b8d9b8',
             total: total1,
             items: [
-              ['Закуп напитков, снеков (стартовый запас)', 3000],
-              [`ЖКУ × ${dur1} мес`, inputs.utilities * dur1],
-              [`Маркетинг запуска × ${dur1} мес`, inputs.marketing * dur1],
-              [`ФОТ этап 1 × ${dur1} мес`, staffFOT(inputs.staff, 1) * dur1],
-              [`Бухгалтер × ${dur1} мес`, inputs.accountant * dur1],
-              [`Прочее × ${dur1} мес`, inputs.other * dur1],
+              { label: 'Депозит агентству / риэлтору', val: agentDep, note: null },
+              { label: 'Первая закупка (кофе, расходники, снеки)', val: stage1Sup, note: null },
+              { label: `ЖКУ × ${dur1} мес`, val: inputs.utilities * dur1, note: '← Финансы → Коммуналка' },
+              { label: `Маркетинг запуска × ${dur1} мес`, val: inputs.marketing * dur1, note: null },
+              { label: `ФОТ этап 1 × ${dur1} мес`, val: staffFOT(inputs.staff, 1) * dur1, note: null },
+              { label: `Бухгалтер × ${dur1} мес`, val: inputs.accountant * dur1, note: null },
+              { label: `Прочее × ${dur1} мес`, val: inputs.other * dur1, note: null },
             ],
           },
           {
@@ -547,13 +616,13 @@ function SectionInputs({ inputs, setInput, model }) {
             color: '#1a3a5f', bg: '#edf3fa', border: '#b8cfe0',
             total: total2,
             items: [
-              ['Лицензия кухни (VISA)', 2000],
-              ['Закуп продуктов (дополнительный)', 5000],
-              [`ЖКУ × ${dur2} мес`, inputs.utilities * dur2],
-              [`Маркетинг × ${dur2} мес`, inputs.marketing * dur2],
-              [`ФОТ этап 2 × ${dur2} мес`, staffFOT(inputs.staff, 2) * dur2],
-              [`Бухгалтер × ${dur2} мес`, inputs.accountant * dur2],
-              [`Прочее × ${dur2} мес`, inputs.other * dur2],
+              { label: 'Лицензия кухни (VISA sanitária)', val: 2000, note: null },
+              { label: 'Закуп продуктов (дополнительный)', val: 5000, note: null },
+              { label: `ЖКУ × ${dur2} мес`, val: inputs.utilities * dur2, note: '← Финансы → Коммуналка' },
+              { label: `Маркетинг × ${dur2} мес`, val: inputs.marketing * dur2, note: null },
+              { label: `ФОТ этап 2 × ${dur2} мес`, val: staffFOT(inputs.staff, 2) * dur2, note: null },
+              { label: `Бухгалтер × ${dur2} мес`, val: inputs.accountant * dur2, note: null },
+              { label: `Прочее × ${dur2} мес`, val: inputs.other * dur2, note: null },
             ],
           },
           {
@@ -561,13 +630,13 @@ function SectionInputs({ inputs, setInput, model }) {
             color: '#4a1a5f', bg: '#f5edfb', border: '#cfb8e0',
             total: total3,
             items: [
-              ['Аниматор / детские мероприятия (запуск)', 3000],
-              ['Магазин (стартовый запас товаров)', 5000],
-              [`ЖКУ × ${dur3} мес`, inputs.utilities * dur3],
-              [`Маркетинг × ${dur3} мес`, inputs.marketing * dur3],
-              [`ФОТ этап 3 × ${dur3} мес`, staffFOT(inputs.staff, 3) * dur3],
-              [`Бухгалтер × ${dur3} мес`, inputs.accountant * dur3],
-              [`Прочее × ${dur3} мес`, inputs.other * dur3],
+              { label: 'Аниматор / детские мероприятия (запуск)', val: 3000, note: null },
+              { label: 'Магазин (стартовый запас товаров)', val: 5000, note: null },
+              { label: `ЖКУ × ${dur3} мес`, val: inputs.utilities * dur3, note: '← Финансы → Коммуналка' },
+              { label: `Маркетинг × ${dur3} мес`, val: inputs.marketing * dur3, note: null },
+              { label: `ФОТ этап 3 × ${dur3} мес`, val: staffFOT(inputs.staff, 3) * dur3, note: null },
+              { label: `Бухгалтер × ${dur3} мес`, val: inputs.accountant * dur3, note: null },
+              { label: `Прочее × ${dur3} мес`, val: inputs.other * dur3, note: null },
             ],
           },
         ]
@@ -575,6 +644,9 @@ function SectionInputs({ inputs, setInput, model }) {
         return (
           <div style={S.subGroup}>
             <div style={S.subTitle}>💸 Бюджет по этапам — что нужно вложить</div>
+            <div style={{ fontSize: 10, color: '#aaa', marginBottom: 10, fontStyle: 'italic' }}>
+              Этап 0: оснащение и работы — из Бюджета (теги закупка/работа); ФОТ ремонта = строки с тегом «работа»; юр. расходы — из Юр. сметы в Бюджете
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
               {stages.map(st => (
@@ -582,10 +654,10 @@ function SectionInputs({ inputs, setInput, model }) {
                   <div style={{ fontSize: 13, fontWeight: 700, color: st.color, marginBottom: 8 }}>
                     {st.emoji} Этап {st.num} — {st.name}
                   </div>
-                  {st.items.map(([label, val], i) => (
+                  {st.items.filter(it => !it.hide).map((it, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 11, color: '#444', marginBottom: 3 }}>
-                      <span style={{ color: '#555' }}>{label}</span>
-                      <span style={{ fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 8 }}>R$ {fmt(val)}</span>
+                      <span style={{ color: '#555', flex: 1 }}>{it.label}{it.note && <span style={noteStyle}>({it.note})</span>}</span>
+                      <span style={{ fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 8 }}>R$ {fmt(it.val)}</span>
                     </div>
                   ))}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: `1.5px solid ${st.border}`, marginTop: 8, paddingTop: 6, fontSize: 13, fontWeight: 700, color: st.color }}>
@@ -610,6 +682,20 @@ function SectionInputs({ inputs, setInput, model }) {
           </div>
         )
       })()}
+
+      {/* Этап 0/1 — стартовые расходы */}
+      <div style={S.subGroup}>
+        <div style={S.subTitle}>Этап 0/1 — стартовые расходы</div>
+        {[
+          ['agentDeposit',   'Депозит агентству / риэлтору, R$'],
+          ['stage1Supplies', 'Первая закупка (кофе, расходники, снеки), R$'],
+        ].map(([key, label]) => (
+          <div key={key} style={S.inputRow}>
+            <span style={S.label}>{label}</span>
+            <NumInput value={inputs[key]} onChange={v => setInput(key, v)} />
+          </div>
+        ))}
+      </div>
 
       {/* Этап 1 */}
       <div style={S.subGroup}>

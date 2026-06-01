@@ -290,6 +290,14 @@ function LgpdNote() {
 const FOOD_COST_PCT = 0.30;
 const TAX_PCT = 0.08;
 
+const DEFAULT_LEGAL_ITEMS = [
+  { name: "Contrato social / registro (нотариус)", brl: 800 },
+  { name: "Alvará de funcionamento (лицензия)", brl: 500 },
+  { name: "VISA sanitária (санитарная лицензия)", brl: 1500 },
+  { name: "Бухгалтер — открытие (сопровождение)", brl: 2000 },
+  { name: "Прочие юр. и регистрационные расходы", brl: 200 },
+]
+
 function computeBEP(rent, avgCheck, staff, other, phase) {
   const foodCost = phase === 1 ? 0.15 : FOOD_COST_PCT; // этап 1: только напитки 15%, этап 2+: еда 30%
   const fixed = rent + staff + other;
@@ -341,6 +349,14 @@ export default function InvestmentCalc() {
   const [calcProperties, setCalcProperties] = useState([]); // rental options with status "в расчёте"
   const [activePropId, setActivePropId] = useState(null);   // currently selected property ID
   const [finMonthly, setFinMonthly] = useState(7200); // utilities+marketing+accountant+other from Finance
+  const [itemTags, setItemTags] = useState({})         // { key: 'labor' | 'purchase' }
+  const [legalItems, setLegalItems] = useState(DEFAULT_LEGAL_ITEMS)
+  const [legalExpanded, setLegalExpanded] = useState(false)
+  const [legalEditing, setLegalEditing] = useState(false)
+  const [legalNewDraft, setLegalNewDraft] = useState(null)
+  const [rentHolidayEnabled, setRentHolidayEnabled] = useState(false)
+  const [rentHolidayMonths, setRentHolidayMonths] = useState(3)
+  const [rentHolidayAmount, setRentHolidayAmount] = useState(9000)
   const saveTimer = useRef(null);
   const globalSaveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
@@ -370,6 +386,11 @@ export default function InvestmentCalc() {
     if (s.beOther) setBeOther(s.beOther);
     if (s.zoneOrder) setZoneOrder(s.zoneOrder);
     if (s.extraOrder) setExtraOrder(s.extraOrder);
+    if (s.itemTags) setItemTags(s.itemTags);
+    if (s.legalItems) setLegalItems(s.legalItems);
+    if (s.rentHolidayEnabled !== undefined) setRentHolidayEnabled(s.rentHolidayEnabled);
+    if (s.rentHolidayMonths !== undefined) setRentHolidayMonths(s.rentHolidayMonths);
+    if (s.rentHolidayAmount !== undefined) setRentHolidayAmount(s.rentHolidayAmount);
     setTimeout(() => { isRemoteUpdate.current = false; }, 0);
   };
 
@@ -405,6 +426,11 @@ export default function InvestmentCalc() {
     if (s.currentChecksDay !== undefined) setCurrentChecksDay(s.currentChecksDay);
     if (s.zoneOrder) setZoneOrder(s.zoneOrder);
     if (s.extraOrder) setExtraOrder(s.extraOrder);
+    if (s.itemTags) setItemTags(s.itemTags);
+    if (s.legalItems) setLegalItems(s.legalItems);
+    if (s.rentHolidayEnabled !== undefined) setRentHolidayEnabled(s.rentHolidayEnabled);
+    if (s.rentHolidayMonths !== undefined) setRentHolidayMonths(s.rentHolidayMonths);
+    if (s.rentHolidayAmount !== undefined) setRentHolidayAmount(s.rentHolidayAmount);
     setTimeout(() => { isRemoteUpdate.current = false; }, 0);
   };
 
@@ -608,9 +634,11 @@ export default function InvestmentCalc() {
       extraItems: localExtras,
       avgCheck, beStaff, beOther, bePhase, currentChecksDay,
       grandTotal, zoneOrder, extraOrder,
+      itemTags, legalItems, rentHolidayEnabled, rentHolidayMonths, rentHolidayAmount,
+      equipOnlyTotal, laborTotal, legalTotal,
     };
     scheduleSave(propertyState);
-  }, [rentType, rent, rentWorkshop, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, activePropId, zoneOrder, extraOrder]); // eslint-disable-line
+  }, [rentType, rent, rentWorkshop, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, activePropId, zoneOrder, extraOrder, itemTags, legalItems, rentHolidayEnabled, rentHolidayMonths, rentHolidayAmount]); // eslint-disable-line
 
   // Ensure zoneOrder has entries for all zones (e.g. after new zones are added)
   const getZoneOrder = (zoneId, itemsLen) => {
@@ -725,6 +753,24 @@ export default function InvestmentCalc() {
   const workingCap = opsMonthly * workingCapMonths;
   const grandTotal = equipTotal + depositTotal + workingCap + reserve;
 
+  // Labor items (tagged 'labor') summed across all active zones
+  const laborTotal = ALL_ZONES.reduce((sum, z) => {
+    if (!enabledZones[z.id]) return sum;
+    const base = z.items.reduce((s, item, i) => {
+      const key = `${z.id}_${i}`;
+      return (enabledItems[key] && itemTags[key] === 'labor')
+        ? s + (prices[key] ?? item.brl) * (quantities[key] || 1) : s;
+    }, 0);
+    const extras = (extraItems[z.id] || []).reduce((s, ex, j) => {
+      const key = `${z.id}_x${j}`;
+      return (enabledItems[key] !== false && itemTags[key] === 'labor')
+        ? s + (prices[key] ?? ex.brl) * (quantities[key] || 1) : s;
+    }, 0);
+    return sum + base + extras;
+  }, 0);
+  const equipOnlyTotal = equipTotal - laborTotal;
+  const legalTotal = legalItems.reduce((s, it) => s + (it.brl || 0), 0);
+
   return (
     <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: "1rem 1rem 2rem" }}>
 
@@ -785,10 +831,12 @@ export default function InvestmentCalc() {
         <div style={{ fontSize: 11, color: "#aaa", marginBottom: 4 }}>Итого инвестиций</div>
         <div style={{ fontSize: 32, fontWeight: 600 }}>{fmt$(grandTotal)}</div>
         <div style={{ fontSize: 13, color: "#aaa", marginTop: 2 }}>{fmtR(grandTotal)}</div>
-        <div style={{ display: "grid", gridTemplateColumns: rentType === "land" ? "1fr 1fr 1fr 1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 8, marginTop: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginTop: 14 }}>
           {[
-            ...(rentType === "land" ? [{ l: "Стройка", v: fmt$(constructionTotal) }] : []),
-            { l: "Оснащение", v: fmt$(equipTotal - constructionTotal) },
+            ...(rentType === "land" && constructionTotal > 0 ? [{ l: "Стройка", v: fmt$(constructionTotal) }] : []),
+            { l: "Оснащение (закупки)", v: fmt$(equipOnlyTotal - (rentType === "land" ? constructionTotal : 0)) },
+            ...(laborTotal > 0 ? [{ l: "Ремонтные работы", v: fmt$(laborTotal) }] : []),
+            ...(legalTotal > 0 ? [{ l: "Юр. расходы", v: fmt$(legalTotal) }] : []),
             { l: "Залог аренды", v: fmt$(depositTotal) },
             { l: "Оборотный кап.", v: fmt$(workingCap) },
             { l: "Резерв", v: fmt$(reserve) },
@@ -841,10 +889,103 @@ export default function InvestmentCalc() {
             <NumInput value={val} onChange={v => set(Math.max(0, v))} suffix={suffix} />
           </div>
         ))}
+        {/* Арендные каникулы */}
+        <div style={{ marginTop: 10, padding: "10px 12px", background: rentHolidayEnabled ? "#f0f7ed" : "#f7f7f5", borderRadius: 8, border: `1px solid ${rentHolidayEnabled ? "#b8d9b8" : "#e8e0d4"}` }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginBottom: rentHolidayEnabled ? 10 : 0 }}>
+            <input type="checkbox" checked={rentHolidayEnabled} onChange={e => setRentHolidayEnabled(e.target.checked)}
+              style={{ width: 15, height: 15, accentColor: "#1a4f1a", cursor: "pointer" }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: rentHolidayEnabled ? "#1a4f1a" : "#666" }}>
+              🎁 Арендные каникулы
+            </span>
+          </label>
+          {rentHolidayEnabled && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                <div style={{ fontSize: 12, color: "#444", minWidth: 200, flex: "0 0 200px" }}>Первые N месяцев, мес</div>
+                <NumInput value={rentHolidayMonths} onChange={v => setRentHolidayMonths(Math.max(0, v))} suffix=" мес" />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ fontSize: 12, color: "#444", minWidth: 200, flex: "0 0 200px" }}>Аренда в период каникул, R$</div>
+                <NumInput value={rentHolidayAmount} onChange={v => setRentHolidayAmount(Math.max(0, v))} />
+              </div>
+              <div style={{ fontSize: 11, color: "#666", marginTop: 8 }}>
+                Первые {rentHolidayMonths} мес × R${rentHolidayAmount.toLocaleString()}, затем R${rent.toLocaleString()}/мес
+              </div>
+            </div>
+          )}
+        </div>
+
         <div style={{ marginTop: 10, padding: "8px 10px", background: "#f7f7f5", borderRadius: 8, fontSize: 11, color: "#888" }}>
           <div>Ежемес. расходы: R${rent.toLocaleString()} аренда{rentWorkshop > 0 ? ` + R$${rentWorkshop.toLocaleString()} цех` : ""} + R${finMonthly.toLocaleString()} (из Финансов) = R${opsMonthly.toLocaleString()}/мес</div>
           <div style={{ marginTop: 2 }}>Оборотный кап: R${opsMonthly.toLocaleString()} × {workingCapMonths} мес = {fmtR(workingCap)} ({fmt$(workingCap)})</div>
         </div>
+      </div>
+
+      {/* ─── Юридическая смета ─── */}
+      <div style={{ background: "#fff", borderRadius: 12, marginBottom: 12, border: `1px solid ${legalExpanded ? "#b8cfe0" : "#ebebeb"}` }}>
+        <div style={{ display: "flex", alignItems: "center", padding: "12px 14px", gap: 10, cursor: "pointer" }}
+          onClick={() => setLegalExpanded(p => !p)}>
+          <span style={{ fontSize: 16 }}>⚖️</span>
+          <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: "#1a1a1a" }}>Юридические и регистрационные расходы</span>
+          <button onClick={e => { e.stopPropagation(); setLegalExpanded(true); setLegalEditing(p => !p); }}
+            style={{ fontSize: 11, padding: "3px 10px", borderRadius: 5, cursor: "pointer",
+              border: legalEditing ? "1px solid #1a1a1a" : "1px solid #ddd",
+              background: legalEditing ? "#1a1a1a" : "#f7f7f5",
+              color: legalEditing ? "#fff" : "#666", flexShrink: 0 }}>
+            {legalEditing ? "✓ Готово" : "Изменить"}
+          </button>
+          <span style={{ fontSize: 13, fontWeight: 500 }}>{fmt$(legalTotal)}</span>
+          <span style={{ fontSize: 11, color: "#bbb", marginLeft: 4 }}>{legalExpanded ? "▲" : "▼"}</span>
+        </div>
+        {legalExpanded && (
+          <div style={{ borderTop: "1px solid #f0f0f0", padding: "8px 14px 12px" }}>
+            {legalItems.map((item, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ flex: 1, fontSize: 12, color: "#444" }}>{item.name}</span>
+                {legalEditing ? (
+                  <>
+                    <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
+                    <input type="number" value={item.brl} min={0}
+                      onChange={e => setLegalItems(p => p.map((x,j) => j===i ? {...x, brl: Math.max(0,Number(e.target.value)||0)} : x))}
+                      style={{ width: 70, textAlign: "right", border: "1px solid #ddd", borderRadius: 4, fontSize: 12, padding: "2px 4px", MozAppearance: "textfield" }} />
+                    <button onClick={() => setLegalItems(p => p.filter((_,j) => j!==i))}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#ddd", fontSize: 15, padding: "0 2px", lineHeight: 1 }}>×</button>
+                  </>
+                ) : (
+                  <span style={{ fontSize: 12, fontWeight: 500, color: "#333", minWidth: 80, textAlign: "right" }}>{fmtR(item.brl)}</span>
+                )}
+              </div>
+            ))}
+            {legalEditing && (
+              legalNewDraft !== null ? (
+                <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 6 }}>
+                  <input autoFocus placeholder="Название..." value={legalNewDraft.name || ""}
+                    onChange={e => setLegalNewDraft(p => ({...p, name: e.target.value}))}
+                    onKeyDown={e => { if (e.key === "Escape") setLegalNewDraft(null) }}
+                    style={{ flex: 1, border: "1px solid #ddd", borderRadius: 6, padding: "4px 8px", fontFamily: "Georgia,serif", fontSize: 12, outline: "none" }} />
+                  <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
+                  <input type="number" placeholder="0" value={legalNewDraft.brl || ""}
+                    onChange={e => setLegalNewDraft(p => ({...p, brl: Number(e.target.value)||0}))}
+                    style={{ width: 70, border: "1px solid #ddd", borderRadius: 6, padding: "4px 6px", fontFamily: "Georgia,serif", fontSize: 12, MozAppearance: "textfield" }} />
+                  <button onClick={() => { if (!legalNewDraft.name?.trim()) return; setLegalItems(p => [...p, {name: legalNewDraft.name.trim(), brl: legalNewDraft.brl||0}]); setLegalNewDraft(null); }}
+                    style={{ padding: "4px 12px", borderRadius: 6, border: "none", background: "#1a1a1a", color: "#fff", fontSize: 12, cursor: "pointer" }}>+</button>
+                  <button onClick={() => setLegalNewDraft(null)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: 14 }}>✗</button>
+                </div>
+              ) : (
+                <button onClick={() => setLegalNewDraft({name: "", brl: 0})}
+                  style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: "1.5px dashed #ddd", background: "transparent", fontSize: 11, color: "#999", cursor: "pointer" }}>
+                  + добавить строку
+                </button>
+              )
+            )}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#1a3a5f" }}>
+                Итого: {fmtR(legalTotal)} / {fmt$(legalTotal)}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{ fontSize: 12, fontWeight: 500, color: "#555", marginBottom: 10 }}>🏗️ Зоны — включай / выключай</div>
@@ -935,6 +1076,12 @@ export default function InvestmentCalc() {
 
                       {isEdit ? (
                         <>
+                          <select value={itemTags[key] || 'purchase'}
+                            onChange={e => setItemTags(p => ({ ...p, [key]: e.target.value }))}
+                            style={{ fontSize: 10, border: "1px solid #ddd", borderRadius: 4, padding: "2px 4px", background: itemTags[key] === 'labor' ? "#fef9ed" : "#f0f7ed", color: itemTags[key] === 'labor' ? "#92400e" : "#1a4f1a", cursor: "pointer", flexShrink: 0 }}>
+                            <option value="purchase">закупка</option>
+                            <option value="labor">работа</option>
+                          </select>
                           <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
                             <button onClick={() => setQty(zone.id, i, qty - 1)}
                               style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
@@ -952,6 +1099,9 @@ export default function InvestmentCalc() {
                         </>
                       ) : (
                         <div style={{ textAlign: "right", flexShrink: 0, minWidth: 80 }}>
+                          {itemTags[key] === 'labor' && (
+                            <div style={{ fontSize: 9, color: "#92400e", background: "#fef9ed", borderRadius: 3, padding: "1px 5px", marginBottom: 2, display: "inline-block" }}>работа</div>
+                          )}
                           {price === 0
                             ? <span style={{ fontSize: 11, color: "#999" }}>бесплатно</span>
                             : <>
@@ -1017,6 +1167,12 @@ export default function InvestmentCalc() {
                       )}
                       {isEdit ? (
                         <>
+                          <select value={itemTags[xKey] || 'purchase'}
+                            onChange={e => setItemTags(p => ({ ...p, [xKey]: e.target.value }))}
+                            style={{ fontSize: 10, border: "1px solid #ddd", borderRadius: 4, padding: "2px 4px", background: itemTags[xKey] === 'labor' ? "#fef9ed" : "#f0f7ed", color: itemTags[xKey] === 'labor' ? "#92400e" : "#1a4f1a", cursor: "pointer", flexShrink: 0 }}>
+                            <option value="purchase">закупка</option>
+                            <option value="labor">работа</option>
+                          </select>
                           <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
                             <button onClick={() => setQuantities(p => ({ ...p, [xKey]: Math.max(0, (p[xKey]||1)-1) }))}
                               style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#f7f7f5", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
@@ -1035,6 +1191,9 @@ export default function InvestmentCalc() {
                         </>
                       ) : (
                         <div style={{ textAlign: "right", flexShrink: 0, minWidth: 80 }}>
+                          {itemTags[xKey] === 'labor' && (
+                            <div style={{ fontSize: 9, color: "#92400e", background: "#fef9ed", borderRadius: 3, padding: "1px 5px", marginBottom: 2, display: "inline-block" }}>работа</div>
+                          )}
                           {xPrice === 0 ? <span style={{ fontSize: 11, color: "#999" }}>бесплатно</span>
                             : <div style={{ fontSize: 12, fontWeight: 500 }}>{fmtR(xPrice * xQty)}</div>}
                         </div>
@@ -1064,6 +1223,12 @@ export default function InvestmentCalc() {
                           onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], name: e.target.value } }))}
                           onKeyDown={e => { if (e.key === "Escape") setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; }); }}
                           style={{ flex: 1, border: "1px solid #ddd", borderRadius: 6, padding: "4px 8px", fontFamily: "Georgia,serif", fontSize: 12, outline: "none" }} />
+                        <select value={newRowDraft[zone.id]?.tag || 'purchase'}
+                          onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], tag: e.target.value } }))}
+                          style={{ fontSize: 11, border: "1px solid #ddd", borderRadius: 5, padding: "3px 5px", background: newRowDraft[zone.id]?.tag === 'labor' ? "#fef9ed" : "#f0f7ed", color: newRowDraft[zone.id]?.tag === 'labor' ? "#92400e" : "#1a4f1a", cursor: "pointer" }}>
+                          <option value="purchase">закупка</option>
+                          <option value="labor">работа</option>
+                        </select>
                         <span style={{ fontSize: 10, color: "#aaa" }}>R$</span>
                         <input type="number" placeholder="0" value={newRowDraft[zone.id]?.brl || ""}
                           onChange={e => setNewRowDraft(p => ({ ...p, [zone.id]: { ...p[zone.id], brl: Number(e.target.value)||0 } }))}
@@ -1071,7 +1236,11 @@ export default function InvestmentCalc() {
                         <button onClick={() => {
                           const row = newRowDraft[zone.id];
                           if (!row?.name?.trim()) return;
-                          setExtraItems(p => ({ ...p, [zone.id]: [...(p[zone.id]||[]), { name: row.name.trim(), brl: row.brl||0, global: row.global || false }] }));
+                          const newExtras = [...(extraItems[zone.id]||[]), { name: row.name.trim(), brl: row.brl||0, global: row.global || false }];
+                          const newIdx = newExtras.length - 1;
+                          const xKey = `${zone.id}_x${newIdx}`;
+                          if (row.tag === 'labor') setItemTags(p => ({ ...p, [xKey]: 'labor' }));
+                          setExtraItems(p => ({ ...p, [zone.id]: newExtras }));
                           setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; });
                         }} style={{ padding: "4px 12px", borderRadius: 6, border: "none", background: "#1a1a1a", color: "#fff", fontSize: 12, cursor: "pointer" }}>+</button>
                         <button onClick={() => setNewRowDraft(p => { const n={...p}; delete n[zone.id]; return n; })}
@@ -1108,10 +1277,19 @@ export default function InvestmentCalc() {
         );
       })}
 
-      <div style={{ marginTop: 8, padding: "12px 14px", background: "#1a1a1a", borderRadius: 12,
-        color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontSize: 12, color: "#aaa" }}>Только оборудование по зонам</div>
-        <div style={{ fontSize: 16, fontWeight: 600 }}>{fmt$(equipTotal)} / {fmtR(equipTotal)}</div>
+      <div style={{ marginTop: 8, padding: "12px 14px", background: "#1a1a1a", borderRadius: 12, color: "white" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: laborTotal > 0 || legalTotal > 0 ? 8 : 0 }}>
+          <div style={{ fontSize: 12, color: "#aaa" }}>Оснащение + работы по зонам</div>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>{fmt$(equipTotal)} / {fmtR(equipTotal)}</div>
+        </div>
+        {(laborTotal > 0 || legalTotal > 0) && (
+          <div style={{ display: "flex", gap: 10, fontSize: 11 }}>
+            <span style={{ color: "#aaa" }}>закупки: <b style={{ color: "#fff" }}>{fmtR(equipOnlyTotal)}</b></span>
+            {laborTotal > 0 && <span style={{ color: "#aaa" }}>работы: <b style={{ color: "#f0d97a" }}>{fmtR(laborTotal)}</b></span>}
+            {legalTotal > 0 && <span style={{ color: "#aaa" }}>юр.: <b style={{ color: "#b8cfe0" }}>{fmtR(legalTotal)}</b></span>}
+            <span style={{ color: "#aaa" }}>буфер 10%: <b style={{ color: "#cfb8e0" }}>{fmtR(Math.round(equipTotal * 0.1))}</b></span>
+          </div>
+        )}
       </div>
     </div>
   );
