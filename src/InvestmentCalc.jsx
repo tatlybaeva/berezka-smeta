@@ -360,6 +360,7 @@ export default function InvestmentCalc() {
   const saveTimer = useRef(null);
   const globalSaveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
+  const isSelfSaving = useRef(false); // игнорируем собственное эхо из smeta realtime
 
   const buildState = (rt, r, rw, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls, ac, bst, bot, gt, zo, eo) => ({ rentType: rt, rent: r, rentWorkshop: rw, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls, avgCheck: ac, beStaff: bst, beOther: bot, grandTotal: gt, zoneOrder: zo, extraOrder: eo });
 
@@ -499,6 +500,8 @@ export default function InvestmentCalc() {
           return;
         }
         if (payload.new?.id !== activePropId) return;
+        // Игнорируем собственное эхо — мы сами только что сохранили это
+        if (isSelfSaving.current) { isSelfSaving.current = false; return; }
         isRemoteUpdate.current = true;
         applyPropertyState(payload.new?.state);
         setTimeout(() => { isRemoteUpdate.current = false; }, 0);
@@ -554,6 +557,7 @@ export default function InvestmentCalc() {
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       const saveId = activePropId || 'main';
+      isSelfSaving.current = true; // помечаем: следующий realtime-эхо — наш
       const { error } = await supabase.from("smeta_state").upsert({ id: saveId, state, updated_at: new Date().toISOString() });
       setSyncStatus(error ? "error" : "saved");
       if (!error) setTimeout(() => setSyncStatus("idle"), 2000);
