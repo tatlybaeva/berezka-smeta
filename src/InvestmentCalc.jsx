@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, Fragment } from "react";
 import { supabase } from "./supabase";
+import { useIsMobile } from "./useIsMobile";
 
 const RATE = 5.7;
 const fmt$ = (brl) => `$${Math.round(brl / RATE).toLocaleString()}`;
@@ -308,6 +309,7 @@ function computeBEP(rent, avgCheck, staff, other, phase) {
 }
 
 export default function InvestmentCalc() {
+  const mob = useIsMobile()
   const [rentType, setRentType] = useState("house"); // "house" | "land"
   const [rent, setRent] = useState(11000);
   const [rentWorkshop, setRentWorkshop] = useState(0);
@@ -778,7 +780,7 @@ export default function InvestmentCalc() {
   const capexTotal = equipOnlyTotal + depositTotal;
 
   return (
-    <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: "1rem 1rem 2rem" }}>
+    <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: mob ? "0.75rem 0.75rem 2rem" : "1rem 1rem 2rem" }}>
 
       {calcProperties.length > 0 && (
         <div style={{
@@ -834,7 +836,7 @@ export default function InvestmentCalc() {
       </div>
 
       <div style={{ background: "#1a1a1a", borderRadius: 14, padding: "16px 18px", marginBottom: 20, color: "white" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div style={{ display: "flex", flexDirection: mob ? "column" : "row", justifyContent: "space-between", alignItems: mob ? "flex-start" : "flex-start", gap: mob ? 12 : 0 }}>
           <div>
             <div style={{ fontSize: 11, color: "#aaa", marginBottom: 4 }}>Итого инвестиций</div>
             <div style={{ fontSize: 32, fontWeight: 600 }}>{fmt$(grandTotal)}</div>
@@ -850,7 +852,7 @@ export default function InvestmentCalc() {
             </div>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginTop: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: mob ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 8, marginTop: 14 }}>
           {[
             ...(rentType === "land" && constructionTotal > 0 ? [{ l: "Стройка", v: fmt$(constructionTotal) }] : []),
             { l: "Оснащение (закупки)", v: fmt$(equipOnlyTotal - (rentType === "land" ? constructionTotal : 0)) },
@@ -903,8 +905,8 @@ export default function InvestmentCalc() {
           { label: "Оборотный капитал, мес", val: workingCapMonths, set: setWorkingCapMonths, suffix: " мес" },
           { label: "Резерв, R$",             val: reserve,          set: setReserve,          suffix: "" },
         ].map(({ label, val, set, suffix }) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-            <div style={{ fontSize: 13, color: "#444", minWidth: 240, flex: "0 0 240px" }}>{label}</div>
+          <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 13, color: "#444", flex: "1 1 150px" }}>{label}</div>
             <NumInput value={val} onChange={v => set(Math.max(0, v))} suffix={suffix} />
           </div>
         ))}
@@ -919,12 +921,12 @@ export default function InvestmentCalc() {
           </label>
           {rentHolidayEnabled && (
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <div style={{ fontSize: 12, color: "#444", minWidth: 200, flex: "0 0 200px" }}>Первые N месяцев, мес</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                <div style={{ fontSize: 12, color: "#444", flex: "1 1 120px" }}>Первые N месяцев, мес</div>
                 <NumInput value={rentHolidayMonths} onChange={v => setRentHolidayMonths(Math.max(0, v))} suffix=" мес" />
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ fontSize: 12, color: "#444", minWidth: 200, flex: "0 0 200px" }}>Аренда в период каникул, R$</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <div style={{ fontSize: 12, color: "#444", flex: "1 1 120px" }}>Аренда в период каникул, R$</div>
                 <NumInput value={rentHolidayAmount} onChange={v => setRentHolidayAmount(Math.max(0, v))} />
               </div>
             </div>
@@ -1021,7 +1023,7 @@ export default function InvestmentCalc() {
             opacity: isOn ? 1 : 0.55,
             ...(zone.id === "construction" ? { background: "#fffdf7" } : {}),
           }}>
-            <div style={{ display: "flex", alignItems: "center", padding: "12px 14px", gap: 10, cursor: "pointer" }}
+            <div style={{ display: "flex", alignItems: "center", padding: mob ? "10px 10px" : "12px 14px", gap: 8, cursor: "pointer" }}
               onClick={() => setExpanded(p => ({ ...p, [zone.id]: !p[zone.id] }))}>
               <input type="checkbox" checked={isOn} onChange={() => toggleZone(zone.id)}
                 onClick={e => e.stopPropagation()}

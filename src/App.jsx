@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useIsMobile } from './useIsMobile'
 import InvestmentCalc from './InvestmentCalc'
 import ResponsibilityCalc from './ResponsibilityCalc'
 import BrandTab from './BrandTab'
@@ -27,6 +28,7 @@ function getInitTab() {
 }
 
 export default function App() {
+  const mob = useIsMobile()
   const [tab, setTab] = useState(getInitTab)
   const [pendingAnchor, setPendingAnchor] = useState(null)
 
@@ -73,10 +75,10 @@ export default function App() {
       }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
-            padding: '9px 14px', borderRadius: '8px 8px 0 0',
+            padding: mob ? '7px 10px' : '9px 14px', borderRadius: '8px 8px 0 0',
             border: 'none', cursor: 'pointer',
             fontFamily: "'Georgia', serif",
-            fontSize: 13, fontWeight: tab === t.id ? 600 : 400,
+            fontSize: mob ? 11 : 13, fontWeight: tab === t.id ? 600 : 400,
             background: tab === t.id ? '#1a1a1a' : 'transparent',
             color: tab === t.id ? '#fff' : '#999',
             transition: 'all 0.15s',

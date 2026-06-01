@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { supabase } from './supabase'
+import { useIsMobile } from './useIsMobile'
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
@@ -118,7 +119,7 @@ const SCENARIOS = {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const S = {
-  wrap: { maxWidth: 860, margin: '0 auto', padding: '24px 16px', fontFamily: "'Georgia', serif" },
+  wrap: { maxWidth: 860, margin: '0 auto', padding: '16px 12px 2rem', fontFamily: "'Georgia', serif" },
   section: { marginBottom: 8 },
   sectionHeader: (open) => ({
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -453,6 +454,13 @@ function Section({ id, label, open, toggle, children }) {
 
 function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, setActiveScenario }) {
   const { fot1, fot2, fot3, onetimeLegal } = model
+  const mob = useIsMobile()
+  const mLabel = mob
+    ? { fontSize: 13, color: '#444', flex: '1 1 auto' }
+    : S.label
+  const mRow = mob
+    ? { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap', justifyContent: 'space-between' }
+    : S.inputRow
 
   const setStaffField = (idx, field, val) => {
     const next = inputs.staff.map((r, i) => i === idx ? { ...r, [field]: val } : r)
@@ -486,8 +494,8 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
           ['workingCapMonths','Оборотный капитал, мес'],
           ['reserve',         'Резерв, R$'],
         ].map(([key, label]) => (
-          <div key={key} style={{ ...S.inputRow, marginBottom: 8 }}>
-            <span style={{ ...S.label, color: '#999' }}>{label} <span style={{ fontSize: 10, color: '#bbb' }}>← Бюджет</span></span>
+          <div key={key} style={{ ...mRow, marginBottom: 8 }}>
+            <span style={{ ...mLabel, color: '#999' }}>{label} <span style={{ fontSize: 10, color: '#bbb' }}>← Бюджет</span></span>
             <div style={{
               border: '1.5px solid #e8e0d0', borderRadius: 6, padding: '4px 10px',
               fontFamily: "'Georgia', serif", fontSize: 13, width: 110, textAlign: 'right',
@@ -504,8 +512,8 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
           ['capital',  'Привлечённый капитал, R$'],
           ['usdRate',  'Курс USD→BRL'],
         ].map(([key, label]) => (
-          <div key={key} style={S.inputRow}>
-            <span style={S.label}>{label}</span>
+          <div key={key} style={mRow}>
+            <span style={mLabel}>{label}</span>
             <NumInput value={inputs[key] ?? 0} onChange={v => setInput(key, v)} />
           </div>
         ))}
@@ -602,7 +610,7 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
             </div>
 
             {/* Stage cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: mob ? '1fr' : 'repeat(2, 1fr)', gap: 10 }}>
               {stages.map(st => (
                 <div key={st.num} style={{ border: `1.5px solid ${st.border}`, borderRadius: 10, padding: '12px 14px', background: st.bg }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: st.color, marginBottom: 4 }}>{st.emoji} Этап {st.num} — {st.name}</div>
@@ -762,7 +770,7 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
               Этап 0: оснащение и работы — из Бюджета (теги закупка/работа); ФОТ ремонта = строки с тегом «работа»; юр. расходы — из Юр. сметы в Бюджете
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: mob ? '1fr' : 'repeat(2, 1fr)', gap: 10 }}>
               {stages.map(st => (
                 <div key={st.num} style={{ border: `1.5px solid ${st.border}`, borderRadius: 10, padding: '12px 14px', background: st.bg }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: st.color, marginBottom: 8 }}>
@@ -801,8 +809,8 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
       <div style={S.subGroup}>
         <div style={S.subTitle}>Этап 0/1 — стартовые расходы</div>
         {/* Залог — из Бюджета, read-only */}
-        <div style={{ ...S.inputRow, marginBottom: 8 }}>
-          <span style={{ ...S.label, color: '#999' }}>Залог аренды (депозит) <span style={{ fontSize: 10, color: '#bbb' }}>← Бюджет</span></span>
+        <div style={{ ...mRow, marginBottom: 8 }}>
+          <span style={{ ...mLabel, color: '#999' }}>Залог аренды (депозит) <span style={{ fontSize: 10, color: '#bbb' }}>← Бюджет</span></span>
           <div style={{
             border: '1.5px solid #e8e0d0', borderRadius: 6, padding: '4px 10px',
             fontFamily: "'Georgia', serif", fontSize: 13, width: 110, textAlign: 'right',
@@ -812,12 +820,12 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
           </div>
         </div>
         {/* Редактируемые */}
-        <div style={S.inputRow}>
-          <span style={S.label}>Первая закупка (кофе, расходники, снеки), R$</span>
+        <div style={mRow}>
+          <span style={mLabel}>Первая закупка (кофе, расходники, снеки), R$</span>
           <NumInput value={inputs.stage1Supplies ?? 8000} onChange={v => setInput('stage1Supplies', v)} />
         </div>
-        <div style={S.inputRow}>
-          <span style={S.label}>Депозит агентству / риэлтору, R$</span>
+        <div style={mRow}>
+          <span style={mLabel}>Депозит агентству / риэлтору, R$</span>
           <NumInput value={inputs.agentDeposit ?? 0} onChange={v => setInput('agentDeposit', v)} />
         </div>
       </div>
@@ -831,8 +839,8 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
           ['s1Drinks',   'Чек напитки/снеки, R$ на гостя'],
           ['s1FoodCost', 'Food/bev cost %'],
         ].map(([key, label]) => (
-          <div key={key} style={S.inputRow}>
-            <span style={S.label}>{label}</span>
+          <div key={key} style={mRow}>
+            <span style={mLabel}>{label}</span>
             <NumInput value={inputs[key]} onChange={v => setInput(key, v)} />
           </div>
         ))}
@@ -846,8 +854,8 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
           ['s2Check',    'Средний чек R$'],
           ['s2FoodCost', 'Food cost %'],
         ].map(([key, label]) => (
-          <div key={key} style={S.inputRow}>
-            <span style={S.label}>{label}</span>
+          <div key={key} style={mRow}>
+            <span style={mLabel}>{label}</span>
             <NumInput value={inputs[key]} onChange={v => setInput(key, v)} />
           </div>
         ))}
@@ -861,8 +869,8 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
           ['s3Check',    'Средний чек R$'],
           ['s3FoodCost', 'Food cost %'],
         ].map(([key, label]) => (
-          <div key={key} style={S.inputRow}>
-            <span style={S.label}>{label}</span>
+          <div key={key} style={mRow}>
+            <span style={mLabel}>{label}</span>
             <NumInput value={inputs[key]} onChange={v => setInput(key, v)} />
           </div>
         ))}
@@ -875,8 +883,8 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
           ['acquiring', 'Эквайринг %'],
           ['tax',       'Налог Simples Nacional %'],
         ].map(([key, label]) => (
-          <div key={key} style={S.inputRow}>
-            <span style={S.label}>{label}</span>
+          <div key={key} style={mRow}>
+            <span style={mLabel}>{label}</span>
             <NumInput value={inputs[key]} onChange={v => setInput(key, v)} />
           </div>
         ))}
@@ -892,8 +900,8 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
           ['accountant', 'Бухгалтер'],
           ['other',      'Прочее'],
         ].map(([key, label]) => (
-          <div key={key} style={S.inputRow}>
-            <span style={S.label}>{label}</span>
+          <div key={key} style={mRow}>
+            <span style={mLabel}>{label}</span>
             <NumInput value={inputs[key]} onChange={v => setInput(key, v)} />
           </div>
         ))}
@@ -902,12 +910,12 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
       {/* Персонал */}
       <div style={S.subGroup}>
         <div style={S.subTitle}>Персонал</div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={S.table}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ ...S.table, minWidth: mob ? 480 : 'auto' }}>
             <thead>
               <tr>
                 {['Роль', 'Кол-во', 'ЗП брутто R$', 'Договор', 'С этапа', 'Итого R$/мес', ''].map(h => (
-                  <th key={h} style={S.th}>{h}</th>
+                  <th key={h} style={{ ...S.th, fontSize: mob ? 11 : 12, padding: mob ? '4px 4px' : '6px 8px' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -1079,6 +1087,7 @@ function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, set
 
 function ModelTable({ inputs, model, activeScenario, setActiveScenario }) {
   const { months, cumCash, stage0cost, balanceAfterStage0 } = model
+  const mob = useIsMobile()
 
   // Calendar month labels: shift by startMonth + prepMonths - 1
   const openOffset = (inputs.startMonth || 1) - 1 + (inputs.prepMonths || 3)
@@ -1152,7 +1161,7 @@ function ModelTable({ inputs, model, activeScenario, setActiveScenario }) {
         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10, color: '#1a1a1a' }}>
           🏗️ Этап 0 — до открытия ({prepMonths} мес)
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: mob ? '1fr 1fr' : '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
           {[
             ['Расходы Этапа 0', stage0cost, '#8B2020'],
             ['Остаток на старте операций', balanceAfterStage0, balanceAfterStage0 >= 0 ? '#2D6A2D' : '#8B2020'],
