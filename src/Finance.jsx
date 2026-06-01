@@ -53,6 +53,10 @@ const DEFAULT_INPUTS = {
   ramp:   [0.6, 0.75, 0.85, 0.95, 1, 1, 1, 1, 1, 1, 1, 1],
   agentDeposit: 0,
   stage1Supplies: 8000,
+  rentWorkshop: 0,
+  depositMonths: 3,
+  workingCapMonths: 6,
+  reserve: 15000,
 }
 
 const DEFAULT_CHECKLIST = {}
@@ -398,14 +402,19 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
       <div style={S.subGroup}>
         <div style={S.subTitle}>Общие параметры</div>
         {[
-          ['workDays', 'Рабочих дней в месяц'],
-          ['capex',    'Инвестиции CAPEX, R$ (← из Бюджета)'],
-          ['capital',  'Привлечённый капитал, R$'],
-          ['usdRate',  'Курс USD→BRL'],
+          ['workDays',    'Рабочих дней в месяц'],
+          ['capex',       'Инвестиции CAPEX, R$ (← из Бюджета)'],
+          ['capital',     'Привлечённый капитал, R$'],
+          ['usdRate',     'Курс USD→BRL'],
+          ['rent',        'Аренда помещения/мес, R$'],
+          ['rentWorkshop','Аренда цеха/мес, R$'],
+          ['depositMonths','Залог (кол-во месяцев)'],
+          ['workingCapMonths','Оборотный капитал, мес'],
+          ['reserve',     'Резерв, R$'],
         ].map(([key, label]) => (
           <div key={key} style={S.inputRow}>
             <span style={S.label}>{label}</span>
-            <NumInput value={inputs[key]} onChange={v => setInput(key, v)} />
+            <NumInput value={inputs[key] ?? 0} onChange={v => setInput(key, v)} />
           </div>
         ))}
       </div>
@@ -462,9 +471,9 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
             duration: `${dur2} мес`, timeRange: `${calL2} – ${MN[(startMonth - 1 + prepMonths + launchMonth3 - 2) % 12]}`,
             customInputs: (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 6 }}>
-                <span style={{ fontSize: 11, color: '#555' }}>Старт (опер. мес)</span>
-                <select value={launchMonth2} onChange={e => setInput('launchMonth2', Number(e.target.value))} style={selStyle}>
-                  {Array.from({length: 11}, (_, i) => <option key={i+2} value={i+2}>{i+2}</option>)}
+                <span style={{ fontSize: 11, color: '#555' }}>Продолжительность</span>
+                <select value={dur2} onChange={e => setInput('launchMonth3', launchMonth2 + Number(e.target.value))} style={selStyle}>
+                  {Array.from({length: 11}, (_, i) => <option key={i+1} value={i+1}>{i+1} мес</option>)}
                 </select>
               </div>
             ),
@@ -474,9 +483,9 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
             duration: `${dur3} мес`, timeRange: `${calL3} – ${calEnd}`,
             customInputs: (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 6 }}>
-                <span style={{ fontSize: 11, color: '#555' }}>Старт (опер. мес)</span>
-                <select value={launchMonth3} onChange={e => setInput('launchMonth3', Number(e.target.value))} style={selStyle}>
-                  {Array.from({length: 11}, (_, i) => <option key={i+2} value={i+2}>{i+2}</option>)}
+                <span style={{ fontSize: 11, color: '#555' }}>Продолжительность</span>
+                <select value={dur3} onChange={e => setInput('launchMonth3', 12 - Number(e.target.value) + 1)} style={selStyle}>
+                  {Array.from({length: 11}, (_, i) => <option key={i+1} value={i+1}>{i+1} мес</option>)}
                 </select>
               </div>
             ),
@@ -553,9 +562,12 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
 
         const agentDep = inputs.agentDeposit || 0
         const stage1Sup = inputs.stage1Supplies || 0
+        const rentWs = inputs.rentWorkshop || 0
 
         const total1 = agentDep
           + stage1Sup
+          + inputs.rent * dur1
+          + (rentWs > 0 ? rentWs * dur1 : 0)
           + inputs.utilities * dur1
           + inputs.marketing * dur1
           + staffFOT(inputs.staff, 1) * dur1
@@ -564,6 +576,8 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
 
         const total2 = 2000
           + 5000
+          + inputs.rent * dur2
+          + (rentWs > 0 ? rentWs * dur2 : 0)
           + inputs.utilities * dur2
           + inputs.marketing * dur2
           + staffFOT(inputs.staff, 2) * dur2
@@ -572,6 +586,8 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
 
         const total3 = 3000
           + 5000
+          + inputs.rent * dur3
+          + (rentWs > 0 ? rentWs * dur3 : 0)
           + inputs.utilities * dur3
           + inputs.marketing * dur3
           + staffFOT(inputs.staff, 3) * dur3
@@ -604,6 +620,8 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
             items: [
               { label: 'Депозит агентству / риэлтору', val: agentDep, note: null },
               { label: 'Первая закупка (кофе, расходники, снеки)', val: stage1Sup, note: null },
+              { label: `Аренда помещения × ${dur1} мес`, val: inputs.rent * dur1, note: null },
+              ...(rentWs > 0 ? [{ label: `Аренда цеха × ${dur1} мес`, val: rentWs * dur1, note: null }] : []),
               { label: `ЖКУ × ${dur1} мес`, val: inputs.utilities * dur1, note: '← Финансы → Коммуналка' },
               { label: `Маркетинг запуска × ${dur1} мес`, val: inputs.marketing * dur1, note: null },
               { label: `ФОТ этап 1 × ${dur1} мес`, val: staffFOT(inputs.staff, 1) * dur1, note: null },
@@ -618,6 +636,8 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
             items: [
               { label: 'Лицензия кухни (VISA sanitária)', val: 2000, note: null },
               { label: 'Закуп продуктов (дополнительный)', val: 5000, note: null },
+              { label: `Аренда помещения × ${dur2} мес`, val: inputs.rent * dur2, note: null },
+              ...(rentWs > 0 ? [{ label: `Аренда цеха × ${dur2} мес`, val: rentWs * dur2, note: null }] : []),
               { label: `ЖКУ × ${dur2} мес`, val: inputs.utilities * dur2, note: '← Финансы → Коммуналка' },
               { label: `Маркетинг × ${dur2} мес`, val: inputs.marketing * dur2, note: null },
               { label: `ФОТ этап 2 × ${dur2} мес`, val: staffFOT(inputs.staff, 2) * dur2, note: null },
@@ -632,6 +652,8 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
             items: [
               { label: 'Аниматор / детские мероприятия (запуск)', val: 3000, note: null },
               { label: 'Магазин (стартовый запас товаров)', val: 5000, note: null },
+              { label: `Аренда помещения × ${dur3} мес`, val: inputs.rent * dur3, note: null },
+              ...(rentWs > 0 ? [{ label: `Аренда цеха × ${dur3} мес`, val: rentWs * dur3, note: null }] : []),
               { label: `ЖКУ × ${dur3} мес`, val: inputs.utilities * dur3, note: '← Финансы → Коммуналка' },
               { label: `Маркетинг × ${dur3} мес`, val: inputs.marketing * dur3, note: null },
               { label: `ФОТ этап 3 × ${dur3} мес`, val: staffFOT(inputs.staff, 3) * dur3, note: null },
@@ -715,7 +737,7 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
 
       {/* Этап 2 */}
       <div style={S.subGroup}>
-        <div style={S.subTitle}>Этап 2 — Кухня (мес 5–8)</div>
+        <div style={S.subTitle}>Этап 2 — Кухня</div>
         {[
           ['s2Guests',   'Гостей/день базово'],
           ['s2Check',    'Средний чек R$'],
@@ -730,7 +752,7 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
 
       {/* Этап 3 */}
       <div style={S.subGroup}>
-        <div style={S.subTitle}>Этап 3 — Полный формат (мес 9+)</div>
+        <div style={S.subTitle}>Этап 3 — Полный формат</div>
         {[
           ['s3Guests',   'Гостей/день базово'],
           ['s3Check',    'Средний чек R$'],
