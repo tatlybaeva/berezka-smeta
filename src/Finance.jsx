@@ -401,16 +401,27 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
       {/* Общие */}
       <div style={S.subGroup}>
         <div style={S.subTitle}>Общие параметры</div>
+        {/* CAPEX — read-only, synced from Бюджет */}
+        <div style={{ ...S.inputRow, marginBottom: 10 }}>
+          <span style={{ ...S.label, color: '#888' }}>Инвестиции CAPEX, R$ (← из Бюджета)</span>
+          <div style={{
+            border: '1.5px solid #e8e0d0', borderRadius: 6, padding: '4px 10px',
+            fontFamily: "'Georgia', serif", fontSize: 13, width: 110, textAlign: 'right',
+            background: '#F5F0E8', color: '#888', userSelect: 'none',
+          }}>
+            {Math.round(inputs.capex || 0).toLocaleString('ru-RU')}
+          </div>
+        </div>
+
         {[
-          ['workDays',    'Рабочих дней в месяц'],
-          ['capex',       'Инвестиции CAPEX, R$ (← из Бюджета)'],
-          ['capital',     'Привлечённый капитал, R$'],
-          ['usdRate',     'Курс USD→BRL'],
-          ['rent',        'Аренда помещения/мес, R$'],
-          ['rentWorkshop','Аренда цеха/мес, R$'],
-          ['depositMonths','Залог (кол-во месяцев)'],
-          ['workingCapMonths','Оборотный капитал, мес'],
-          ['reserve',     'Резерв, R$'],
+          ['workDays',         'Рабочих дней в месяц'],
+          ['capital',          'Привлечённый капитал, R$'],
+          ['usdRate',          'Курс USD→BRL'],
+          ['rent',             'Аренда помещения/мес, R$'],
+          ['rentWorkshop',     'Аренда цеха/мес, R$'],
+          ['depositMonths',    'Залог (кол-во месяцев)'],
+          ['workingCapMonths', 'Оборотный капитал, мес'],
+          ['reserve',          'Резерв, R$'],
         ].map(([key, label]) => (
           <div key={key} style={S.inputRow}>
             <span style={S.label}>{label}</span>
