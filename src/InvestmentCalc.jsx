@@ -126,6 +126,7 @@ const ZONES = [
       { name: "Мини дачная кухня-игрушка", brl: 500, url: ML("cozinha brinquedo madeira infantil") },
       { name: "Подушки + книги + пуфики", brl: 400, url: ML("puff infantil almofada leitura") },
       { name: "Деревянные игрушки монтессори", brl: 800, url: ML("brinquedo educativo madeira montessori") },
+      { name: "Кондиционер 9000 BTU + установка", brl: 2800, url: ML("ar condicionado 9000 BTU inverter instalação") },
     ]
   },
   {
@@ -142,6 +143,7 @@ const ZONES = [
       { name: "Тюль белый на окна", brl: 300, url: ML("cortina voil branco janela") },
       { name: "Декоративные дрова + медный чайник б/у", brl: 300, url: OLX("chaleira cobre decorativa lenha decorativa") },
       { name: "Кресло-качалка б/у", brl: 400, url: OLX("cadeira balanço madeira usado") },
+      { name: "Кондиционер 12000 BTU + установка", brl: 3500, url: ML("ar condicionado 12000 BTU inverter instalação") },
     ]
   },
   {
@@ -165,6 +167,7 @@ const ZONES = [
       { name: "Кастрюли большие × 3 + средние × 3", brl: 500, url: ML("panela inox caldeirão grande conjunto") },
       { name: "Посудомоечная машина б/у", brl: 2000, url: OLX("lava louça industrial comercial usado") },
       { name: "Ремонт кухни (плитка, стены, под VISA)", brl: 2000, url: "" },
+      { name: "Кондиционер 9000 BTU + установка (кухня)", brl: 2800, url: ML("ar condicionado 9000 BTU inverter instalação") },
     ]
   },
   {
