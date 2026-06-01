@@ -927,17 +927,10 @@ export default function InvestmentCalc() {
                 <div style={{ fontSize: 12, color: "#444", minWidth: 200, flex: "0 0 200px" }}>Аренда в период каникул, R$</div>
                 <NumInput value={rentHolidayAmount} onChange={v => setRentHolidayAmount(Math.max(0, v))} />
               </div>
-              <div style={{ fontSize: 11, color: "#666", marginTop: 8 }}>
-                Первые {rentHolidayMonths} мес × R${rentHolidayAmount.toLocaleString()}, затем R${rent.toLocaleString()}/мес
-              </div>
             </div>
           )}
         </div>
 
-        <div style={{ marginTop: 10, padding: "8px 10px", background: "#f7f7f5", borderRadius: 8, fontSize: 11, color: "#888" }}>
-          <div>Ежемес. расходы: R${rent.toLocaleString()} аренда{rentWorkshop > 0 ? ` + R$${rentWorkshop.toLocaleString()} цех` : ""} + R${finMonthly.toLocaleString()} (из Финансов) = R${opsMonthly.toLocaleString()}/мес</div>
-          <div style={{ marginTop: 2 }}>Оборотный кап: R${opsMonthly.toLocaleString()} × {workingCapMonths} мес = {fmtR(workingCap)} ({fmt$(workingCap)})</div>
-        </div>
       </div>
 
       {/* ─── Юридическая смета ─── */}
