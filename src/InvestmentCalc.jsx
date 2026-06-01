@@ -69,6 +69,16 @@ const ZONES = [
     ]
   },
   {
+    id: "facade", emoji: "🏛️", name: "Фасад здания",
+    items: [
+      { name: "Покраска фасада (фасадная краска, 2 слоя) — ~80 м²", brl: 3200, url: ML("tinta fachada externa látex acrílico galão") },
+      { name: "Работа маляра — фасад", brl: 2000, url: "" },
+      { name: "Облицовка колонн деревом (вагонка/декор-рейки) — 6 шт.", brl: 3600, url: ML("ripa madeira pinus revestimento coluna") },
+      { name: "Монтаж облицовки — 6 колонн", brl: 1200, url: "" },
+      { name: "Пропитка/лак для защиты дерева снаружи", brl: 400, url: ML("verniz impregnante externo madeira proteção") },
+    ]
+  },
+  {
     id: "entry", emoji: "🚪", name: "Вход / первое впечатление",
     items: [
       { name: "Деревянная арка или перголa у входа", brl: 1200, url: ML("pérgola madeira jardim") },
