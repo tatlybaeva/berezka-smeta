@@ -5,6 +5,31 @@ const RATE = 5.7;
 const fmt$ = (brl) => `$${Math.round(brl / RATE).toLocaleString()}`;
 const fmtR = (brl) => `R$${brl.toLocaleString()}`;
 
+// ─── Numeric Input (Finance-style) ──────────────────────────────────────────
+function NumInput({ value, onChange, suffix = "" }) {
+  const [local, setLocal] = useState(String(value))
+  useEffect(() => { setLocal(String(value)) }, [value])
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <input
+        style={{
+          border: "1.5px solid #D4C4A8", borderRadius: 6, padding: "4px 8px",
+          fontFamily: "'Georgia', serif", fontSize: 13, width: 110, textAlign: "right",
+          background: "#FDFAF5", outline: "none",
+        }}
+        value={local}
+        onChange={e => setLocal(e.target.value)}
+        onBlur={() => {
+          const n = parseFloat(local)
+          if (!isNaN(n)) onChange(n)
+          else setLocal(String(value))
+        }}
+      />
+      {suffix && <span style={{ fontSize: 12, color: "#888" }}>{suffix}</span>}
+    </div>
+  )
+}
+
 // Зона строительства — только для пустого участка
 const CONSTRUCTION_ZONE = {
   id: "construction", emoji: "🏗️", name: "Строительство дома",
@@ -768,29 +793,18 @@ export default function InvestmentCalc() {
       </div>
 
       <div style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", marginBottom: 16, border: "1px solid #ebebeb" }}>
-        <div style={{ fontSize: 12, fontWeight: 500, color: "#555", marginBottom: 12 }}>⚙️ Параметры аренды и капитала</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "#5C3D1E", marginBottom: 12, letterSpacing: 0.3 }}>⚙️ Параметры аренды и капитала</div>
         {[
-          { label: "Аренда/мес", val: rent, set: setRent, min: 5000, max: 30000, step: 500 },
-          { label: "Залог (мес)", val: depositMonths, set: setDepositMonths, min: 1, max: 6, step: 1, suffix: " мес" },
-          { label: "Оборотный кап. (мес)", val: workingCapMonths, set: setWorkingCapMonths, min: 2, max: 12, step: 1, suffix: " мес" },
-        ].map(({ label, val, set, min, max, step, suffix }) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <div style={{ fontSize: 12, color: "#666", minWidth: 150 }}>{label}</div>
-            <input type="range" min={min} max={max} step={step} value={val}
-              onChange={e => set(Number(e.target.value))}
-              style={{ flex: 1, accentColor: "#1a1a1a" }} />
-            <div style={{ fontSize: 13, fontWeight: 500, minWidth: 80, textAlign: "right" }}>
-              {label === "Аренда/мес" ? `R$${val.toLocaleString()}` : `${val}${suffix || ""}`}
-            </div>
+          { label: "Аренда/мес, R$",        val: rent,             set: setRent,             suffix: "" },
+          { label: "Залог (кол-во месяцев)", val: depositMonths,    set: setDepositMonths,    suffix: " мес" },
+          { label: "Оборотный капитал, мес", val: workingCapMonths, set: setWorkingCapMonths, suffix: " мес" },
+          { label: "Резерв, R$",             val: reserve,          set: setReserve,          suffix: "" },
+        ].map(({ label, val, set, suffix }) => (
+          <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 13, color: "#444", minWidth: 240, flex: "0 0 240px" }}>{label}</div>
+            <NumInput value={val} onChange={v => set(Math.max(0, v))} suffix={suffix} />
           </div>
         ))}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontSize: 12, color: "#666", minWidth: 150 }}>Резерв (R$)</div>
-          <input type="range" min={0} max={30000} step={1000} value={reserve}
-            onChange={e => setReserve(Number(e.target.value))}
-            style={{ flex: 1, accentColor: "#1a1a1a" }} />
-          <div style={{ fontSize: 13, fontWeight: 500, minWidth: 80, textAlign: "right" }}>R${reserve.toLocaleString()}</div>
-        </div>
         <div style={{ marginTop: 10, padding: "8px 10px", background: "#f7f7f5", borderRadius: 8, fontSize: 11, color: "#888" }}>
           Оборотный кап: R${opsMonthly.toLocaleString()}/мес × {workingCapMonths} = {fmtR(workingCap)} ({fmt$(workingCap)})
         </div>
