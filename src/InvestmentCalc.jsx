@@ -289,6 +289,7 @@ function computeBEP(rent, avgCheck, staff, other, phase) {
 export default function InvestmentCalc() {
   const [rentType, setRentType] = useState("house"); // "house" | "land"
   const [rent, setRent] = useState(11000);
+  const [rentWorkshop, setRentWorkshop] = useState(0);
   const [depositMonths, setDepositMonths] = useState(3);
   const [workingCapMonths, setWorkingCapMonths] = useState(6);
   const [reserve, setReserve] = useState(15000);
@@ -331,13 +332,14 @@ export default function InvestmentCalc() {
   const globalSaveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
 
-  const buildState = (rt, r, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls, ac, bst, bot, gt, zo, eo) => ({ rentType: rt, rent: r, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls, avgCheck: ac, beStaff: bst, beOther: bot, grandTotal: gt, zoneOrder: zo, extraOrder: eo });
+  const buildState = (rt, r, rw, d, wc, res, ez, ei, q, p, bp, cd, names, extras, urls, ac, bst, bot, gt, zo, eo) => ({ rentType: rt, rent: r, rentWorkshop: rw, depositMonths: d, workingCapMonths: wc, reserve: res, enabledZones: ez, enabledItems: ei, quantities: q, prices: p, bePhase: bp, currentChecksDay: cd, itemNames: names, extraItems: extras, itemUrls: urls, avgCheck: ac, beStaff: bst, beOther: bot, grandTotal: gt, zoneOrder: zo, extraOrder: eo });
 
   const applyState = (s) => {
     if (!s) return;
     isRemoteUpdate.current = true;
     if (s.rentType) setRentType(s.rentType);
     if (s.rent !== undefined) setRent(s.rent);
+    if (s.rentWorkshop !== undefined) setRentWorkshop(s.rentWorkshop);
     if (s.depositMonths !== undefined) setDepositMonths(s.depositMonths);
     if (s.workingCapMonths !== undefined) setWorkingCapMonths(s.workingCapMonths);
     if (s.reserve !== undefined) setReserve(s.reserve);
@@ -363,6 +365,7 @@ export default function InvestmentCalc() {
     isRemoteUpdate.current = true;
     if (s.rentType) setRentType(s.rentType);
     if (s.rent !== undefined) setRent(s.rent);
+    if (s.rentWorkshop !== undefined) setRentWorkshop(s.rentWorkshop);
     if (s.depositMonths !== undefined) setDepositMonths(s.depositMonths);
     if (s.workingCapMonths !== undefined) setWorkingCapMonths(s.workingCapMonths);
     if (s.reserve !== undefined) setReserve(s.reserve);
@@ -587,14 +590,14 @@ export default function InvestmentCalc() {
       if (l.length > 0) localExtras[zoneId] = l;
     });
     const propertyState = {
-      rentType, rent, depositMonths, workingCapMonths, reserve,
+      rentType, rent, rentWorkshop, depositMonths, workingCapMonths, reserve,
       enabledZones, enabledItems, quantities,
       extraItems: localExtras,
       avgCheck, beStaff, beOther, bePhase, currentChecksDay,
       grandTotal, zoneOrder, extraOrder,
     };
     scheduleSave(propertyState);
-  }, [rentType, rent, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, activePropId, zoneOrder, extraOrder]); // eslint-disable-line
+  }, [rentType, rent, rentWorkshop, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, activePropId, zoneOrder, extraOrder]); // eslint-disable-line
 
   // Ensure zoneOrder has entries for all zones (e.g. after new zones are added)
   const getZoneOrder = (zoneId, itemsLen) => {
@@ -705,7 +708,7 @@ export default function InvestmentCalc() {
   const constructionTotal = rentType === "land" ? (enabledZones["construction"] ? zoneTotal(CONSTRUCTION_ZONE) : 0) : 0;
   const equipTotal = ZONES.reduce((sum, z) => sum + (enabledZones[z.id] ? zoneTotal(z) : 0), 0) + constructionTotal;
   const depositTotal = rent * depositMonths;
-  const opsMonthly = rent + finMonthly;
+  const opsMonthly = rent + rentWorkshop + finMonthly;
   const workingCap = opsMonthly * workingCapMonths;
   const grandTotal = equipTotal + depositTotal + workingCap + reserve;
 
@@ -814,8 +817,9 @@ export default function InvestmentCalc() {
       <div style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", marginBottom: 16, border: "1px solid #ebebeb" }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: "#5C3D1E", marginBottom: 12, letterSpacing: 0.3 }}>⚙️ Параметры аренды и капитала</div>
         {[
-          { label: "Аренда/мес, R$",        val: rent,             set: setRent,             suffix: "" },
-          { label: "Залог (кол-во месяцев)", val: depositMonths,    set: setDepositMonths,    suffix: " мес" },
+          { label: "Аренда помещения/мес, R$",  val: rent,          set: setRent,          suffix: "" },
+          { label: "Аренда цеха/мес, R$",       val: rentWorkshop,  set: setRentWorkshop,  suffix: "" },
+          { label: "Залог (кол-во месяцев)",     val: depositMonths, set: setDepositMonths, suffix: " мес" },
           { label: "Оборотный капитал, мес", val: workingCapMonths, set: setWorkingCapMonths, suffix: " мес" },
           { label: "Резерв, R$",             val: reserve,          set: setReserve,          suffix: "" },
         ].map(({ label, val, set, suffix }) => (
@@ -825,7 +829,7 @@ export default function InvestmentCalc() {
           </div>
         ))}
         <div style={{ marginTop: 10, padding: "8px 10px", background: "#f7f7f5", borderRadius: 8, fontSize: 11, color: "#888" }}>
-          <div>Ежемес. расходы: R${rent.toLocaleString()} аренда + R${finMonthly.toLocaleString()} (из Финансов) = R${opsMonthly.toLocaleString()}/мес</div>
+          <div>Ежемес. расходы: R${rent.toLocaleString()} аренда{rentWorkshop > 0 ? ` + R$${rentWorkshop.toLocaleString()} цех` : ""} + R${finMonthly.toLocaleString()} (из Финансов) = R${opsMonthly.toLocaleString()}/мес</div>
           <div style={{ marginTop: 2 }}>Оборотный кап: R${opsMonthly.toLocaleString()} × {workingCapMonths} мес = {fmtR(workingCap)} ({fmt$(workingCap)})</div>
         </div>
       </div>
