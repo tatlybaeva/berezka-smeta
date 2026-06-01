@@ -270,18 +270,39 @@ export default function Finance() {
 
   // ── Computed Model ──────────────────────────────────────────────────────────
   const model = useMemo(() => {
-    const { workDays, capex, capital, launchMonth2, launchMonth3,
+    const { workDays, capital, launchMonth2, launchMonth3,
             s1Guests, s1Entry, s1Drinks, s1FoodCost,
             s2Guests, s2Check, s2FoodCost,
             s3Guests, s3Check, s3FoodCost,
             acquiring, tax, rent, utilities,
-            marketing, accountant, other, staff, season, ramp } = inputs
+            marketing, accountant, other, staff, season, ramp,
+            prepMonths } = inputs
+
+    const { equipOnlyTotal, laborTotal, legalTotal,
+            rentHolidayEnabled, rentHolidayMonths, rentHolidayAmount } = smetaData
 
     const fot1 = staffFOT(staff, 1)
     const fot2 = staffFOT(staff, 2)
     const fot3 = staffFOT(staff, 3) || fot2
     const fixedNoFot = rent + utilities + marketing + accountant + other
 
+    // ── Этап 0: расходы до открытия ──────────────────────────────────────────
+    const prep = prepMonths || 3
+    const rentDuringPrep = rentHolidayEnabled
+      ? Math.min(rentHolidayMonths || 0, prep) * (rentHolidayAmount || 0)
+        + Math.max(prep - (rentHolidayMonths || 0), 0) * rent
+      : prep * rent
+    const equipBase = (equipOnlyTotal ?? 0) + (laborTotal ?? 0)
+    const stage0cost =
+      (equipOnlyTotal ?? 0)
+      + (laborTotal ?? 0)
+      + (legalTotal ?? 0)
+      + rentDuringPrep
+      + utilities * prep
+      + equipBase * 0.1    // буфер 10%
+    const balanceAfterStage0 = capital - stage0cost
+
+    // ── Операционные месяцы 1–12 ─────────────────────────────────────────────
     const months = Array.from({ length: 12 }, (_, i) => {
       const mo = i + 1
       const stage = mo < launchMonth2 ? 1 : mo < launchMonth3 ? 2 : 3
@@ -303,25 +324,24 @@ export default function Finance() {
       const opProfit = margin + totalFixed
       const opPct = revenue ? opProfit / revenue * 100 : 0
       const opCF = opProfit
-      const capexCost = mo === 1 ? -capex : 0
-      const netCF = opCF + capexCost
+      const netCF = opCF   // capex больше не вычитаем в месяце 1
       return {
         stage, seas, rm, guestsDay, checkVal, revenue,
         foodCost, acqCost, taxCost, totalVar, margin, marginPct,
         fot: -fot, totalFixed, opProfit, opPct,
-        opCF, capexCost, netCF,
+        opCF, capexCost: 0, netCF,
       }
     })
 
-    // cumulative cash
-    let cum = capital
+    // cumulative cash — стартуем с реального остатка после Этапа 0
+    let cum = balanceAfterStage0
     const cumCash = months.map(m => {
       cum += m.netCF
       return cum
     })
 
-    return { months, cumCash, fot1, fot2, fot3, fixedNoFot }
-  }, [inputs])
+    return { months, cumCash, fot1, fot2, fot3, fixedNoFot, stage0cost, balanceAfterStage0 }
+  }, [inputs, smetaData])
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -340,7 +360,7 @@ export default function Finance() {
 
       {/* ── 2. Модель 12 месяцев ── */}
       <Section id="model" label="📊 Модель 12 месяцев" open={open} toggle={toggleSection}>
-        <ModelTable inputs={inputs} model={model} />
+        <ModelTable inputs={inputs} model={model} smetaData={smetaData} />
       </Section>
 
       {/* ── 3. Точка безубыточности ── */}
@@ -948,7 +968,7 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
 // ─── 2. Модель 12 месяцев ─────────────────────────────────────────────────────
 
 function ModelTable({ inputs, model }) {
-  const { months, cumCash } = model
+  const { months, cumCash, stage0cost, balanceAfterStage0 } = model
 
   // Calendar month labels: shift by startMonth + prepMonths - 1
   const openOffset = (inputs.startMonth || 1) - 1 + (inputs.prepMonths || 3)
@@ -982,7 +1002,6 @@ function ModelTable({ inputs, model }) {
     { label: 'Рентабельность %',          key: 'opPct',      fmt: (v) => pct(v),           isAvg: true,  highlight: false, isNum: false },
     { label: '---',                       key: '_sep',       fmt: () => '',                isAvg: false, highlight: false, isNum: false, isSep: true },
     { label: 'Денежный поток от операций',key: 'opCF',       fmt: (v) => fmt(v),           isAvg: false, highlight: false, isNum: true },
-    { label: 'Инвестиции CAPEX',          key: 'capexCost',  fmt: (v) => fmt(v),           isAvg: false, highlight: false, isNum: true },
     { label: 'Чистый денежный поток',     key: 'netCF',      fmt: (v) => fmt(v),           isAvg: false, highlight: false, isNum: true },
     { label: 'Деньги на счёте на конец месяца', key: '_cum', fmt: (v) => fmt(v),          isAvg: false, highlight: true,  isNum: true, bold: true, colorized: true },
   ]
@@ -1008,9 +1027,44 @@ function ModelTable({ inputs, model }) {
   }
 
   const minCash = Math.min(...cumCash)
+  const minCashMonth = cumCash.indexOf(minCash) + 1
+  const isViable = minCash >= 0
+  const prepMonths = inputs.prepMonths || 3
 
   return (
     <div>
+      {/* ── Этап 0: блок расходов до открытия ── */}
+      <div style={{
+        background: isViable ? '#f0fdf4' : '#fff0f0',
+        border: `1.5px solid ${isViable ? '#b8d9b8' : '#f5c0c0'}`,
+        borderRadius: 10, padding: '14px 16px', marginBottom: 16,
+      }}>
+        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10, color: '#1a1a1a' }}>
+          🏗️ Этап 0 — до открытия ({prepMonths} мес)
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
+          {[
+            ['Расходы Этапа 0', stage0cost, '#8B2020'],
+            ['Остаток на старте операций', balanceAfterStage0, balanceAfterStage0 >= 0 ? '#2D6A2D' : '#8B2020'],
+            ['Мин. остаток за 12 мес', minCash, minCash >= 0 ? '#2D6A2D' : '#8B2020'],
+            [`Мин. в месяце`, minCashMonth, '#555'],
+          ].map(([label, val, color]) => (
+            <div key={label} style={{ background: '#fff', borderRadius: 7, padding: '8px 10px' }}>
+              <div style={{ fontSize: 10, color: '#888', marginBottom: 2 }}>{label}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'monospace', color }}>
+                {label === 'Мин. в месяце' ? `мес. ${val}` : fmt(val)}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontWeight: 700, fontSize: 13, color: isViable ? '#2D6A2D' : '#8B2020' }}>
+          {isViable
+            ? '✅ Капитала достаточно для запуска'
+            : `⚠️ Кассовый разрыв в месяце ${minCashMonth} — нужно ещё ${fmt(Math.abs(minCash))}`
+          }
+        </div>
+      </div>
+
       <div style={{ overflowX: 'auto' }}>
         <table style={{ ...S.table, minWidth: 900 }}>
           <thead>
@@ -1021,6 +1075,18 @@ function ModelTable({ inputs, model }) {
             </tr>
           </thead>
           <tbody>
+            {/* Строка Этап 0 — стройка */}
+            <tr style={{ background: '#fff8e1' }}>
+              <td style={{ ...S.tdLeft, fontWeight: 700, fontSize: 12, color: '#7a5a00' }}>
+                🏗️ Этап 0 — стройка ({prepMonths} мес)
+              </td>
+              <td colSpan={12} style={{ ...S.td, color: '#8B2020', fontFamily: 'monospace', fontWeight: 600, fontSize: 12 }}>
+                − {fmt(stage0cost)} (расходы до открытия)
+              </td>
+              <td style={{ ...S.tdMono, fontWeight: 700, fontSize: 12, color: balanceAfterStage0 >= 0 ? '#2D6A2D' : '#8B2020' }}>
+                {fmt(balanceAfterStage0)}
+              </td>
+            </tr>
             {rows.map((row, ri) => {
               if (row.isSep) {
                 return (
@@ -1055,12 +1121,21 @@ function ModelTable({ inputs, model }) {
           </tbody>
         </table>
       </div>
-      <div style={{ marginTop: 12, fontSize: 13 }}>
-        <span>Минимальный остаток за год: </span>
-        <span style={{ fontWeight: 700, color: minCash < 0 ? '#8B2020' : '#2D6A2D', fontFamily: 'monospace' }}>
-          {fmt(minCash)}
+      <div style={{ marginTop: 12, fontSize: 13, display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+        <span>
+          Старт операций:{' '}
+          <span style={{ fontWeight: 700, fontFamily: 'monospace', color: balanceAfterStage0 >= 0 ? '#2D6A2D' : '#8B2020' }}>
+            {fmt(balanceAfterStage0)}
+          </span>
         </span>
-        {minCash < 0 && <span style={{ color: '#8B2020', marginLeft: 8, fontSize: 12 }}>⚠ Кассовый разрыв! Нужна дополнительная подушка.</span>}
+        <span>
+          Минимум за год:{' '}
+          <span style={{ fontWeight: 700, fontFamily: 'monospace', color: minCash < 0 ? '#8B2020' : '#2D6A2D' }}>
+            {fmt(minCash)}
+          </span>
+          <span style={{ color: '#aaa', fontSize: 11, marginLeft: 4 }}>(мес. {minCashMonth})</span>
+        </span>
+        {minCash < 0 && <span style={{ color: '#8B2020', fontSize: 12 }}>⚠ Кассовый разрыв!</span>}
       </div>
     </div>
   )
