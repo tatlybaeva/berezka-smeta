@@ -326,6 +326,7 @@ export default function InvestmentCalc() {
   const [beOther, setBeOther] = useState({ 1: 3500, 2: 5000,  3: 6000 });    // прочие расходы по этапам
   const [calcProperties, setCalcProperties] = useState([]); // rental options with status "в расчёте"
   const [activePropId, setActivePropId] = useState(null);   // currently selected property ID
+  const [finMonthly, setFinMonthly] = useState(7200); // utilities+marketing+accountant+other from Finance
   const saveTimer = useRef(null);
   const globalSaveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
@@ -430,6 +431,14 @@ export default function InvestmentCalc() {
         setRent(Number(inCalc[0].data.rent));
       }
 
+      // Load Finance recurring expenses
+      const { data: finData } = await supabase.from('finance_state').select('data').eq('id', 'main').maybeSingle();
+      if (finData?.data?.inputs) {
+        const fi = finData.data.inputs;
+        const monthly = (fi.utilities || 0) + (fi.marketing || 0) + (fi.accountant || 0) + (fi.other || 0);
+        if (monthly > 0) setFinMonthly(monthly);
+      }
+
       isRemoteUpdate.current = false;
     };
 
@@ -463,9 +472,19 @@ export default function InvestmentCalc() {
       })
       .subscribe();
 
+    const finChannel = supabase.channel('finance_for_budget')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'finance_state' }, (payload) => {
+        const fi = payload.new?.data?.inputs;
+        if (!fi) return;
+        const monthly = (fi.utilities || 0) + (fi.marketing || 0) + (fi.accountant || 0) + (fi.other || 0);
+        if (monthly > 0) setFinMonthly(monthly);
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(rentalChannel);
+      supabase.removeChannel(finChannel);
     };
   }, []); // eslint-disable-line
 
@@ -686,7 +705,7 @@ export default function InvestmentCalc() {
   const constructionTotal = rentType === "land" ? (enabledZones["construction"] ? zoneTotal(CONSTRUCTION_ZONE) : 0) : 0;
   const equipTotal = ZONES.reduce((sum, z) => sum + (enabledZones[z.id] ? zoneTotal(z) : 0), 0) + constructionTotal;
   const depositTotal = rent * depositMonths;
-  const opsMonthly = rent + 21900;
+  const opsMonthly = rent + finMonthly;
   const workingCap = opsMonthly * workingCapMonths;
   const grandTotal = equipTotal + depositTotal + workingCap + reserve;
 
@@ -806,7 +825,8 @@ export default function InvestmentCalc() {
           </div>
         ))}
         <div style={{ marginTop: 10, padding: "8px 10px", background: "#f7f7f5", borderRadius: 8, fontSize: 11, color: "#888" }}>
-          Оборотный кап: R${opsMonthly.toLocaleString()}/мес × {workingCapMonths} = {fmtR(workingCap)} ({fmt$(workingCap)})
+          <div>Ежемес. расходы: R${rent.toLocaleString()} аренда + R${finMonthly.toLocaleString()} (из Финансов) = R${opsMonthly.toLocaleString()}/мес</div>
+          <div style={{ marginTop: 2 }}>Оборотный кап: R${opsMonthly.toLocaleString()} × {workingCapMonths} мес = {fmtR(workingCap)} ({fmt$(workingCap)})</div>
         </div>
       </div>
 

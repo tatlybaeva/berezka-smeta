@@ -158,14 +158,14 @@ export default function Finance() {
         const loadedInputs = data.data.inputs ? { ...DEFAULT_INPUTS, ...data.data.inputs } : null
         if (loadedInputs) {
           // If finance_state doesn't have rent, try to pull from smeta_state
-          if (loadedInputs.rent === DEFAULT_INPUTS.rent) {
+          if (loadedInputs.rent === DEFAULT_INPUTS.rent || loadedInputs.capex === DEFAULT_INPUTS.capex) {
             supabase.from('smeta_state').select('state').eq('id', 'main').single()
               .then(({ data: sData }) => {
-                if (sData?.state?.rent !== undefined) {
-                  setInputs({ ...loadedInputs, rent: sData.state.rent })
-                } else {
-                  setInputs(loadedInputs)
-                }
+                const patch = {}
+                if (sData?.state?.rent !== undefined) patch.rent = sData.state.rent
+                if (sData?.state?.grandTotal !== undefined) patch.capex = sData.state.grandTotal
+                if (Object.keys(patch).length) setInputs(prev => ({ ...prev, ...loadedInputs, ...patch }))
+                else setInputs(loadedInputs)
               })
           } else {
             setInputs(loadedInputs)
@@ -199,8 +199,12 @@ export default function Finance() {
       .channel('smeta_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'smeta_state' }, (payload) => {
         const s = payload.new?.state
-        if (s?.rent !== undefined) {
-          setInputs(prev => ({ ...prev, rent: s.rent }))
+        if (s?.rent !== undefined || s?.grandTotal !== undefined) {
+          setInputs(prev => ({
+            ...prev,
+            ...(s.rent !== undefined ? { rent: s.rent } : {}),
+            ...(s.grandTotal !== undefined ? { capex: s.grandTotal } : {}),
+          }))
         }
       })
       .subscribe()
@@ -382,7 +386,7 @@ function SectionInputs({ inputs, setInput, model }) {
         <div style={S.subTitle}>Общие параметры</div>
         {[
           ['workDays', 'Рабочих дней в месяц'],
-          ['capex',    'Стартовые инвестиции CAPEX, R$'],
+          ['capex',    'Инвестиции CAPEX, R$ (← из Бюджета)'],
           ['capital',  'Привлечённый капитал, R$'],
           ['usdRate',  'Курс USD→BRL'],
         ].map(([key, label]) => (
