@@ -12,14 +12,19 @@ import { supabase } from './supabase'
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
+// ─── Тип договора → коэффициент encargos ─────────────────────────────────────
+const ENCARGOS = { CLT: 1.7, MEI: 1.2, PJ: 1.0 }
+const getEncargos = (contractType, fallbackEncargos) =>
+  ENCARGOS[contractType] ?? fallbackEncargos ?? 1.7
+
 const DEFAULT_STAFF = [
-  { role: 'Собственник/управляющий', count: 1, salary: 3000, encargos: 1.1, stage: 1 },
-  { role: 'Бариста',                 count: 1, salary: 2200, encargos: 1.7, stage: 1 },
-  { role: 'Хостес / касса',          count: 1, salary: 2000, encargos: 1.7, stage: 1 },
-  { role: 'Помощник зала / мойка',   count: 1, salary: 1700, encargos: 1.7, stage: 1 },
-  { role: 'Повар',                   count: 1, salary: 2800, encargos: 1.7, stage: 2 },
-  { role: 'Помощник кухни',          count: 1, salary: 1800, encargos: 1.7, stage: 2 },
-  { role: 'Официант',                count: 1, salary: 1900, encargos: 1.7, stage: 2 },
+  { role: 'Собственник/управляющий', count: 1, salary: 3000, contractType: 'MEI', stage: 1 },
+  { role: 'Бариста',                 count: 1, salary: 2200, contractType: 'CLT', stage: 1 },
+  { role: 'Хостес / касса',          count: 1, salary: 2000, contractType: 'CLT', stage: 1 },
+  { role: 'Помощник зала / мойка',   count: 1, salary: 1700, contractType: 'CLT', stage: 1 },
+  { role: 'Повар',                   count: 1, salary: 2800, contractType: 'CLT', stage: 2 },
+  { role: 'Помощник кухни',          count: 1, salary: 1800, contractType: 'CLT', stage: 2 },
+  { role: 'Официант',                count: 1, salary: 1900, contractType: 'CLT', stage: 2 },
 ]
 
 const DEFAULT_INPUTS = {
@@ -57,6 +62,17 @@ const DEFAULT_INPUTS = {
   depositMonths: 3,
   workingCapMonths: 6,
   reserve: 15000,
+  // Разовые расходы → stage0cost
+  alvaraFee:    1500,
+  bombeiros:    2500,
+  vigilancia:    800,
+  cnpjAbertura: 2000,
+  uniformes:    1000,
+  utensilios:   4000,
+  // Ежемесячные → fixedNoFot
+  insurance:     250,
+  taxaMunicipal: 300,
+  manutencao:    300,
 }
 
 const DEFAULT_CHECKLIST = {}
@@ -78,7 +94,25 @@ const MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'И�
 function staffFOT(staff, stage) {
   return staff
     .filter(s => s.stage <= stage)
-    .reduce((sum, s) => sum + Number(s.count) * Number(s.salary) * Number(s.encargos), 0)
+    .reduce((sum, s) => sum + Number(s.count) * Number(s.salary) * getEncargos(s.contractType, s.encargos), 0)
+}
+
+// ─── Сезонность Флорипы по календарным месяцам ───────────────────────────────
+const SEASON_COEFFS = {
+  1: 1.4, 2: 1.4, 3: 1.2, 4: 0.75,
+  5: 0.70, 6: 0.80, 7: 0.85, 8: 0.70,
+  9: 0.70, 10: 0.75, 11: 0.85, 12: 1.3,
+}
+function getSeasonCoeff(startMonth, monthIndex) {
+  const cal = ((startMonth - 1 + monthIndex) % 12) + 1
+  return SEASON_COEFFS[cal] ?? 1.0
+}
+
+// ─── Сценарный анализ ─────────────────────────────────────────────────────────
+const SCENARIOS = {
+  pessimistic: { label: '😟 Пессимизм', mult: 0.5, color: '#8B2020' },
+  base:        { label: '📊 База',      mult: 1.0, color: '#2D6A2D' },
+  optimistic:  { label: '🚀 Оптимизм', mult: 1.5, color: '#1a3a5f' },
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -153,6 +187,7 @@ export default function Finance() {
   const [checklist, setChecklist] = useState(DEFAULT_CHECKLIST)
   const [saveStatus, setSaveStatus] = useState('') // '', 'saving', 'saved', 'error'
   const [smetaData, setSmetaData] = useState({ equipOnlyTotal: null, laborTotal: null, legalTotal: null, rentHolidayEnabled: false, rentHolidayMonths: 0, rentHolidayAmount: 0 })
+  const [activeScenario, setActiveScenario] = useState('base')
   const debounceRef = useRef(null)
   const isRemoteUpdate = useRef(false)
 
@@ -285,6 +320,9 @@ export default function Finance() {
     const fot2 = staffFOT(staff, 2)
     const fot3 = staffFOT(staff, 3) || fot2
     const fixedNoFot = rent + utilities + marketing + accountant + other
+      + (inputs.insurance ?? 0)
+      + (inputs.taxaMunicipal ?? 0)
+      + (inputs.manutencao ?? 0)
 
     // ── Этап 0: расходы до открытия ──────────────────────────────────────────
     const prep = prepMonths || 3
@@ -292,24 +330,33 @@ export default function Finance() {
       ? Math.min(rentHolidayMonths || 0, prep) * (rentHolidayAmount || 0)
         + Math.max(prep - (rentHolidayMonths || 0), 0) * rent
       : prep * rent
+    const onetimeLegal =
+      (inputs.alvaraFee ?? 0) + (inputs.bombeiros ?? 0) + (inputs.vigilancia ?? 0)
+      + (inputs.cnpjAbertura ?? 0) + (inputs.uniformes ?? 0) + (inputs.utensilios ?? 0)
     const equipBase = (equipOnlyTotal ?? 0) + (laborTotal ?? 0)
     const stage0cost =
       (equipOnlyTotal ?? 0)
       + (laborTotal ?? 0)
       + (legalTotal ?? 0)
+      + onetimeLegal
       + rentDuringPrep
       + utilities * prep
       + equipBase * 0.1    // буфер 10%
     const balanceAfterStage0 = capital - stage0cost
 
+    // ── Сценарий ─────────────────────────────────────────────────────────────
+    const scenarioMult = SCENARIOS[activeScenario]?.mult ?? 1.0
+
     // ── Операционные месяцы 1–12 ─────────────────────────────────────────────
     const months = Array.from({ length: 12 }, (_, i) => {
       const mo = i + 1
       const stage = mo < launchMonth2 ? 1 : mo < launchMonth3 ? 2 : 3
-      const seas = season[i] || 1
+      const seas = getSeasonCoeff(inputs.startMonth || 1, i)   // П6: реальная сезонность
       const rm = ramp[i] || 1
       const baseGuests = stage === 1 ? s1Guests : stage === 2 ? s2Guests : s3Guests
-      const guestsDay = parseFloat((baseGuests * seas * rm).toFixed(1))
+      const guestsDay = parseFloat(
+        Math.min(baseGuests * seas * rm * scenarioMult, baseGuests * scenarioMult).toFixed(1)  // П6+П7
+      )
       const checkVal = stage === 1 ? (s1Entry + s1Drinks) : stage === 2 ? s2Check : s3Check
       const revenue = guestsDay * checkVal * workDays
       const foodCostPct = stage === 1 ? s1FoodCost : stage === 2 ? s2FoodCost : s3FoodCost
@@ -340,8 +387,8 @@ export default function Finance() {
       return cum
     })
 
-    return { months, cumCash, fot1, fot2, fot3, fixedNoFot, stage0cost, balanceAfterStage0 }
-  }, [inputs, smetaData])
+    return { months, cumCash, fot1, fot2, fot3, fixedNoFot, stage0cost, balanceAfterStage0, onetimeLegal }
+  }, [inputs, smetaData, activeScenario])
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -355,12 +402,13 @@ export default function Finance() {
 
       {/* ── 1. Вводные ── */}
       <Section id="inputs" label="📋 Вводные" open={open} toggle={toggleSection}>
-        <SectionInputs inputs={inputs} setInput={setInput} model={model} smetaData={smetaData} />
+        <SectionInputs inputs={inputs} setInput={setInput} model={model} smetaData={smetaData} activeScenario={activeScenario} setActiveScenario={setActiveScenario} />
       </Section>
 
       {/* ── 2. Модель 12 месяцев ── */}
       <Section id="model" label="📊 Модель 12 месяцев" open={open} toggle={toggleSection}>
-        <ModelTable inputs={inputs} model={model} smetaData={smetaData} />
+        <ModelTable inputs={inputs} model={model} smetaData={smetaData}
+          activeScenario={activeScenario} setActiveScenario={setActiveScenario} />
       </Section>
 
       {/* ── 3. Точка безубыточности ── */}
@@ -403,8 +451,8 @@ function Section({ id, label, open, toggle, children }) {
 
 // ─── 1. Вводные ──────────────────────────────────────────────────────────────
 
-function SectionInputs({ inputs, setInput, model, smetaData }) {
-  const { fot1, fot2, fot3 } = model
+function SectionInputs({ inputs, setInput, model, smetaData, activeScenario, setActiveScenario }) {
+  const { fot1, fot2, fot3, onetimeLegal } = model
 
   const setStaffField = (idx, field, val) => {
     const next = inputs.staff.map((r, i) => i === idx ? { ...r, [field]: val } : r)
@@ -858,14 +906,15 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
           <table style={S.table}>
             <thead>
               <tr>
-                {['Роль', 'Кол-во', 'ЗП брутто R$', 'Энкаргос ×', 'С этапа', 'Итого R$/мес', ''].map(h => (
+                {['Роль', 'Кол-во', 'ЗП брутто R$', 'Договор', 'С этапа', 'Итого R$/мес', ''].map(h => (
                   <th key={h} style={S.th}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {inputs.staff.map((row, i) => {
-                const total = row.count * row.salary * row.encargos
+                const enc = getEncargos(row.contractType, row.encargos)
+                const total = row.count * row.salary * enc
                 return (
                   <tr key={i}>
                     <td style={S.tdLeft}>
@@ -881,8 +930,17 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
                     <td style={S.td}>
                       <NumInput value={row.salary} onChange={v => setStaffField(i, 'salary', v)} style={{ width: 80 }} />
                     </td>
-                    <td style={S.td}>
-                      <NumInput value={row.encargos} onChange={v => setStaffField(i, 'encargos', v)} style={{ width: 60 }} />
+                    <td style={{ ...S.td, textAlign: 'center' }}>
+                      <select
+                        style={{ ...S.input, width: 70, textAlign: 'center',
+                          background: row.contractType === 'PJ' ? '#f0f7ed' : row.contractType === 'MEI' ? '#fef9ed' : '#fff' }}
+                        value={row.contractType ?? 'CLT'}
+                        onChange={e => setStaffField(i, 'contractType', e.target.value)}
+                      >
+                        <option value="CLT">CLT ×1.7</option>
+                        <option value="MEI">MEI ×1.2</option>
+                        <option value="PJ">PJ ×1.0</option>
+                      </select>
                     </td>
                     <td style={{ ...S.td, textAlign: 'center' }}>
                       <select
@@ -923,10 +981,62 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
         >
           + добавить сотрудника
         </button>
-        <div style={{ fontSize: 13, color: '#444', marginTop: 10 }}>
+        <div style={{ fontSize: 11, color: '#aaa', marginTop: 6, fontStyle: 'italic' }}>
+          CLT — трудовой договор (encargos ×1.7) · MEI — самозанятый (×1.2) · PJ — юр. лицо (×1.0)
+        </div>
+        <div style={{ fontSize: 13, color: '#444', marginTop: 8 }}>
           <span style={{ marginRight: 24 }}>ФОТ Этап 1: <b style={S.negNum}>{fmt(fot1)}</b></span>
           <span style={{ marginRight: 24 }}>ФОТ Этап 2: <b style={S.negNum}>{fmt(fot2)}</b></span>
           <span>ФОТ Этап 3: <b style={S.negNum}>{fmt(fot3)}</b></span>
+        </div>
+      </div>
+
+      {/* Обязательные расходы Бразилии */}
+      <div style={S.subGroup}>
+        <div style={S.subTitle}>🇧🇷 Обязательные расходы (Бразилия)</div>
+        <div style={{ fontSize: 11, color: '#aaa', marginBottom: 10, fontStyle: 'italic' }}>
+          Разовые → входят в Этап 0. Ежемесячные → добавляются в постоянные расходы.
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={S.table}>
+            <thead>
+              <tr>
+                {['Статья', 'Тип', 'Сумма, R$'].map(h => <th key={h} style={S.th}>{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { key: 'alvaraFee',     label: 'Alvará de funcionamento', type: 'Разово' },
+                { key: 'bombeiros',     label: 'AVCB (пожарная лицензия)', type: 'Разово' },
+                { key: 'vigilancia',    label: 'Vigilância Sanitária',     type: 'Разово' },
+                { key: 'cnpjAbertura',  label: 'Abertura CNPJ + contabil', type: 'Разово' },
+                { key: 'uniformes',     label: 'Uniformes (форма персонала)', type: 'Разово' },
+                { key: 'utensilios',    label: 'Utensílios de cozinha',    type: 'Разово' },
+                { key: 'insurance',     label: 'Seguro (страховка)',        type: 'Ежемес' },
+                { key: 'taxaMunicipal', label: 'ISS + taxa de lixo',       type: 'Ежемес' },
+                { key: 'manutencao',    label: 'Manutenção (ТО оборудования)', type: 'Ежемес' },
+              ].map(({ key, label, type }) => (
+                <tr key={key}>
+                  <td style={S.tdLeft}>{label}</td>
+                  <td style={{ ...S.td, textAlign: 'center', fontWeight: 600, fontSize: 11,
+                    color: type === 'Разово' ? '#b45309' : '#1a4f1a' }}>{type}</td>
+                  <td style={S.td}>
+                    <NumInput value={inputs[key] ?? 0} onChange={v => setInput(key, v)} style={{ width: 90 }} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ marginTop: 10, padding: '10px 12px', background: '#F5F0E8', borderRadius: 8, fontSize: 12 }}>
+          <span style={{ marginRight: 20 }}>
+            Разовые (Этап 0):{' '}
+            <b>{fmt(onetimeLegal ?? 0)}</b>
+          </span>
+          <span>
+            Ежемесячные доп.:{' '}
+            <b>{fmt((inputs.insurance ?? 0) + (inputs.taxaMunicipal ?? 0) + (inputs.manutencao ?? 0))}/мес</b>
+          </span>
         </div>
       </div>
 
@@ -967,7 +1077,7 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
 
 // ─── 2. Модель 12 месяцев ─────────────────────────────────────────────────────
 
-function ModelTable({ inputs, model }) {
+function ModelTable({ inputs, model, activeScenario, setActiveScenario }) {
   const { months, cumCash, stage0cost, balanceAfterStage0 } = model
 
   // Calendar month labels: shift by startMonth + prepMonths - 1
@@ -980,7 +1090,7 @@ function ModelTable({ inputs, model }) {
 
   const rows = [
     { label: 'Этап (1/2/3)',              key: 'stage',      fmt: (v) => v,              isAvg: false, highlight: false, isNum: false },
-    { label: 'Сезонность',                key: 'seas',       fmt: (v) => fmtN(v),         isAvg: true,  highlight: false, isNum: false },
+    { label: 'Сезонность (Флорипа)',       key: 'seas',       fmt: (v) => `×${fmtN(v)}`,   isAvg: true,  highlight: false, isNum: false },
     { label: 'Раскрутка',                 key: 'rm',         fmt: (v) => fmtN(v),         isAvg: true,  highlight: false, isNum: false },
     { label: 'Гостей в день (с коэф)',    key: 'guestsDay',  fmt: (v) => fmtN(v),         isAvg: true,  highlight: false, isNum: true },
     { label: 'Выручка на гостя R$',       key: 'checkVal',   fmt: (v) => fmtN(v, 0),      isAvg: true,  highlight: false, isNum: true },
@@ -1063,6 +1173,25 @@ function ModelTable({ inputs, model }) {
             : `⚠️ Кассовый разрыв в месяце ${minCashMonth} — нужно ещё ${fmt(Math.abs(minCash))}`
           }
         </div>
+      </div>
+
+      {/* ── Переключатель сценариев ── */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, color: '#888' }}>Сценарий:</span>
+        {Object.entries(SCENARIOS).map(([key, sc]) => (
+          <button key={key} onClick={() => setActiveScenario(key)} style={{
+            padding: '5px 14px', borderRadius: 20, cursor: 'pointer',
+            border: `2px solid ${sc.color}`,
+            background: activeScenario === key ? sc.color : '#fff',
+            color: activeScenario === key ? '#fff' : sc.color,
+            fontFamily: "'Georgia', serif", fontSize: 12,
+            fontWeight: activeScenario === key ? 700 : 400,
+            transition: 'all 0.15s',
+          }}>{sc.label}</button>
+        ))}
+        <span style={{ fontSize: 11, color: '#bbb' }}>
+          ×{SCENARIOS[activeScenario]?.mult} от плановой загрузки · не сохраняется
+        </span>
       </div>
 
       <div style={{ overflowX: 'auto' }}>
