@@ -323,7 +323,7 @@ export default function Finance() {
 
       {/* ── 1. Вводные ── */}
       <Section id="inputs" label="📋 Вводные" open={open} toggle={toggleSection}>
-        <SectionInputs inputs={inputs} setInput={setInput} model={model} />
+        <SectionInputs inputs={inputs} setInput={setInput} model={model} smetaData={smetaData} />
       </Section>
 
       {/* ── 2. Модель 12 месяцев ── */}
@@ -371,7 +371,7 @@ function Section({ id, label, open, toggle, children }) {
 
 // ─── 1. Вводные ──────────────────────────────────────────────────────────────
 
-function SectionInputs({ inputs, setInput, model }) {
+function SectionInputs({ inputs, setInput, model, smetaData }) {
   const { fot1, fot2, fot3 } = model
 
   const setStaffField = (idx, field, val) => {
