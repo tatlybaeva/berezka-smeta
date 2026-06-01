@@ -170,6 +170,10 @@ export default function Finance() {
               const s = sData?.state
               const patch = {}
               if (s?.rent !== undefined) patch.rent = s.rent
+              if (s?.rentWorkshop !== undefined) patch.rentWorkshop = s.rentWorkshop
+              if (s?.depositMonths !== undefined) patch.depositMonths = s.depositMonths
+              if (s?.workingCapMonths !== undefined) patch.workingCapMonths = s.workingCapMonths
+              if (s?.reserve !== undefined) patch.reserve = s.reserve
               if (s?.grandTotal !== undefined) patch.capex = s.grandTotal
               const sd = {}
               if (s?.equipOnlyTotal !== undefined) sd.equipOnlyTotal = s.equipOnlyTotal
@@ -187,18 +191,16 @@ export default function Finance() {
       })
   }, [])
 
-  // ── Realtime ────────────────────────────────────────────────────────────────
+  // ── Realtime finance_state (только чеклист, inputs не перезаписываем — блокирует сохранение) ──
   useEffect(() => {
     const channel = supabase
       .channel('finance_state_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'finance_state' }, (payload) => {
-        if (isRemoteUpdate.current) return
         const d = payload.new?.data
         if (!d) return
-        isRemoteUpdate.current = true
-        if (d.inputs) setInputs(prev => ({ ...DEFAULT_INPUTS, ...d.inputs }))
-        if (d.checklist) setChecklist(d.checklist)
-        setTimeout(() => { isRemoteUpdate.current = false }, 0)
+        // Только чеклист синхронизируем из realtime — inputs не трогаем,
+        // чтобы isRemoteUpdate не блокировал сохранение пользовательских правок
+        if (d.checklist && !isRemoteUpdate.current) setChecklist(d.checklist)
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
@@ -213,6 +215,10 @@ export default function Finance() {
         if (!s) return
         const inputPatch = {}
         if (s.rent !== undefined) inputPatch.rent = s.rent
+        if (s.rentWorkshop !== undefined) inputPatch.rentWorkshop = s.rentWorkshop
+        if (s.depositMonths !== undefined) inputPatch.depositMonths = s.depositMonths
+        if (s.workingCapMonths !== undefined) inputPatch.workingCapMonths = s.workingCapMonths
+        if (s.reserve !== undefined) inputPatch.reserve = s.reserve
         if (s.grandTotal !== undefined) inputPatch.capex = s.grandTotal
         if (Object.keys(inputPatch).length) setInputs(prev => ({ ...prev, ...inputPatch }))
         const sd = {}
@@ -401,27 +407,32 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
       {/* Общие */}
       <div style={S.subGroup}>
         <div style={S.subTitle}>Общие параметры</div>
-        {/* CAPEX — read-only, synced from Бюджет */}
-        <div style={{ ...S.inputRow, marginBottom: 10 }}>
-          <span style={{ ...S.label, color: '#888' }}>Инвестиции CAPEX, R$ (← из Бюджета)</span>
-          <div style={{
-            border: '1.5px solid #e8e0d0', borderRadius: 6, padding: '4px 10px',
-            fontFamily: "'Georgia', serif", fontSize: 13, width: 110, textAlign: 'right',
-            background: '#F5F0E8', color: '#888', userSelect: 'none',
-          }}>
-            {Math.round(inputs.capex || 0).toLocaleString('ru-RU')}
-          </div>
-        </div>
-
+        {/* Read-only поля из Бюджета */}
         {[
-          ['workDays',         'Рабочих дней в месяц'],
-          ['capital',          'Привлечённый капитал, R$'],
-          ['usdRate',          'Курс USD→BRL'],
-          ['rent',             'Аренда помещения/мес, R$'],
-          ['rentWorkshop',     'Аренда цеха/мес, R$'],
-          ['depositMonths',    'Залог (кол-во месяцев)'],
-          ['workingCapMonths', 'Оборотный капитал, мес'],
-          ['reserve',          'Резерв, R$'],
+          ['capex',           'Инвестиции CAPEX, R$'],
+          ['rent',            'Аренда помещения/мес, R$'],
+          ['rentWorkshop',    'Аренда цеха/мес, R$'],
+          ['depositMonths',   'Залог (кол-во месяцев)'],
+          ['workingCapMonths','Оборотный капитал, мес'],
+          ['reserve',         'Резерв, R$'],
+        ].map(([key, label]) => (
+          <div key={key} style={{ ...S.inputRow, marginBottom: 8 }}>
+            <span style={{ ...S.label, color: '#999' }}>{label} <span style={{ fontSize: 10, color: '#bbb' }}>← Бюджет</span></span>
+            <div style={{
+              border: '1.5px solid #e8e0d0', borderRadius: 6, padding: '4px 10px',
+              fontFamily: "'Georgia', serif", fontSize: 13, width: 110, textAlign: 'right',
+              background: '#F5F0E8', color: '#888', userSelect: 'none',
+            }}>
+              {Math.round(inputs[key] || 0).toLocaleString('ru-RU')}
+            </div>
+          </div>
+        ))}
+
+        {/* Редактируемые поля */}
+        {[
+          ['workDays', 'Рабочих дней в месяц'],
+          ['capital',  'Привлечённый капитал, R$'],
+          ['usdRate',  'Курс USD→BRL'],
         ].map(([key, label]) => (
           <div key={key} style={S.inputRow}>
             <span style={S.label}>{label}</span>
@@ -719,15 +730,26 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
       {/* Этап 0/1 — стартовые расходы */}
       <div style={S.subGroup}>
         <div style={S.subTitle}>Этап 0/1 — стартовые расходы</div>
-        {[
-          ['agentDeposit',   'Депозит агентству / риэлтору, R$'],
-          ['stage1Supplies', 'Первая закупка (кофе, расходники, снеки), R$'],
-        ].map(([key, label]) => (
-          <div key={key} style={S.inputRow}>
-            <span style={S.label}>{label}</span>
-            <NumInput value={inputs[key]} onChange={v => setInput(key, v)} />
+        {/* Залог — из Бюджета, read-only */}
+        <div style={{ ...S.inputRow, marginBottom: 8 }}>
+          <span style={{ ...S.label, color: '#999' }}>Залог аренды (депозит) <span style={{ fontSize: 10, color: '#bbb' }}>← Бюджет</span></span>
+          <div style={{
+            border: '1.5px solid #e8e0d0', borderRadius: 6, padding: '4px 10px',
+            fontFamily: "'Georgia', serif", fontSize: 13, width: 110, textAlign: 'right',
+            background: '#F5F0E8', color: '#888', userSelect: 'none',
+          }}>
+            {Math.round((inputs.rent || 0) * (inputs.depositMonths || 0)).toLocaleString('ru-RU')}
           </div>
-        ))}
+        </div>
+        {/* Редактируемые */}
+        <div style={S.inputRow}>
+          <span style={S.label}>Первая закупка (кофе, расходники, снеки), R$</span>
+          <NumInput value={inputs.stage1Supplies ?? 8000} onChange={v => setInput('stage1Supplies', v)} />
+        </div>
+        <div style={S.inputRow}>
+          <span style={S.label}>Депозит агентству / риэлтору, R$</span>
+          <NumInput value={inputs.agentDeposit ?? 0} onChange={v => setInput('agentDeposit', v)} />
+        </div>
       </div>
 
       {/* Этап 1 */}
