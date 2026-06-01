@@ -174,7 +174,8 @@ export default function Finance() {
               if (s?.depositMonths !== undefined) patch.depositMonths = s.depositMonths
               if (s?.workingCapMonths !== undefined) patch.workingCapMonths = s.workingCapMonths
               if (s?.reserve !== undefined) patch.reserve = s.reserve
-              if (s?.grandTotal !== undefined) patch.capex = s.grandTotal
+              if (s?.capexTotal !== undefined) patch.capex = s.capexTotal
+              else if (s?.grandTotal !== undefined) patch.capex = s.grandTotal // fallback для старых записей
               const sd = {}
               if (s?.equipOnlyTotal !== undefined) sd.equipOnlyTotal = s.equipOnlyTotal
               if (s?.laborTotal !== undefined) sd.laborTotal = s.laborTotal
@@ -219,7 +220,8 @@ export default function Finance() {
         if (s.depositMonths !== undefined) inputPatch.depositMonths = s.depositMonths
         if (s.workingCapMonths !== undefined) inputPatch.workingCapMonths = s.workingCapMonths
         if (s.reserve !== undefined) inputPatch.reserve = s.reserve
-        if (s.grandTotal !== undefined) inputPatch.capex = s.grandTotal
+        if (s.capexTotal !== undefined) inputPatch.capex = s.capexTotal
+        else if (s.grandTotal !== undefined) inputPatch.capex = s.grandTotal // fallback
         if (Object.keys(inputPatch).length) setInputs(prev => ({ ...prev, ...inputPatch }))
         const sd = {}
         if (s.equipOnlyTotal !== undefined) sd.equipOnlyTotal = s.equipOnlyTotal
@@ -556,7 +558,7 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
         const dur3 = 12 - launchMonth3 + 1
 
         // Values from Бюджет (InvestmentCalc) via smeta_state sync
-        const equipOnlyTotal = smetaData.equipOnlyTotal != null ? smetaData.equipOnlyTotal : (inputs.capex || 0)
+        const equipOnlyTotal = smetaData.equipOnlyTotal != null ? smetaData.equipOnlyTotal : 0
         const laborTotal     = smetaData.laborTotal    != null ? smetaData.laborTotal    : 0
         const legalBudget    = smetaData.legalTotal    != null ? smetaData.legalTotal    : 5000
         const allEquip       = equipOnlyTotal + laborTotal
@@ -627,7 +629,7 @@ function SectionInputs({ inputs, setInput, model, smetaData }) {
             color: '#7a5a00', bg: '#fffbe6', border: '#f0d97a',
             total: total0,
             items: [
-              { label: 'Оснащение / закупка (← Смета)', val: equipOnlyTotal, note: smetaData.equipOnlyTotal == null ? 'из capex' : 'из Бюджета' },
+              { label: 'Оснащение / закупка (← Смета)', val: equipOnlyTotal, note: 'из Бюджета' },
               { label: 'Оплата ремонтных работ (← теги «работа»)', val: laborTotal, note: null, hide: laborTotal === 0 && smetaData.laborTotal == null },
               { label: rentLabel0, val: rentCost0, note: null },
               { label: `ЖКУ × ${prepMonths} мес`, val: inputs.utilities * prepMonths, note: '← Финансы → Коммуналка' },

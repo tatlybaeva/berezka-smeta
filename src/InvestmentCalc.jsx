@@ -635,7 +635,7 @@ export default function InvestmentCalc() {
       avgCheck, beStaff, beOther, bePhase, currentChecksDay,
       grandTotal, zoneOrder, extraOrder,
       itemTags, legalItems, rentHolidayEnabled, rentHolidayMonths, rentHolidayAmount,
-      equipOnlyTotal, laborTotal, legalTotal,
+      equipOnlyTotal, laborTotal, legalTotal, capexTotal,
     };
     scheduleSave(propertyState);
   }, [rentType, rent, rentWorkshop, depositMonths, workingCapMonths, reserve, enabledZones, enabledItems, quantities, prices, extraItems, avgCheck, beStaff, beOther, bePhase, currentChecksDay, activePropId, zoneOrder, extraOrder, itemTags, legalItems, rentHolidayEnabled, rentHolidayMonths, rentHolidayAmount]); // eslint-disable-line
@@ -770,6 +770,8 @@ export default function InvestmentCalc() {
   }, 0);
   const equipOnlyTotal = equipTotal - laborTotal;
   const legalTotal = legalItems.reduce((s, it) => s + (it.brl || 0), 0);
+  // CAPEX = оснащение (закупки) + залог аренды
+  const capexTotal = equipOnlyTotal + depositTotal;
 
   return (
     <div style={{ fontFamily: "'Georgia', serif", background: "#faf9f6", minHeight: "100vh", padding: "1rem 1rem 2rem" }}>
@@ -831,6 +833,17 @@ export default function InvestmentCalc() {
         <div style={{ fontSize: 11, color: "#aaa", marginBottom: 4 }}>Итого инвестиций</div>
         <div style={{ fontSize: 32, fontWeight: 600 }}>{fmt$(grandTotal)}</div>
         <div style={{ fontSize: 13, color: "#aaa", marginTop: 2 }}>{fmtR(grandTotal)}</div>
+        <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(255,255,255,0.06)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 10, color: "#888", marginBottom: 2 }}>CAPEX (оснащение + залог)</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#fff" }}>{fmt$(capexTotal)}</div>
+            <div style={{ fontSize: 10, color: "#aaa" }}>{fmtR(capexTotal)}</div>
+          </div>
+          <div style={{ fontSize: 10, color: "#555", textAlign: "right", lineHeight: 1.6 }}>
+            <div>оснащение {fmtR(equipOnlyTotal)}</div>
+            <div>+ залог {fmtR(depositTotal)}</div>
+          </div>
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginTop: 14 }}>
           {[
             ...(rentType === "land" && constructionTotal > 0 ? [{ l: "Стройка", v: fmt$(constructionTotal) }] : []),
