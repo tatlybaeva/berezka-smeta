@@ -844,6 +844,40 @@ function FoodStorageContent() {
           Держать холодильник при <b>≤ 5°С</b>, морозильник при <b>≤ -18°С</b>. Завести термометры и проверять каждое утро.
         </div>
       </Section>
+
+      <Section id="kb-vigilancia-floripa" title="Vigilância Sanitária — Флорипа (практика)">
+        <p style={p}>Источник: <b>Prefeitura de Florianópolis</b>. Практические уточнения для формата БЕРЁЗКИ:</p>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#2d5a27', marginBottom: 6 }}>🏭 Производство еды не на месте продажи</div>
+          <ul style={ul}>
+            <li>Если еда <b>производится не на месте продажи</b> — нужна лицензированная кухня с <b>Alvará Sanitário</b> для производства.</li>
+            <li>Можно использовать <b>чужую лицензированную кухню</b> — это закрывает вопрос.</li>
+            <li style={{ color: '#2d5a27' }}>→ <b>Core Cozinhas</b> закрывает этот вопрос для БЕРЁЗКИ.</li>
+          </ul>
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#5C3D1E', marginBottom: 6 }}>🚰 Раковина для мытья рук</div>
+          <ul style={ul}>
+            <li>Продаёшь только <b>упакованную еду без манипуляций</b> — раковина не обязательна.</li>
+            <li>Есть <b>любая манипуляция с едой</b> (нарезка, раскладка, приготовление) — <b>раковина обязательна</b>.</li>
+          </ul>
+        </div>
+
+        <div style={{ marginBottom: 6 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#1a3a5f', marginBottom: 6 }}>👨‍🍳 Treinamento de Boas Práticas</div>
+          <ul style={ul}>
+            <li>Все сотрудники, работающие с едой, обязаны пройти <b>Treinamento de Boas Práticas para Manipulação de Alimentos</b>.</li>
+            <li>Формат: базовый курс + полный курс, <b>минимум по 3 часа каждый</b>.</li>
+            <li>Документ о прохождении хранится у владельца и предъявляется при проверке.</li>
+          </ul>
+        </div>
+
+        <div style={highlight}>
+          Чеклист Этапа 0: ① Core Cozinhas или своя кухня с Alvará Sanitário ② Раковина в зоне манипуляции с едой ③ Все сотрудники — сертификат Boas Práticas
+        </div>
+      </Section>
     </div>
   )
 }
