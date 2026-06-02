@@ -874,8 +874,21 @@ function FoodStorageContent() {
           </ul>
         </div>
 
+        <div style={{ marginBottom: 14, padding: '12px 14px', background: '#f0f7ed', borderRadius: 8, border: '1.5px solid #b8d9b8' }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#1a4f1a', marginBottom: 6 }}>
+            🎓 Где пройти курс — IFSC (официально)
+          </div>
+          <ul style={ul}>
+            <li><b>IFSC Campus Florianópolis-Continente</b> — официально аккредитован Vigilância Sanitária Флорианополиса.</li>
+            <li>Проводит курс для манипуляторов продуктов питания в <b>онлайн формате</b>.</li>
+            <li>Сайт: <a href="https://www.ifsc.edu.br" target="_blank" rel="noopener noreferrer" style={{ color: '#1a4f1a' }}>ifsc.edu.br</a></li>
+            <li>Стоимость: <b>бесплатно или минимальная</b>.</li>
+            <li>Сертификат <b>принимается официально</b> Vigilância Sanitária Флорипы.</li>
+          </ul>
+        </div>
+
         <div style={highlight}>
-          Чеклист Этапа 0: ① Core Cozinhas или своя кухня с Alvará Sanitário ② Раковина в зоне манипуляции с едой ③ Все сотрудники — сертификат Boas Práticas
+          Чеклист Этапа 0: ① Core Cozinhas или своя кухня с Alvará Sanitário ② Раковина в зоне манипуляции с едой ③ Все сотрудники — курс IFSC + сертификат
         </div>
       </Section>
     </div>
