@@ -875,16 +875,43 @@ function FoodStorageContent() {
         </div>
 
         <div style={{ marginBottom: 14, padding: '12px 14px', background: '#f0f7ed', borderRadius: 8, border: '1.5px solid #b8d9b8' }}>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#1a4f1a', marginBottom: 6 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#1a4f1a', marginBottom: 8 }}>
             🎓 Где пройти курс — IFSC (официально)
           </div>
-          <ul style={ul}>
-            <li><b>IFSC Campus Florianópolis-Continente</b> — официально аккредитован Vigilância Sanitária Флорианополиса.</li>
-            <li>Проводит курс для манипуляторов продуктов питания в <b>онлайн формате</b>.</li>
-            <li>Сайт: <a href="https://www.ifsc.edu.br" target="_blank" rel="noopener noreferrer" style={{ color: '#1a4f1a' }}>ifsc.edu.br</a></li>
-            <li>Стоимость: <b>бесплатно или минимальная</b>.</li>
-            <li>Сертификат <b>принимается официально</b> Vigilância Sanitária Флорипы.</li>
-          </ul>
+
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontWeight: 600, fontSize: 12, color: '#1a4f1a', marginBottom: 4 }}>О курсе</div>
+            <ul style={ul}>
+              <li><b>Название:</b> Treinamento para Manipuladores de Alimentos (Básico e Completo) — EAD</li>
+              <li><b>Формат:</b> онлайн (EAD), <b>20 часов</b></li>
+              <li><b>Структура:</b> 6 модулей с видеоуроками — загрязнение продуктов, гигиена помещения, вода, мусор, дезинфекция, этапы работы с едой</li>
+              <li><b>Требования:</b> минимум 16 лет + начальное образование</li>
+              <li><b>Стоимость:</b> бесплатно или минимальная</li>
+              <li>Сертификат <b>принимается официально</b> Vigilância Sanitária Флорипы</li>
+              <li>Сайт: <a href="https://www.ifsc.edu.br" target="_blank" rel="noopener noreferrer" style={{ color: '#1a4f1a' }}>ifsc.edu.br</a></li>
+            </ul>
+          </div>
+
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontWeight: 600, fontSize: 12, color: '#1a4f1a', marginBottom: 4 }}>Как записаться — пошагово</div>
+            <ol style={{ margin: 0, paddingLeft: 20, fontSize: 13, lineHeight: 1.8, color: '#333' }}>
+              <li>Зайди на <a href="https://www.ifsc.edu.br" target="_blank" rel="noopener noreferrer" style={{ color: '#1a4f1a' }}>ifsc.edu.br</a> → <b>CÂMPUS</b> → <b>Florianópolis-Continente</b> → <b>Qualificação Profissional</b></li>
+              <li>Найди курс: <i>«Treinamento para Manipuladores de Alimentos — EAD»</i></li>
+              <li>Открой <b>edital</b> (объявление о наборе) и подай заявку</li>
+            </ol>
+            <div style={{ marginTop: 8, padding: '8px 10px', background: '#fef9ed', borderRadius: 6, border: '1px solid #f0d97a', fontSize: 12, color: '#7a5a00' }}>
+              ⚠️ Набор идёт по <b>жеребьёвке (sorteio)</b> — подаёшь заявку, потом случайный отбор. Обычно <b>50 мест</b> на поток.
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 12, color: '#1a4f1a', marginBottom: 4 }}>Если мест нет или набор закрыт</div>
+            <p style={{ ...p, marginBottom: 4 }}>Напиши напрямую — спроси когда следующий набор:</p>
+            <ul style={ul}>
+              <li>📧 <a href="mailto:continente@ifsc.edu.br" style={{ color: '#1a4f1a' }}>continente@ifsc.edu.br</a></li>
+              <li>📞 (48) 3877-8400</li>
+            </ul>
+          </div>
         </div>
 
         <div style={highlight}>
